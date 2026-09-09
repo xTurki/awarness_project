@@ -1,0 +1,17 @@
+# Normalise line endings so the repo looks the same to everyone on the team,
+# whichever platform they work on. Without this, a checkout on macOS or Linux
+# shows every file as modified.
+* text=auto eol=lf
+
+# Windows-only scripts keep CRLF
+*.ps1 text eol=crlf
+
+# Binary — never touch
+*.docx binary
+*.pptx binary
+*.pdf binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
