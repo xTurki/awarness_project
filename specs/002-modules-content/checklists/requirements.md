@@ -43,7 +43,7 @@ The project owner asked for the security surface to be cut back, on the grounds 
 
 The two-step sign-in itself stays, simplified: password, then a six-digit emailed code valid for ten minutes and usable once. The verify form carries the email address, so no signed cookie is needed between the steps.
 
-`.specify/memory/constitution.md` was amended to match and is now at 3.0.0 — a MAJOR bump, since mandatory rules were removed.
+`.specify/memory/constitution.md` was amended to match and is now at 3.0.0, a MAJOR bump, since mandatory rules were removed.
 
 ### Consequences worth knowing
 
@@ -61,7 +61,7 @@ Three further simplifications were settled after the first draft and propagated 
 
 - **Modules are never archived.** Published or unpublished; retiring one means unpublishing it.
 - **Registrations carry no status.** A person is on a module or is not.
-- **Self-registration is gone entirely.** `Module.self_registration_open` is removed along with a whole user story and three requirements. This closed a real contradiction: a trainee was permitted to put themselves on a module while the dashboard showed only modules they were already on, so there was no way to discover one. Rather than add a browse-and-join page, the capability was dropped — mandatory training is assigned, not opted into.
+- **Self-registration is gone entirely.** `Module.self_registration_open` is removed along with a whole user story and three requirements. This closed a real contradiction: a trainee was permitted to put themselves on a module while the dashboard showed only modules they were already on, so there was no way to discover one. Rather than add a browse-and-join page, the capability was dropped, mandatory training is assigned, not opted into.
 - **`Module.code` is removed.** Inherited from the school framing, never used, never explained.
 
 Uploads are now checked by extension and size only. Content sanitising before storage is the one security control kept in this phase, because instructor-authored HTML is read back by every trainee who opens the page.

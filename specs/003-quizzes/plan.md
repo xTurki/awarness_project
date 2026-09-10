@@ -1,4 +1,4 @@
-# Implementation Plan: Quizzes — Question Banks, Attempts & Scoring
+# Implementation Plan: Quizzes, Question Banks, Attempts & Scoring
 
 **Branch**: `003-quizzes` | **Date**: 2026-09-10 | **Spec**: [spec.md](./spec.md)
 
@@ -16,7 +16,7 @@ The engineering work is almost entirely in one place: **the attempt**. Answers m
 
 **Primary Dependencies**: Nothing new. Everything this phase needs already exists from Phases 0 and 1.
 
-**Storage**: MySQL 8 — five new tables. No new volume; nothing here stores files.
+**Storage**: MySQL 8, five new tables. No new volume; nothing here stores files.
 
 **Testing**: pytest against a disposable MySQL container, as before
 
@@ -51,7 +51,7 @@ Checked against `.specify/memory/constitution.md` v4.0.0.
 
 | Constraint | Status |
 |---|---|
-| Naive UTC everywhere — the whole phase is about time | ✅ |
+| Naive UTC everywhere, the whole phase is about time | ✅ |
 | No `table=True` model rendered or returned | ✅ |
 | Authorisation in the service layer | ✅ |
 | Three tiers, only Nginx published | ✅ |
@@ -80,7 +80,7 @@ specs/003-quizzes/
 ├── quickstart.md
 ├── contracts/routes.md
 ├── checklists/requirements.md
-└── tasks.md             # /speckit-tasks output — not created here
+└── tasks.md             # /speckit-tasks output, not created here
 ```
 
 ### Source Code (repository root)
@@ -90,14 +90,14 @@ Additions to what Phases 0 and 1 built.
 ```text
 backend/app/
 ├── models/
-│   ├── question.py          # new — question + answer option
-│   ├── test.py              # new — the test and its question list
-│   └── attempt.py           # new — attempt + answer given
+│   ├── question.py          # new, question + answer option
+│   ├── test.py              # new, the test and its question list
+│   └── attempt.py           # new, attempt + answer given
 ├── services/
-│   ├── question_service.py  # new — the bank
-│   ├── test_service.py      # new — building, publishing, the frozen check
-│   ├── attempt_service.py   # new — start, save, resume, submit, score
-│   └── scoring.py           # new — one pure function, no database
+│   ├── question_service.py  # new, the bank
+│   ├── test_service.py      # new, building, publishing, the frozen check
+│   ├── attempt_service.py   # new, start, save, resume, submit, score
+│   └── scoring.py           # new, one pure function, no database
 ├── routers/
 │   ├── questions.py         # new
 │   ├── tests.py             # new
@@ -110,7 +110,7 @@ backend/app/
 tests/services/{test_question,test_test,test_attempt,test_scoring}.py
 ```
 
-**Structure Decision**: Phases 0 and 1 layout continues. One addition worth naming: `app/services/scoring.py` holds a single pure function — given the questions and the answers given, return the score. No database, no session, no clock. It is the piece most worth testing exhaustively and easiest to test when it touches nothing.
+**Structure Decision**: Phases 0 and 1 layout continues. One addition worth naming: `app/services/scoring.py` holds a single pure function, given the questions and the answers given, return the score. No database, no session, no clock. It is the piece most worth testing exhaustively and easiest to test when it touches nothing.
 
 ## Complexity Tracking
 

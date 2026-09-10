@@ -6,9 +6,9 @@
 
 ## Summary
 
-Introduce the module — the thing the platform exists to deliver — and everything that hangs off it: an administrator creating modules and assigning instructors, an instructor writing ordered content pages with a rich-text editor and uploading images into them, people being registered onto modules, and trainees finding and reading what they have been assigned.
+Introduce the module, the thing the platform exists to deliver, and everything that hangs off it: an administrator creating modules and assigning instructors, an instructor writing ordered content pages with a rich-text editor and uploading images into them, people being registered onto modules, and trainees finding and reading what they have been assigned.
 
-Two pieces of this phase carry all its risk, and the plan is shaped around them. **Instructor-authored HTML is read back by every trainee who opens that page**, so it must be sanitised on the server before storage — not on render, not in the editor. And **this is the first phase to accept a file**, which brings a storage volume, an upload limit that has to agree in two places, and a serving path that must not execute anything.
+Two pieces of this phase carry all its risk, and the plan is shaped around them. **Instructor-authored HTML is read back by every trainee who opens that page**, so it must be sanitised on the server before storage, not on render, not in the editor. And **this is the first phase to accept a file**, which brings a storage volume, an upload limit that has to agree in two places, and a serving path that must not execute anything.
 
 Everything else is CRUD with an authorisation rule in front of it.
 
@@ -18,11 +18,11 @@ Everything else is CRUD with an authorisation rule in front of it.
 
 **Primary Dependencies**: Everything from Phase 0, plus `nh3` (HTML sanitising) and a vendored rich-text editor (Quill). No other additions.
 
-**Storage**: MySQL 8 for modules, pages, registrations, and image metadata. A second named Docker volume for the image files themselves — the first file storage in the project.
+**Storage**: MySQL 8 for modules, pages, registrations, and image metadata. A second named Docker volume for the image files themselves, the first file storage in the project.
 
 **Testing**: pytest against a disposable MySQL 8 container, as Phase 0 established
 
-**Target Platform**: Unchanged — Linux server under Docker Compose, browsers from 360px up
+**Target Platform**: Unchanged, Linux server under Docker Compose, browsers from 360px up
 
 **Project Type**: Server-rendered web application, three containers
 
@@ -42,12 +42,12 @@ Checked against `.specify/memory/constitution.md` v4.0.0.
 
 | # | Principle | Status | How this phase satisfies it |
 |---|---|---|---|
-| I | Routers Are Thin | ✅ | `Session` and `select` stay under `app/services/`. The upload route is the one to watch — it is tempting to put file handling in the router; it goes in `content_service`. |
+| I | Routers Are Thin | ✅ | `Session` and `select` stay under `app/services/`. The upload route is the one to watch, it is tempting to put file handling in the router; it goes in `content_service`. |
 | II | Services Are HTTP-Agnostic | ✅ | `content_service` receives file **bytes and a filename**, not `UploadFile`. Reading the upload off the request is the router's job; everything after is plain arguments. |
 | III | Authorisation in the Service Layer | ✅ | This is the first phase with module-scoped data, so the principle finally has teeth. Every service function takes the acting account and resolves the module through one chokepoint (research R1). |
 | IV | The Models Are the Schema | ✅ | Three new tables from `create_all()`. Still no migration tool; still `down -v` to change anything. |
 | V | Every Phase Ships Running Software | ✅ | Ends with an instructor able to write and publish a real module that real trainees can read. |
-| VI | Tests Accompany the Feature | ✅ | Against MySQL. The sanitiser gets its own tests — it is the one thing here that fails silently and dangerously. |
+| VI | Tests Accompany the Feature | ✅ | Against MySQL. The sanitiser gets its own tests, it is the one thing here that fails silently and dangerously. |
 | VII | Non-Goals Are Defended | ✅ | No self-registration of any kind, no prerequisites or gating, no pathways, no trainee uploads, no roster import, no module copying. All recorded in the spec. |
 | VIII | Simplicity Is a Requirement | ✅ | Two dependencies added, both load-bearing. Research records what was rejected. |
 
@@ -55,9 +55,9 @@ Checked against `.specify/memory/constitution.md` v4.0.0.
 
 | Constraint | Status | Note |
 |---|---|---|
-| Instructor HTML sanitised server-side before storage | ✅ | `nh3`, allowlist, in `content_service` — never in a template filter |
+| Instructor HTML sanitised server-side before storage | ✅ | `nh3`, allowlist, in `content_service`, never in a template filter |
 | Uploads image-only by extension, with a size cap | ✅ | Extension allowlist and size check; no content sniffing (removed with the security reduction) |
-| Nginx `client_max_body_size` agrees with the application limit | ✅ | Both read from one number — research R4 |
+| Nginx `client_max_body_size` agrees with the application limit | ✅ | Both read from one number, research R4 |
 | No `table=True` model rendered or returned | ✅ | Done-gate 5, and now four models rather than two |
 | Naive UTC everywhere | ✅ | |
 | Authorisation in the service layer | ✅ | Done-gate 6 |
@@ -82,14 +82,14 @@ Checked against `.specify/memory/constitution.md` v4.0.0.
 ```text
 specs/002-modules-content/
 ├── plan.md              # This file
-├── research.md          # Phase 0 output — implementation decisions
-├── data-model.md        # Phase 1 output — three new tables
-├── quickstart.md        # Phase 1 output — bring it up and prove it works
+├── research.md          # Phase 0 output, implementation decisions
+├── data-model.md        # Phase 1 output, three new tables
+├── quickstart.md        # Phase 1 output, bring it up and prove it works
 ├── contracts/
-│   └── routes.md        # Phase 1 output — the HTTP surface added
+│   └── routes.md        # Phase 1 output, the HTTP surface added
 ├── checklists/
 │   └── requirements.md  # From /speckit-specify
-└── tasks.md             # Phase 2 output (/speckit-tasks — not created here)
+└── tasks.md             # Phase 2 output (/speckit-tasks, not created here)
 ```
 
 ### Source Code (repository root)
@@ -109,14 +109,14 @@ backend/
     │   ├── content_image.py     # new
     │   └── registration.py      # new
     ├── services/
-    │   ├── module_service.py    # new — modules, instructor assignment, the authorisation chokepoint
-    │   ├── content_service.py   # new — pages, ordering, sanitising, uploads
+    │   ├── module_service.py    # new, modules, instructor assignment, the authorisation chokepoint
+    │   ├── content_service.py   # new, pages, ordering, sanitising, uploads
     │   └── registration_service.py  # new
     ├── routers/
     │   ├── modules.py           # new
     │   ├── content.py           # new
     │   └── registrations.py     # new
-    ├── sanitise.py              # new — the allowlist and one function, kept apart deliberately
+    ├── sanitise.py              # new, the allowlist and one function, kept apart deliberately
     ├── templates/
     │   ├── modules/{list,form,home,page,roster}.html
     │   └── components/module_nav.html

@@ -21,7 +21,7 @@ Nothing is written. There is no results table, no cached state, no summary row.
 
 ## The state rule
 
-One function, `state_for(test, attempts)`, applied per person per module. Evaluated in this order — the first match wins:
+One function, `state_for(test, attempts)`, applied per person per module. Evaluated in this order, the first match wins:
 
 | # | Condition | State |
 |---|---|---|
@@ -35,11 +35,11 @@ One function, `state_for(test, attempts)`, applied per person per module. Evalua
 
 **Rule 3 filters by the currently published test** (FR-008). Attempts at a test that has since been replaced are excluded here, though they still appear in the person's history. This is what makes publishing a replacement reset the whole cohort.
 
-**Rule 4 uses the most recent submitted attempt**, not the best (FR-005). Someone who scored 40, then 90, then 70 with a pass mark of 80 is **failed** — the same rule Phase 2 applies and Phase 4 will apply to due dates.
+**Rule 4 uses the most recent submitted attempt**, not the best (FR-005). Someone who scored 40, then 90, then 70 with a pass mark of 80 is **failed**, the same rule Phase 2 applies and Phase 4 will apply to due dates.
 
 ### The score shown
 
-Whatever the deciding attempt scored, including an instructor's override — Phase 2 stores an override in the same column, so nothing here needs to know one happened.
+Whatever the deciding attempt scored, including an instructor's override, Phase 2 stores an override in the same column, so nothing here needs to know one happened.
 
 A state with no deciding attempt shows no score (FR-004).
 
@@ -49,7 +49,7 @@ A state with no deciding attempt shows no score (FR-004).
 
 ### A person's own results (FR-001)
 
-One row per registration where `role_in_module = 'trainee'` — a module someone only instructs is not training they owe (FR-015).
+One row per registration where `role_in_module = 'trainee'`, a module someone only instructs is not training they owe (FR-015).
 
 ```
 module title · state · score (where one exists) · a way in
@@ -59,7 +59,7 @@ Ordered by outstanding first (research R4), and a person with no registrations s
 
 ### One module's history for one person (FR-009)
 
-Every attempt that person has made at that module's tests — **including at replaced tests**, which is the one place they remain visible.
+Every attempt that person has made at that module's tests, **including at replaced tests**, which is the one place they remain visible.
 
 ```
 date · score · outcome · a link to the review from Phase 2
@@ -83,7 +83,7 @@ Same five states, decided by the same function (FR-017). Ordered so those who ha
 
 | Not shown | Why |
 |---|---|
-| Anything spanning more than one module | FR-021 — no organisation-wide view exists |
+| Anything spanning more than one module | FR-021, no organisation-wide view exists |
 | An average, a trend, or a comparison between people | Out of scope |
 | A completion certificate or printable record | Out of scope |
 | A count of how many people passed, on a person's own page | The instructor's view covers one module; nothing aggregates |
@@ -92,4 +92,4 @@ Same five states, decided by the same function (FR-017). Ordered so those who ha
 
 ## One value computed for Phase 2
 
-`count_affected_by_replacement(module)` returns how many registered people currently show **passed**. Phase 2's publish route calls it to fill in the warning that FR-027 requires — "this will reset 30 people to not started". It uses the same state function, so the number shown is exactly the number that changes.
+`count_affected_by_replacement(module)` returns how many registered people currently show **passed**. Phase 2's publish route calls it to fill in the warning that FR-027 requires, "this will reset 30 people to not started". It uses the same state function, so the number shown is exactly the number that changes.

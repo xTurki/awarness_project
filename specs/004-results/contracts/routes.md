@@ -11,7 +11,7 @@
 | Method | Path | Guard | Result |
 |---|---|---|---|
 | GET | `/` | auth | **Moved here from `dashboard.py`; the application registers `GET /` exactly once.** **A trainee's dashboard, which is their results page.** Every module they are registered on as a trainee, with state and score. Outstanding first. A person with none sees a statement saying so. Instructors and administrators see their own dashboards here instead. |
-| GET | `/results/modules/{id}` | auth | That person's attempt history for that module — every attempt including at replaced tests, each linking to its Phase 2 review. An attempt in progress links back into the attempt. |
+| GET | `/results/modules/{id}` | auth | That person's attempt history for that module, every attempt including at replaced tests, each linking to its Phase 2 review. An attempt in progress links back into the attempt. |
 
 The dashboard shows the caller's own results and nobody else's. There is no path parameter for a person, so there is no route by which one trainee reaches another's (FR-013).
 
@@ -25,7 +25,7 @@ The dashboard shows the caller's own results and nobody else's. There is no path
 |---|---|---|---|
 | GET | `/modules/{id}/results` | `module:write` | Everyone registered on the module as a trainee, with state and score. Those who have not passed first. Each links to that person's attempts. |
 
-| GET | `/modules/{id}/results/{uid}` | `module:write` | **One person's attempt history for that module** — every attempt with its date, score, and outcome, each linking to its Phase 2 review. This is what a cohort row links to (FR-018). |
+| GET | `/modules/{id}/results/{uid}` | `module:write` | **One person's attempt history for that module**, every attempt with its date, score, and outcome, each linking to its Phase 2 review. This is what a cohort row links to (FR-018). |
 
 Phase 2's `/tests/{tid}/attempts` remains: it lists every attempt on one test by everyone. The route above is one person across that module's tests, which is what FR-018 asks for and what the cohort row needs.
 
@@ -39,7 +39,7 @@ These are Phase 1 and 2 pages that gain a state badge rather than new routes:
 
 | Page | Addition |
 |---|---|
-| `/modules/{id}` — module home | The caller's state for this module |
+| `/modules/{id}`, module home | The caller's state for this module |
 
 The badge always carries its word, never colour alone (FR-023).
 
@@ -47,7 +47,7 @@ The badge always carries its word, never colour alone (FR-023).
 
 ## One thing Phase 2 gains
 
-`POST /modules/{id}/tests/{tid}/publish` — already defined in Phase 2 — now shows a confirmation first when the module already has a published test, naming how many people will revert to "not started" (FR-027). The count comes from `results_service`.
+`POST /modules/{id}/tests/{tid}/publish`, already defined in Phase 2, now shows a confirmation first when the module already has a published test, naming how many people will revert to "not started" (FR-027). The count comes from `results_service`.
 
 ---
 
@@ -55,9 +55,9 @@ The badge always carries its word, never colour alone (FR-023).
 
 | Absent | Why |
 |---|---|
-| Any route reaching another person's results by id | FR-013 — there is no such parameter |
+| Any route reaching another person's results by id | FR-013, there is no such parameter |
 | Any route spanning more than one module | FR-021 |
-| Any `POST` in this phase | FR-025 and FR-026 — nothing is stored and no score is entered here |
+| Any `POST` in this phase | FR-025 and FR-026, nothing is stored and no score is entered here |
 | An export | Out of scope |
 | A certificate or printable record | Out of scope |
 

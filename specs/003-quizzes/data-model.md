@@ -35,7 +35,7 @@ There is no `type` column. Multiple choice is the only kind (spec, Deliberately 
 
 **Validated on save (FR-003)**: at least two options, at least one correct. Both are checked in `question_service`, not left to the database.
 
-How many are correct also decides presentation — one means radio buttons, several means checkboxes (FR-005, research R7).
+How many are correct also decides presentation, one means radio buttons, several means checkboxes (FR-005, research R7).
 
 ---
 
@@ -56,9 +56,9 @@ How many are correct also decides presentation — one means radio buttons, seve
 | `passing_score` | INT | yes | A percentage |
 | `created_at` | DATETIME | no | |
 
-**Frozen once attempted (FR-013).** No column records this — the check is whether any attempt row exists (research R6). A boolean would be a second source of truth able to disagree with reality.
+**Frozen once attempted (FR-013).** No column records this, the check is whether any attempt row exists (research R6). A boolean would be a second source of truth able to disagree with reality.
 
-**FR-011** — publishing is refused with no questions. **FR-012** — a pass mark unreachable with the points available is refused on save.
+**FR-011**, publishing is refused with no questions. **FR-012**, a pass mark unreachable with the points available is refused on save.
 
 Phase 4 adds `retake_interval_days` and `completion_deadline_days` here.
 
@@ -96,17 +96,17 @@ One person's sitting of one test. The centre of this phase.
 | `user_id` | INT, FK → `user.id`, indexed | no | |
 | `attempt_number` | INT | no | Derived on creation, never supplied by the request |
 | `started_at` | DATETIME | no | |
-| `ends_at` | DATETIME | no | **Fixed at creation** — `min(started_at + limit, closes_at)`. Never recomputed (FR-016, FR-023) |
+| `ends_at` | DATETIME | no | **Fixed at creation**, `min(started_at + limit, closes_at)`. Never recomputed (FR-016, FR-023) |
 | `submitted_at` | DATETIME | yes | Null while in progress |
 | `is_submitted` | BOOL | no | Default false |
-| `question_order` | JSON | no | **Fixed at creation** — ordered question ids (FR-017) |
+| `question_order` | JSON | no | **Fixed at creation**, ordered question ids (FR-017) |
 | `points_earned` | INT | yes | Set on scoring |
 | `points_possible` | INT | yes | Set on scoring |
 | `score_percent` | INT | yes | Set on scoring; replaced by an instructor override (FR-035) |
 | `passed` | BOOL | yes | Follows `score_percent` against the test's pass mark |
 | `score_overridden` | BOOL | no | Default false; true once an instructor sets a score by hand |
 
-**Index on `(test_id, user_id)`** — every attempt-count and most-recent-attempt query uses it.
+**Index on `(test_id, user_id)`**, every attempt-count and most-recent-attempt query uses it.
 
 ### The two fixed columns
 
@@ -123,9 +123,9 @@ in progress ──── submitted by the trainee ────▶ submitted, sco
 
 There is no scheduled sweep. An expired attempt becomes submitted the next time anyone looks at it.
 
-**FR-024** — submitting an already-submitted attempt does nothing and returns the same result.
+**FR-024**, submitting an already-submitted attempt does nothing and returns the same result.
 
-**FR-029** — a person's *most recent submitted* attempt is the one that represents them. Everything downstream reads that, not the best one.
+**FR-029**, a person's *most recent submitted* attempt is the one that represents them. Everything downstream reads that, not the best one.
 
 ---
 
@@ -143,7 +143,7 @@ What one person chose for one question in one attempt.
 | `points_awarded` | INT | yes | Set at scoring |
 | `answered_at` | DATETIME | no | Updated on each change |
 
-**Unique constraint on `(attempt_id, question_id)`** — this is what makes each save an upsert and guarantees one row per question however many times the trainee changes their mind.
+**Unique constraint on `(attempt_id, question_id)`**, this is what makes each save an upsert and guarantees one row per question however many times the trainee changes their mind.
 
 A question with no row is unanswered, and scores zero.
 

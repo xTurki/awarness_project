@@ -1,7 +1,7 @@
 """Create the demonstration accounts for a fresh installation.
 
 Seven accounts: one administrator, one instructor, five trainees. All are created
-with `must_set_password` **false** — demonstration accounts are exempt so the
+with `must_set_password` **false**, demonstration accounts are exempt so the
 platform can be shown working without a detour. Accounts an administrator creates
 are never exempt (spec Assumptions).
 

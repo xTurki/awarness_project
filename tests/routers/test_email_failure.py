@@ -1,6 +1,6 @@
 """A mail outage is legible, and quick (FR-020, FR-021, SC-008).
 
-The person is told plainly and left on the sign-in page — not sent to wait for a
+The person is told plainly and left on the sign-in page, not sent to wait for a
 code that never left.
 """
 

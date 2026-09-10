@@ -1,4 +1,4 @@
-# Implementation Plan: Results — Where Everyone Stands
+# Implementation Plan: Results, Where Everyone Stands
 
 **Branch**: `004-results` | **Date**: 2026-09-10 | **Spec**: [spec.md](./spec.md)
 
@@ -8,7 +8,7 @@
 
 Two pages. A trainee opens one and sees every module they are on with a state against each. An instructor opens the other and sees everyone on their module with the same states.
 
-**This phase stores nothing.** Every figure it shows already exists in registrations and attempts. The work is one query and one function that turns rows into a state — plus two templates and the ordering that puts outstanding things first.
+**This phase stores nothing.** Every figure it shows already exists in registrations and attempts. The work is one query and one function that turns rows into a state, plus two templates and the ordering that puts outstanding things first.
 
 The one piece worth designing carefully is the state function itself, because Phases 2, 3, and 4 all have to agree on what "passed" means for the same person.
 
@@ -78,11 +78,11 @@ Checked against `.specify/memory/constitution.md` v4.0.0.
 specs/004-results/
 ├── plan.md
 ├── research.md
-├── data-model.md        # derivation rules — no tables in this phase
+├── data-model.md        # derivation rules, no tables in this phase
 ├── quickstart.md
 ├── contracts/routes.md
 ├── checklists/requirements.md
-└── tasks.md             # /speckit-tasks output — not created here
+└── tasks.md             # /speckit-tasks output, not created here
 ```
 
 ### Source Code (repository root)
@@ -90,10 +90,10 @@ specs/004-results/
 ```text
 backend/app/
 ├── services/
-│   ├── results_service.py   # new — the two queries
-│   └── state.py             # new — one pure function: rows in, state out
+│   ├── results_service.py   # new, the two queries
+│   └── state.py             # new, one pure function: rows in, state out
 ├── routers/
-│   └── results.py           # new — four routes; `GET /` moves here from dashboard.py,
+│   └── results.py           # new, four routes; `GET /` moves here from dashboard.py,
 │                             # which is then deleted (there is exactly one `GET /`)
 └── templates/results/
     ├── dashboard.html       # a trainee's dashboard = their results
@@ -103,7 +103,7 @@ backend/app/
 tests/services/{test_state,test_results}.py
 ```
 
-**Structure Decision**: `app/services/state.py` holds one pure function that decides a person's state for a module. It is separate from `results_service` for the same reason `scoring.py` was separated in Phase 2 — it is the piece with the most cases, it touches nothing, and **Phase 4 will import it** to decide who is due. Putting it anywhere else would mean Phase 4 either duplicates the rule or reaches into a service that queries the database.
+**Structure Decision**: `app/services/state.py` holds one pure function that decides a person's state for a module. It is separate from `results_service` for the same reason `scoring.py` was separated in Phase 2, it is the piece with the most cases, it touches nothing, and **Phase 4 will import it** to decide who is due. Putting it anywhere else would mean Phase 4 either duplicates the rule or reaches into a service that queries the database.
 
 ## Complexity Tracking
 

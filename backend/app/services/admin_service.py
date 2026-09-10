@@ -1,4 +1,4 @@
-"""Account administration — the only way an account comes into existence.
+"""Account administration, the only way an account comes into existence.
 
 Every function takes the acting account and verifies its role itself. The router
 guard is a second line, not the enforcement (Principle III, done-gate 6).

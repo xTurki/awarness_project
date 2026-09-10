@@ -1,4 +1,4 @@
-# Feature Specification: Platform Foundation — Identity, Access & Shell
+# Feature Specification: Platform Foundation, Identity, Access & Shell
 
 **Feature Branch**: `001-platform-foundation`
 
@@ -12,7 +12,7 @@
 
 Phase 0 of the SME Cybersecurity Awareness Training Platform. It establishes who people are, how they prove it, what they may reach once they have, and a running environment to put it all in.
 
-It deliberately contains no training modules, no content, and no quizzes. Those begin in Phase 1. What it delivers is an installation an administrator can sign into, put real people into, and hand out access from — the smallest thing that is genuinely useful, and the foundation every later phase assumes.
+It deliberately contains no training modules, no content, and no quizzes. Those begin in Phase 1. What it delivers is an installation an administrator can sign into, put real people into, and hand out access from, the smallest thing that is genuinely useful, and the foundation every later phase assumes.
 
 ## Clarifications
 
@@ -87,9 +87,9 @@ A person signs out and their session ends. Separately, when an administrator dis
 
 An administrator sees everyone who has an account, creates accounts, corrects a name or address, resets a forgotten password, promotes someone to instructor, and switches off the account of someone who has left.
 
-**Why this priority**: There is no other way an account can come into existence. Nobody registers themselves, so without this the platform holds only the accounts seeded at installation and cannot take on a single real person. It is also the only route back for a forgotten password, since self-service reset is out of scope — an administrator who is unreachable means a locked-out person stays locked out.
+**Why this priority**: There is no other way an account can come into existence. Nobody registers themselves, so without this the platform holds only the accounts seeded at installation and cannot take on a single real person. It is also the only route back for a forgotten password, since self-service reset is out of scope, an administrator who is unreachable means a locked-out person stays locked out.
 
-**Independent Test**: As an administrator, create an account, sign in as it, then edit it, change its role to instructor, reset its password, and deactivate it — confirming after each step that the change took effect for that account.
+**Independent Test**: As an administrator, create an account, sign in as it, then edit it, change its role to instructor, reset its password, and deactivate it, confirming after each step that the change took effect for that account.
 
 **Acceptance Scenarios**:
 
@@ -125,7 +125,7 @@ Someone setting the platform up on a fresh machine issues a single command and, 
 
 ### User Story 6 - Be told clearly when email fails (Priority: P4)
 
-Email delivery fails — an outage, a blocked connection, an expired credential. The person trying to sign in is told plainly and quickly, rather than being left on a page waiting for a code that will never arrive.
+Email delivery fails, an outage, a blocked connection, an expired credential. The person trying to sign in is told plainly and quickly, rather than being left on a page waiting for a code that will never arrive.
 
 **Why this priority**: It changes nothing when things work. It matters because every sign-in needs an emailed code, so a mail outage locks everybody out and the least the platform can do is say so.
 
@@ -173,7 +173,7 @@ Email delivery fails — an outage, a blocked connection, an expired credential.
 **Signing in**
 
 - **FR-013**: System MUST require two steps for every sign-in by every role: correct credentials, then a single-use numeric code sent to the account's email address.
-- **FR-014**: System MUST NOT provide any way to skip the second step — no trusted device, no remembered browser, no per-account exemption.
+- **FR-014**: System MUST NOT provide any way to skip the second step, no trusted device, no remembered browser, no per-account exemption.
 - **FR-015**: System MUST store codes in a form from which the original cannot be recovered.
 - **FR-016**: System MUST expire a code after a fixed period and MUST refuse it thereafter.
 - **FR-017**: System MUST refuse a code that has already been used successfully.
@@ -203,12 +203,12 @@ Email delivery fails — an outage, a blocked connection, an expired credential.
 - **FR-032**: System MUST wait for its data store to become ready at startup rather than failing.
 - **FR-033**: System MUST take all secrets from its environment, and MUST NOT carry any credential inside its published artefacts or configuration files held in version control.
 - **FR-034**: System MUST preserve its data across restarts.
-- **FR-035**: System MUST be kept under version control from this phase onward, in a **local repository**. There is no remote and no shared hosting — the owner's decision. Already satisfied: the repository was initialised before this phase began.
+- **FR-035**: System MUST be kept under version control from this phase onward, in a **local repository**. There is no remote and no shared hosting, the owner's decision. Already satisfied: the repository was initialised before this phase began.
 - **FR-036**: Automated tests MUST be runnable on demand by any team member with a single documented command. Running them automatically on every change is deferred to a later phase.
 
 ### Key Entities
 
-- **User**: A person who can sign in — the table is `user`, and the screens that manage them are called account administration. Holds their email address, name, role, whether they are active, and their password in unrecoverable form. Records whether the person must choose a new password before continuing, which is set whenever an administrator creates the account or resets its password and cleared once they do. Also carries whatever is outstanding for a sign-in currently in progress — the pending code in unrecoverable form and the moment it stops being valid — both cleared once used.
+- **User**: A person who can sign in, the table is `user`, and the screens that manage them are called account administration. Holds their email address, name, role, whether they are active, and their password in unrecoverable form. Records whether the person must choose a new password before continuing, which is set whenever an administrator creates the account or resets its password and cleared once they do. Also carries whatever is outstanding for a sign-in currently in progress, the pending code in unrecoverable form and the moment it stops being valid, both cleared once used.
 - **Session**: Evidence that a particular account signed in successfully, held by the platform rather than by the browser. Records when it began, when it ceases to be valid, and enough about its origin to be recognised. Removed on sign-out, and removable at any time to withdraw access.
 
 ## Success Criteria *(mandatory)*
@@ -235,7 +235,7 @@ Email delivery fails — an outage, a blocked connection, an expired credential.
 
 - A code remains valid for ten minutes. Long enough to survive slow mail, short enough to bound the window.
 - A session lasts twelve hours. Chosen against the fact that every sign-in costs an email round trip: a shorter session would make the second factor tiring for someone working a full day, a longer one weakens the point of holding sessions at all.
-- Sign-in attempts are limited to a handful per source per short interval. Code entry is deliberately not throttled — see the note below.
+- Sign-in attempts are limited to a handful per source per short interval. Code entry is deliberately not throttled, see the note below.
 - A person choosing their first password is not asked for the administrator's password again. They have just proved who they are with that password and an emailed code; asking a third time adds friction without adding proof.
 - The demonstration accounts created at installation are exempt from the first-sign-in password change, so the platform can be shown working without a detour. Real accounts created by an administrator are never exempt.
 - Passwords must be at least eight characters. No composition rules.
@@ -258,9 +258,9 @@ Email delivery fails — an outage, a blocked connection, an expired credential.
 
 - Any way for a person to create their own account. Every account is created by an administrator or comes from the starting set.
 - Self-service password reset. An administrator resets passwords (FR-008), and the person then chooses their own at their next sign-in. A person who forgets their password and cannot reach an administrator has no route back.
-- A record of who did what — no audit trail exists in this platform.
+- A record of who did what, no audit trail exists in this platform.
 - A route to resend a code without starting sign-in again.
 - Any second-factor channel other than email.
 - Any backup, snapshot, or export of the database.
-- Application logging of any kind — no structured logs, no log files, no aggregation. Whatever the server prints to the console is all there is.
+- Application logging of any kind, no structured logs, no log files, no aggregation. Whatever the server prints to the console is all there is.
 - Arabic, right-to-left layout, or any second interface language.

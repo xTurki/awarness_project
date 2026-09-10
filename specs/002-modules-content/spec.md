@@ -10,24 +10,24 @@
 
 ## Overview
 
-Phase 1 of the SME Cybersecurity Awareness Training Platform. It introduces the thing the whole platform exists to deliver: a **module** — a subject an organisation wants its people to learn, holding the material they read and the people who must read it.
+Phase 1 of the SME Cybersecurity Awareness Training Platform. It introduces the thing the whole platform exists to deliver: a **module**, a subject an organisation wants its people to learn, holding the material they read and the people who must read it.
 
 By the end of this phase an administrator can set up a module, an instructor can write its material and put people on it, and those people can find it and read it. No tests exist yet; assessment begins in Phase 2.
 
-This phase depends on Phase 1 of nothing — it builds directly on the accounts, roles, and sign-in delivered in `specs/001-platform-foundation`.
+This phase depends on Phase 1 of nothing, it builds directly on the accounts, roles, and sign-in delivered in `specs/001-platform-foundation`.
 
 ## Clarifications
 
 ### Session 2026-09-10
 
 - Q: Which language will instructors write module content in, and does the editor need to type right-to-left? → A: English, left-to-right
-- Q: Should a trainee's dashboard and their results page be the same page? → A: The same page — Phase 3 extends this dashboard rather than adding a second list
+- Q: Should a trainee's dashboard and their results page be the same page? → A: The same page, Phase 3 extends this dashboard rather than adding a second list
 
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Set up a module and put someone in charge of it (Priority: P1)
 
-An administrator creates a module for a subject the organisation needs covered — phishing awareness, say — and assigns an instructor to own it. Until that instructor has written something and the module is published, nobody else sees it.
+An administrator creates a module for a subject the organisation needs covered, phishing awareness, say, and assigns an instructor to own it. Until that instructor has written something and the module is published, nobody else sees it.
 
 **Why this priority**: Nothing else in the phase can happen first. Every page, every registration, and every later test hangs off a module existing and having an owner.
 
@@ -59,7 +59,7 @@ The instructor who owns a module writes its content inside the platform: several
 3. **Given** several pages, **When** the instructor changes their order, **Then** trainees see them in the new order.
 4. **Given** a page left as a draft, **When** a registered trainee opens the module, **Then** that page is absent from their view entirely.
 5. **Given** a published page, **When** the instructor unpublishes it, **Then** it disappears from the trainee view while remaining editable.
-6. **Given** an instructor, **When** they submit a page body containing a script, an event handler, or a dangerous link, **Then** what is stored has those removed — not merely hidden or escaped when displayed.
+6. **Given** an instructor, **When** they submit a page body containing a script, an event handler, or a dangerous link, **Then** what is stored has those removed, not merely hidden or escaped when displayed.
 7. **Given** an instructor on someone else's module, **When** they attempt to add or edit a page, **Then** they are refused.
 8. **Given** a page holding a full training topic of several thousand words, **When** it is saved, **Then** nothing is silently truncated.
 
@@ -67,7 +67,7 @@ The instructor who owns a module writes its content inside the platform: several
 
 ### User Story 3 - Put people on a module (Priority: P2)
 
-An administrator or the module's own instructor registers people onto it — one at a time, or several in one action — and removes people who should no longer be on it.
+An administrator or the module's own instructor registers people onto it, one at a time, or several in one action, and removes people who should no longer be on it.
 
 **Why this priority**: Material nobody is registered on reaches nobody. This is what turns a written module into training someone is actually expected to do.
 
@@ -113,7 +113,7 @@ A trainee signs in, sees the modules they have been put on, opens one, and reads
 - **An oversized image.** The instructor is told the file is too large and by how much, rather than the upload failing without explanation.
 - **An image used on a page that is later deleted.** The image remains stored and unreferenced. Deleting the whole module removes it.
 - **A module with no pages at all.** It can be published. A trainee opening it sees an empty module rather than an error, and the instructor is warned before publishing it empty.
-- **Two instructors editing the same page.** The later save wins. Nothing is merged and nothing warns them — accepted for this phase.
+- **Two instructors editing the same page.** The later save wins. Nothing is merged and nothing warns them, accepted for this phase.
 - **A trainee registered on a module whose only pages are drafts.** They see the module with no readable content, not an error.
 
 ## Requirements *(mandatory)*
@@ -123,7 +123,7 @@ A trainee signs in, sees the modules they have been put on, opens one, and reads
 **Modules**
 
 - **FR-001**: System MUST let an administrator create a module with a title and a description. A module has no code or reference number; its title identifies it.
-- **FR-002**: Every module MUST be in exactly one of two states: unpublished or published. There is no archived state — a module does not come to an end.
+- **FR-002**: Every module MUST be in exactly one of two states: unpublished or published. There is no archived state, a module does not come to an end.
 - **FR-003**: System MUST let an administrator publish and unpublish a module.
 - **FR-004**: System MUST let an administrator assign one or more instructors to a module, and remove them.
 - **FR-005**: System MUST restrict creating, publishing, unpublishing, and assigning instructors to administrators.
@@ -156,11 +156,11 @@ A trainee signs in, sees the modules they have been put on, opens one, and reads
 - **FR-023**: System MUST let an administrator register and remove any person on any module.
 - **FR-024**: System MUST let an instructor register and remove trainees on modules they are assigned to.
 - **FR-025**: System MUST let several people be registered in a single action.
-- **FR-026**: System MUST record a person's capacity on a module — instructor or trainee — independently of their platform-wide role, so the same person may be an instructor on one module and a trainee on another.
+- **FR-026**: System MUST record a person's capacity on a module, instructor or trainee, independently of their platform-wide role, so the same person may be an instructor on one module and a trainee on another.
 - **FR-027**: System MUST NOT create a duplicate when someone already registered is registered again.
 - **FR-028**: System MUST NOT provide any way for a person to register themselves on a module, or to remove their own registration. People are put on modules by an administrator or by the module's instructor, and taken off the same way.
 - **FR-029**: System MUST let an instructor see the roster of a module they are assigned to, and MUST refuse the roster of any other module.
-- **FR-030**: A registration either exists or it does not. System MUST NOT carry intermediate registration states — nothing is invited and awaiting acceptance, and nothing is concluded, because people are registered directly and modules do not end.
+- **FR-030**: A registration either exists or it does not. System MUST NOT carry intermediate registration states, nothing is invited and awaiting acceptance, and nothing is concluded, because people are registered directly and modules do not end.
 
 **Finding and reading**
 
@@ -168,14 +168,14 @@ A trainee signs in, sees the modules they have been put on, opens one, and reads
 - **FR-032**: System MUST give each module a home view from which its readable pages can be reached.
 - **FR-033**: System MUST present module navigation as persistent alongside the content on desktop widths, and as an openable drawer at phone widths.
 - **FR-034**: System MUST present every screen in this phase usably at phone, tablet, and desktop widths, with no sideways scrolling of the page itself.
-- **FR-035**: System MUST make content and any assessment reachable independently — reading the material MUST NOT be a precondition for anything else. Assessment arrives in Phase 2, so this is asserted there, against that phase's FR-039.
+- **FR-035**: System MUST make content and any assessment reachable independently, reading the material MUST NOT be a precondition for anything else. Assessment arrives in Phase 2, so this is asserted there, against that phase's FR-039.
 
 ### Key Entities
 
-- **Module**: A subject the organisation wants covered. Holds a title, a description, and whether it is published. Owns its pages, its images, and its registrations. It has no end date and no completed state — it stays available and is retaken periodically once Phase 4 adds retake intervals.
+- **Module**: A subject the organisation wants covered. Holds a title, a description, and whether it is published. Owns its pages, its images, and its registrations. It has no end date and no completed state, it stays available and is retaken periodically once Phase 4 adds retake intervals.
 - **Page**: One section of a module's material. Holds a title, a body of formatted text, its position among the module's other pages, and whether it is a draft or published. Belongs to exactly one module.
 - **Content image**: A picture an instructor uploaded for use in a page. Records the name it is stored under, the name it arrived with, its type and size, who uploaded it, and when. Belongs to a module.
-- **Registration**: The fact that a particular person is on a particular module, and in what capacity — instructor or trainee. Records when it began. It carries no status of its own: it exists, or the person is not on the module.
+- **Registration**: The fact that a particular person is on a particular module, and in what capacity, instructor or trainee. Records when it began. It carries no status of its own: it exists, or the person is not on the module.
 
 ## Success Criteria *(mandatory)*
 
@@ -202,10 +202,10 @@ A trainee signs in, sees the modules they have been put on, opens one, and reads
 
 - Modules are created by administrators only. Instructors write and run modules but do not create them. Confirmed deliberately: in an organisation this size the administrator and the instructor are often the same person, so the bottleneck is theoretical.
 - A module may have more than one instructor. Nothing requires it, but nothing is gained by forbidding it, and a single-instructor rule would have to be undone the first time someone goes on holiday.
-- The maximum upload size is five megabytes per image — comfortably more than a screenshot or diagram needs, comfortably less than a video.
+- The maximum upload size is five megabytes per image, comfortably more than a screenshot or diagram needs, comfortably less than a video.
 - Accepted image types are the ordinary web formats, checked by file extension.
 - "Several thousand words" for FR-017 means a page limit generous enough that an instructor will not meet it while writing prose; the failure mode that matters is silent truncation, not the exact ceiling.
-- Bulk registration means selecting several existing people and registering them together. It does not mean importing a file — that remains out of scope.
+- Bulk registration means selecting several existing people and registering them together. It does not mean importing a file, that remains out of scope.
 - **Modules are never archived and never conclude.** Training in an SME is continuous: a module stays available and its test is retaken on a cycle rather than the module being closed off. Retiring one means unpublishing it. This removes the archived state the earlier draft carried, and with it every question about what an archived module means for the people on it.
 - **A registration has no status.** With no invitation to accept and no module completion to record, states such as "invited" and "concluded" had nothing that could produce them. A person is on a module or is not.
 - Publishing a module with no pages is permitted but warned about, on the grounds that an empty module is more likely a mistake than an intention.
@@ -214,12 +214,12 @@ A trainee signs in, sees the modules they have been put on, opens one, and reads
 
 **Dependencies**:
 
-- Everything in `specs/001-platform-foundation` — accounts, the three roles, sign-in, and the application shell — must exist first. This phase adds no new way to sign in and no new kind of person.
+- Everything in `specs/001-platform-foundation`, accounts, the three roles, sign-in, and the application shell, must exist first. This phase adds no new way to sign in and no new kind of person.
 - File storage becomes part of the platform for the first time in this phase, for instructor image uploads only.
 
 **Deliberately excluded**, so that their absence is a decision rather than an oversight:
 
-- Any assessment. No questions, no tests, no scores — that is Phase 2.
+- Any assessment. No questions, no tests, no scores, that is Phase 2.
 - Prerequisites or completion gating. Content and assessment are always both reachable; there is no "read this before that", no tracking of which pages a trainee has opened, and no unlock rules.
 - Arabic, right-to-left layout, or any second interface language. Adding one later means revisiting every template built from this phase onward.
 - Any form of self-registration. A person cannot put themselves on a module, and there is no page listing modules they are not on. Training here is assigned, not chosen.
@@ -230,4 +230,4 @@ A trainee signs in, sees the modules they have been put on, opens one, and reads
 - Archiving a module, or any lifecycle state beyond published and unpublished.
 - Marking a registration, or a module, as completed or concluded.
 - Any record of who changed what, in keeping with the platform carrying no audit trail.
-- Notifying anyone that they have been registered on a module — notifications arrive in Phase 4.
+- Notifying anyone that they have been registered on a module, notifications arrive in Phase 4.

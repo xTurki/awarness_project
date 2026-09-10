@@ -1,4 +1,4 @@
-# Specification Quality Checklist: Platform Foundation — Identity, Access & Shell
+# Specification Quality Checklist: Platform Foundation, Identity, Access & Shell
 
 **Purpose**: Validate specification completeness and quality before proceeding to planning
 **Created**: 2026-09-10
@@ -43,7 +43,7 @@ The project owner asked for the security surface to be cut back, on the grounds 
 
 The two-step sign-in itself stays, simplified: password, then a six-digit emailed code valid for ten minutes and usable once. The verify form carries the email address, so no signed cookie is needed between the steps.
 
-`.specify/memory/constitution.md` was amended to match and is now at 3.0.0 — a MAJOR bump, since mandatory rules were removed.
+`.specify/memory/constitution.md` was amended to match and is now at 3.0.0, a MAJOR bump, since mandatory rules were removed.
 
 ### Consequences worth knowing
 
@@ -62,7 +62,7 @@ None of these matters much for one small organisation. They are recorded so that
 
 The removals were surgical, so the specification was re-read end to end. Five inconsistencies had been left behind and are now fixed:
 
-- A success criterion still refused a code "belonging to a different sign-in" — the browser binding that made that possible was removed.
+- A success criterion still refused a code "belonging to a different sign-in", the browser binding that made that possible was removed.
 - An edge case claimed repeated wrong codes were throttled, while the requirement it rested on now covers sign-in only.
 - An assumption made the same claim.
 - A requirement to end all of an account's sessions at once had no user story, no acceptance scenario, and no success criterion attached to it. Removed rather than given scaffolding it did not need.

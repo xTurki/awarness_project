@@ -29,7 +29,7 @@ from app.security import hash_secret, reset_rate_limits
 TEST_SCHEMA = f"{settings.mysql_database}_test"
 
 # The application user is scoped to the application database and cannot create or
-# drop another one. The suite needs both, so it connects as root — which exists
+# drop another one. The suite needs both, so it connects as root, which exists
 # only in this disposable local container and never in the application itself.
 _ROOT_PASSWORD = os.environ.get("MYSQL_ROOT_PASSWORD", "")
 

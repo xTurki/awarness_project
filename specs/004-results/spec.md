@@ -1,4 +1,4 @@
-# Feature Specification: Results — Where Everyone Stands
+# Feature Specification: Results, Where Everyone Stands
 
 **Feature Branch**: `004-results`
 
@@ -12,7 +12,7 @@
 
 Phase 3 of the SME Cybersecurity Awareness Training Platform. The platform can now assign training and score it. This phase answers the question that follows: **where do I stand?**
 
-One page, listing every module a person is on, what they scored, whether they passed, and what — if anything — is outstanding.
+One page, listing every module a person is on, what they scored, whether they passed, and what, if anything, is outstanding.
 
 It is the smallest phase in the project and it **adds nothing to the data**. Every number it shows already exists from Phases 1 and 2. This phase is about presenting it.
 
@@ -22,7 +22,7 @@ It is the smallest phase in the project and it **adds nothing to the data**. Eve
 
 ### Session 2026-09-10
 
-- Q: Should a trainee's dashboard and their results page be the same page, or two separate pages? → A: The same page — a trainee's dashboard is their results page
+- Q: Should a trainee's dashboard and their results page be the same page, or two separate pages? → A: The same page, a trainee's dashboard is their results page
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -32,7 +32,7 @@ A trainee signs in and opens one page. It lists every module they are registered
 
 **Why this priority**: It is the whole phase. A person who has been assigned five modules currently has no way to see which ones they still owe.
 
-**Independent Test**: Register a trainee on four modules — one never attempted, one in progress, one passed, one failed — and confirm the page shows the right state against each.
+**Independent Test**: Register a trainee on four modules, one never attempted, one in progress, one passed, one failed, and confirm the page shows the right state against each.
 
 **Acceptance Scenarios**:
 
@@ -41,7 +41,7 @@ A trainee signs in and opens one page. It lists every module they are registered
 3. **Given** a module whose test the trainee passed, **When** the results are shown, **Then** it shows the score and reads "passed".
 4. **Given** a module whose test the trainee failed, **When** the results are shown, **Then** it shows the score and reads "failed".
 5. **Given** a module with no published test at all, **When** the results are shown, **Then** it is listed as having nothing to complete rather than as "not started".
-6. **Given** a trainee who scored 40, then 90, then 70 on the same test, **When** their results are shown, **Then** the score shown is 70 — the most recent — consistent with how a person's result is decided everywhere else.
+6. **Given** a trainee who scored 40, then 90, then 70 on the same test, **When** their results are shown, **Then** the score shown is 70, the most recent, consistent with how a person's result is decided everywhere else.
 7. **Given** a trainee, **When** they request another person's results directly, **Then** they are refused.
 8. **Given** a trainee on a phone, **When** they open their results, **Then** the page is readable without sideways scrolling.
 
@@ -49,7 +49,7 @@ A trainee signs in and opens one page. It lists every module they are registered
 
 ### User Story 2 - Look back at one module (Priority: P2)
 
-From the results page a trainee opens a single module and sees every attempt they have made at its test — when, what they scored, and whether each passed — and can open any of them to see the questions and answers.
+From the results page a trainee opens a single module and sees every attempt they have made at its test, when, what they scored, and whether each passed, and can open any of them to see the questions and answers.
 
 **Why this priority**: Someone who failed needs to know what they got wrong, and someone retaking a module a year later benefits from seeing what they did last time. The attempt review itself was built in Phase 2; this connects it to something a person can find.
 
@@ -103,7 +103,7 @@ An instructor opens a module they run and sees everyone registered on it, with e
 ### Edge Cases
 
 - **Registered on a module with no published test.** Listed as having nothing to complete. It is not a failure and not an omission.
-- **The test was replaced after being attempted.** Everyone reverts to "not started" for that module, because state follows the currently published test. Their old attempts stay in their history. Publishing a replacement therefore resets the whole cohort — see the note in Assumptions.
+- **The test was replaced after being attempted.** Everyone reverts to "not started" for that module, because state follows the currently published test. Their old attempts stay in their history. Publishing a replacement therefore resets the whole cohort, see the note in Assumptions.
 - **A registration is removed.** The module leaves the person's results immediately. Their attempts are not deleted, but they are no longer theirs to see.
 - **An instructor corrected a score by hand.** The results page shows the corrected score, because that is now the attempt's score.
 - **A test is unpublished after someone passed it.** Their result stands. Unpublishing stops new attempts; it does not erase old ones.
@@ -118,7 +118,7 @@ An instructor opens a module they run and sees everyone registered on it, with e
 
 **What a person sees**
 
-- **FR-001**: System MUST list, on a trainee's dashboard, each module they hold a registration on and no module they do not. This dashboard **is** the results page — there is no second, separate list of the same modules. Instructor and administrator dashboards are unaffected.
+- **FR-001**: System MUST list, on a trainee's dashboard, each module they hold a registration on and no module they do not. This dashboard **is** the results page, there is no second, separate list of the same modules. Instructor and administrator dashboards are unaffected.
 - **FR-002**: System MUST show, against each listed module, the person's current state in it.
 - **FR-003**: System MUST distinguish these states: no test available · not started · in progress · passed · failed.
 - **FR-004**: System MUST show the score alongside any state where one exists.
@@ -162,9 +162,9 @@ An instructor opens a module they run and sees everyone registered on it, with e
 
 This phase introduces no new entity. Everything it shows is derived from what already exists:
 
-- **Registration** (from Phase 1) — decides which modules appear for a person.
-- **Test** (from Phase 2) — decides whether a module has anything to complete, and what the pass mark is.
-- **Attempt** (from Phase 2) — supplies the score, the outcome, and the history. The most recent submitted one decides the state shown.
+- **Registration** (from Phase 1), decides which modules appear for a person.
+- **Test** (from Phase 2), decides whether a module has anything to complete, and what the pass mark is.
+- **Attempt** (from Phase 2), supplies the score, the outcome, and the history. The most recent submitted one decides the state shown.
 
 ## Success Criteria *(mandatory)*
 
@@ -198,7 +198,7 @@ This phase introduces no new entity. Everything it shows is derived from what al
 - **A trainee's dashboard is their results page.** One route, one template, one list. The plain module list Phase 1 described for trainees is replaced by this one rather than sitting alongside it. Instructors and administrators keep their own dashboards, which show different things.
 - An instructor's view covers one module at a time. Nothing aggregates across modules, for anyone.
 
-> **A consequence of deciding state from the currently published test.** Replacing a test resets everyone registered on that module to "not started" — including people who passed the previous version yesterday. Correcting a single misspelled question therefore invalidates the whole group's training record, and once Phase 4 exists it will make all of them due at once and send them all a notification.
+> **A consequence of deciding state from the currently published test.** Replacing a test resets everyone registered on that module to "not started", including people who passed the previous version yesterday. Correcting a single misspelled question therefore invalidates the whole group's training record, and once Phase 4 exists it will make all of them due at once and send them all a notification.
 >
 > This is the honest reading of "the module now asks something different", and it puts real weight behind getting a test right before publishing it. But an instructor needs to know it before they click, which is what FR-027 requires.
 

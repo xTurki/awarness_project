@@ -70,7 +70,7 @@ def test_seeded_accounts_are_exempt_from_the_password_change_not_from_the_code(
     )
 
     # Step one succeeded, so the account is not required to change its password
-    # first — but it still landed on the code page, not on the dashboard.
+    # first, but it still landed on the code page, not on the dashboard.
     assert response.status_code == 303
     assert response.headers["location"].startswith("/login/verify")
     assert client.cookies.get("session") is None

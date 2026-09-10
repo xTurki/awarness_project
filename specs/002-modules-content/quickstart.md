@@ -8,7 +8,7 @@ Every scenario maps to a user story in [spec.md](./spec.md). Walking all six is 
 
 ## Prerequisites
 
-Phase 0 built and working — accounts, sign-in, the application shell. If `docker compose up` does not already give you a sign-in page, finish that first.
+Phase 0 built and working, accounts, sign-in, the application shell. If `docker compose up` does not already give you a sign-in page, finish that first.
 
 New in this phase:
 
@@ -28,14 +28,14 @@ docker compose exec backend python seed.py
 
 ---
 
-## Scenario 1 — Set up a module *(US1, P1)*
+## Scenario 1, Set up a module *(US1, P1)*
 
 As the seeded **administrator**:
 
-1. Create a module — a title and a description. It exists, unpublished.
+1. Create a module, a title and a description. It exists, unpublished.
 2. Assign the seeded **instructor** to it.
 3. Sign in as that instructor: the module appears in their list, though it is unpublished.
-4. Sign in as a **trainee**: it does not appear. Request `/modules/{id}` directly — expect **404**, not 403.
+4. Sign in as a **trainee**: it does not appear. Request `/modules/{id}` directly, expect **404**, not 403.
 
 > 404 rather than 403 is deliberate. A trainee should not be able to learn that a module exists by being refused it.
 
@@ -43,15 +43,15 @@ As the seeded **administrator**:
 
 ---
 
-## Scenario 2 — Write the material *(US2, P1)*
+## Scenario 2, Write the material *(US2, P1)*
 
 As the **instructor** on that module:
 
-1. Create three pages. Use the editor's headings, bold, a list, and a link — without typing any markup.
+1. Create three pages. Use the editor's headings, bold, a list, and a link, without typing any markup.
 2. Reorder them. Confirm the new order sticks.
 3. Publish the first two. Leave the third a draft.
 4. Upload an image into page two and confirm it displays.
-5. Sign in as a registered trainee (after Scenario 3) — expect **exactly two pages**, in your order, with the image visible and **no sign the third exists**.
+5. Sign in as a registered trainee (after Scenario 3), expect **exactly two pages**, in your order, with the image visible and **no sign the third exists**.
 
 **Then the one that matters:**
 
@@ -68,13 +68,13 @@ As the **instructor** on that module:
      "SELECT body FROM lms.page WHERE id = <page id>\G"
    ```
 
-   Expect `<p>Hello</p>` and a stripped link. The `<script>` must be **absent from the column** — not escaped, not hidden by the template. If it is in the database, the sanitiser is in the wrong place (research R2).
+   Expect `<p>Hello</p>` and a stripped link. The `<script>` must be **absent from the column**, not escaped, not hidden by the template. If it is in the database, the sanitiser is in the wrong place (research R2).
 
 8. As an instructor on a *different* module, try to edit this one's pages. Expect **403**.
 
 ---
 
-## Scenario 3 — Put people on it *(US3, P2)*
+## Scenario 3, Put people on it *(US3, P2)*
 
 As the module's **instructor**:
 
@@ -87,7 +87,7 @@ As the module's **instructor**:
 
 ---
 
-## Scenario 4 — Read your training *(US4, P2)*
+## Scenario 4, Read your training *(US4, P2)*
 
 As a registered **trainee**:
 
@@ -98,13 +98,13 @@ As a registered **trainee**:
 
 ---
 
-## Scenario 5 — Uploads behave *(FR-019 to FR-022)*
+## Scenario 5, Uploads behave *(FR-019 to FR-022)*
 
 As the **instructor**:
 
 | Try | Expect |
 |---|---|
-| A 12MB image, with `UPLOAD_MAX_MB=5` | Refused, with a message naming the limit — *not* a blank Nginx error page |
+| A 12MB image, with `UPLOAD_MAX_MB=5` | Refused, with a message naming the limit, *not* a blank Nginx error page |
 | `notes.pdf` | Refused as not an accepted type |
 | `payload.exe` renamed to `payload.png` | **Accepted.** Extension-only checking is the recorded decision; it lands in a directory Nginx serves as static content and does not run |
 
@@ -112,12 +112,12 @@ Then confirm the stored filename is generated, not the uploaded one:
 
 ```bash
 docker compose exec backend ls /data/uploads
-# expect names like 9f3a1c8e4b7d.png — never the original filename
+# expect names like 9f3a1c8e4b7d.png, never the original filename
 ```
 
 ---
 
-## Scenario 6 — Every width *(FR-033, FR-034, done-gate 3)*
+## Scenario 6, Every width *(FR-033, FR-034, done-gate 3)*
 
 Walk the module list, module home, a content page, the editor, and the roster at each width:
 
@@ -127,7 +127,7 @@ Walk the module list, module home, a content page, the editor, and the roster at
 | 768px | Usable |
 | 1280px | Navigation persistent alongside the content, not behind a button |
 
-The editor is the one to check carefully on a phone — its toolbar is the thing most likely to force horizontal scroll.
+The editor is the one to check carefully on a phone, its toolbar is the thing most likely to force horizontal scroll.
 
 ---
 
