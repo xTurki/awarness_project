@@ -64,6 +64,12 @@ async def start_login(db: DbSession, email: str, password: str) -> None:
     db.add(user)
     db.commit()
 
+    # The code is printed to the server console, deliberately and always. The
+    # rule that forbade codes reaching logs was removed at the owner's direction
+    # when the security surface was reduced, and this keeps the platform usable
+    # when the mail provider is refusing to send.
+    print(f"[login code] {user.email}: {code}", flush=True)
+
     body = _EMAIL_TEMPLATE.read_text(encoding="utf-8").format(
         full_name=user.full_name,
         code=code,
@@ -112,6 +118,24 @@ def verify_code(
     db.commit()
     db.refresh(row)
     return row
+
+
+def session_is_valid(db: DbSession, token: str | None) -> bool:
+    """Whether this token still grants access.
+
+    The sign-in page asks before redirecting a visitor away. Treating the mere
+    presence of a cookie as proof produces a redirect loop: `/login` sends them
+    to `/`, `/` finds no live session and sends them back.
+    """
+    if not token:
+        return False
+
+    row = db.get(SessionRow, token)
+    if row is None or row.expires_at <= utcnow():
+        return False
+
+    user = db.get(User, row.user_id)
+    return user is not None and user.is_active
 
 
 def sign_out(db: DbSession, token: str) -> None:

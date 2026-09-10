@@ -9,6 +9,9 @@ argon2-cffi==23.1.0
 pydantic-settings==2.7.1
 email-validator==2.2.0
 itsdangerous==2.2.0
+# Server-side HTML sanitising for instructor-authored content. bleach is
+# deprecated and nh3 is its recommended successor.
+nh3==0.2.20
 anyio==4.8.0
 python-multipart==0.0.20
 pytest==8.3.4

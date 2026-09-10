@@ -14,9 +14,13 @@ from fastapi import FastAPI
 from sqlmodel import SQLModel
 
 from app.database import assert_utf8mb4, engine, wait_for_database
+from app.models.content_image import ContentImage  # noqa: F401 - registers the table
+from app.models.module import Module  # noqa: F401 - registers the table
+from app.models.page import Page  # noqa: F401 - registers the table
+from app.models.registration import Registration  # noqa: F401 - registers the table
 from app.models.session import Session  # noqa: F401 - registers the table
 from app.models.user import User  # noqa: F401 - registers the table
-from app.routers import admin, auth, dashboard, password
+from app.routers import admin, auth, content, dashboard, modules, password, registrations
 
 
 @asynccontextmanager
@@ -40,6 +44,9 @@ def create_app() -> FastAPI:
     application.include_router(password.router)
     application.include_router(dashboard.router)
     application.include_router(admin.router)
+    application.include_router(modules.router)
+    application.include_router(content.router)
+    application.include_router(registrations.router)
 
     return application
 

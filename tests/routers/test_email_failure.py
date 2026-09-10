@@ -22,7 +22,10 @@ def mail_is_down(monkeypatch):
     monkeypatch.setattr(auth_service.email_service, "send_email", fail)
 
 
-def test_the_person_is_told_and_stays_on_the_sign_in_page(client, make_user, csrf, mail_is_down):
+def test_the_person_reaches_the_code_page_and_is_told_why(client, make_user, csrf, mail_is_down):
+    """A mail outage slows sign-in; it does not stop it. The code was issued and
+    is on the server console, so the person is carried to the page where they
+    can use it, with the failure stated there (FR-020)."""
     make_user(email="a@example.com", password="demo-password")
 
     token = csrf("/login")
@@ -31,10 +34,13 @@ def test_the_person_is_told_and_stays_on_the_sign_in_page(client, make_user, csr
         data={"email": "a@example.com", "password": "demo-password", "csrf_token": token},
     )
 
-    assert response.status_code == 503
-    assert "could not be sent" in response.text
-    assert "signing in again" in response.text.lower()
-    assert "location" not in response.headers, "must not redirect to the code page"
+    assert response.status_code == 303
+    assert "mail=failed" in response.headers["location"]
+
+    landed = client.get(response.headers["location"])
+    assert landed.status_code == 200
+    assert "could not be emailed" in landed.text
+    assert "still issued" in landed.text
 
 
 def test_no_session_is_issued_while_mail_is_down(client, make_user, csrf, mail_is_down):

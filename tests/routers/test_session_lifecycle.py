@@ -49,6 +49,31 @@ def test_an_expired_session_is_refused_and_deleted(client, db, make_user, sign_i
     assert db.get(SessionRow, token_id) is None, "an expired row is deleted on sight"
 
 
+def test_a_stale_cookie_does_not_loop_between_login_and_dashboard(client, db, make_user, sign_in):
+    """The bug this test exists for: `/login` redirected to `/` whenever a
+    session cookie was present, and `/` redirected back when it was not valid.
+    A browser holding a dead cookie bounced between the two forever.
+    """
+    user = make_user(email="a@example.com")
+    token_id = sign_in(user)
+
+    row = db.get(SessionRow, token_id)
+    db.delete(row)
+    db.commit()
+
+    response = client.get("/login")
+    assert response.status_code == 200, "a dead cookie must show the form, not redirect"
+    assert "Sign in" in response.text
+
+
+def test_a_valid_session_still_skips_the_sign_in_page(client, make_user, sign_in):
+    sign_in(make_user(email="a@example.com"))
+
+    response = client.get("/login")
+    assert response.status_code == 303
+    assert response.headers["location"] == "/"
+
+
 def test_deactivation_refuses_an_existing_session_on_the_next_request(
     client, db, make_user, sign_in
 ):

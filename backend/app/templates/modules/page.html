@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}{{ page.title }}{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12 col-lg-3">
+    {% include "components/module_nav.html" %}
+  </div>
+
+  <div class="col-12 col-lg-9">
+    <nav class="small mb-2">
+      <a href="/modules/{{ module.id }}" class="text-decoration-none">{{ module.title }}</a>
+    </nav>
+
+    <h1 class="h4 mb-3">{{ page.title }}</h1>
+
+    {# The stored column is already sanitised, which is why this is rendered
+       directly and carries no filter of its own. Adding one here would suggest
+       the column might hold something unsafe, and it cannot (research R2). #}
+    <article class="content-body">{{ page.body|safe }}</article>
+  </div>
+</div>
+
+<style>
+  /* Images must never push the page sideways on a phone. */
+  .content-body img { max-width: 100%; height: auto; }
+  .content-body pre { overflow-x: auto; }
+</style>
+{% endblock %}

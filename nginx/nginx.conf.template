@@ -1,0 +1,47 @@
+# Rendered at container start by the official image's envsubst step, which
+# writes the result to /etc/nginx/conf.d/. Only variables present in the
+# environment are substituted, so nginx's own $host and $scheme survive.
+
+upstream backend {
+    server backend:8000;
+}
+
+server {
+    listen 80;
+    server_name _;
+    server_tokens off;
+
+    # Derived from UPLOAD_MAX_MB with one megabyte added for multipart
+    # overhead. When this is lower than the application's own limit an
+    # oversized upload dies here with a generic 413 that the application never
+    # sees and therefore cannot explain (research R4).
+    client_max_body_size ${UPLOAD_MAX_PLUS_MARGIN}m;
+
+    # Static assets are served here, never by the Python process (research R10).
+    # The volume is mounted read-only: nginx can read it, nothing can write it.
+    location /static/ {
+        alias /srv/static/;
+        access_log off;
+        expires 1h;
+    }
+
+    # Instructor image uploads, served as static files under generated names.
+    location /uploads/ {
+        alias /srv/uploads/;
+        access_log off;
+        expires 1h;
+    }
+
+    location / {
+        proxy_pass         http://backend;
+        proxy_http_version 1.1;
+
+        proxy_set_header Host              $host;
+        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+        # The application decides the Secure cookie flag from this header.
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        proxy_read_timeout 30s;
+    }
+}
