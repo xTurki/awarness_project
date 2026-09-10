@@ -9,7 +9,7 @@ Every scenario below maps to a user story in [spec.md](./spec.md). Walking all s
 ## Prerequisites
 
 - Docker and Docker Compose
-- A Gmail or Google Workspace account with an **App Password** — an ordinary account password will not work for SMTP
+- A Gmail or Google Workspace account with an **App Password**, an ordinary account password will not work for SMTP
 - Outbound access to `smtp.gmail.com:587`. **Verify this first.** Without it nobody can sign in, and there is no bypass.
 
 ---
@@ -31,7 +31,7 @@ The seed creates seven accounts: one administrator, one instructor, five trainee
 
 ---
 
-## Scenario 1 — Sign in with a second factor *(US1, P1)*
+## Scenario 1, Sign in with a second factor *(US1, P1)*
 
 1. Open `http://localhost`, enter the seeded administrator's email and password.
 2. You are taken to the code-entry page. A six-digit code arrives by email.
@@ -44,11 +44,11 @@ The seed creates seven accounts: one administrator, one instructor, five trainee
 | A wrong code | Refused, still on the page, able to retry |
 | A code older than ten minutes | Refused as expired |
 | The same code twice | Refused the second time |
-| Start a fresh sign-in, then submit the first code | Refused — the newer code replaced it |
+| Start a fresh sign-in, then submit the first code | Refused, the newer code replaced it |
 
 ---
 
-## Scenario 2 — Role-shaped workspace *(US2, P2)*
+## Scenario 2, Role-shaped workspace *(US2, P2)*
 
 Sign in as the administrator, the instructor, and a trainee in turn.
 
@@ -57,28 +57,28 @@ Sign in as the administrator, the instructor, and a trainee in turn.
 
 ---
 
-## Scenario 3 — Ending access *(US3, P2)*
+## Scenario 3, Ending access *(US3, P2)*
 
 1. Sign in as a trainee in one browser. In another, sign in as the administrator.
 2. Administrator: deactivate the trainee's account.
-3. Trainee: load any page. Expect to be refused and returned to sign-in — **on the very next request**, not at session expiry.
+3. Trainee: load any page. Expect to be refused and returned to sign-in, **on the very next request**, not at session expiry.
 4. Sign in again as anyone, then sign out. Expect protected pages to be unreachable with that session.
 
 ---
 
-## Scenario 4 — Create a real account *(US4, P2)*
+## Scenario 4, Create a real account *(US4, P2)*
 
 1. As the administrator, create an account with a chosen role and an initial password.
 2. Sign in as that new person: password → code → **you are asked to choose a new password before anything else**.
 3. Try to reach `/` before setting one. Expect to be returned to the choose-a-password screen.
-4. Set one. You reach the dashboard. Sign in again later — you are not asked again.
+4. Set one. You reach the dashboard. Sign in again later, you are not asked again.
 5. As the administrator, reset that account's password. Sign in as them again: **they are asked to choose one again.**
 
 Also confirm: creating a second account with an email already in use is refused, and no signed-out visitor is offered any way to create an account.
 
 ---
 
-## Scenario 5 — From nothing *(US5, P3)*
+## Scenario 5, From nothing *(US5, P3)*
 
 On a machine that has never run this:
 
@@ -94,16 +94,16 @@ Expect a working sign-in page inside ten minutes, including image pulls.
 **Then check the boundaries:**
 
 ```bash
-curl http://localhost:3306      # expect refused — MySQL is not published
-curl http://localhost:8000      # expect refused — the application is not published
+curl http://localhost:3306      # expect refused, MySQL is not published
+curl http://localhost:8000      # expect refused, the application is not published
 docker compose restart          # accounts still there afterwards
 ```
 
 ---
 
-## Scenario 6 — When email fails *(US6, P4)*
+## Scenario 6, When email fails *(US6, P4)*
 
-Break mail deliberately — put a wrong `SMTP_APP_PASSWORD` in `.env` and restart the backend.
+Break mail deliberately, put a wrong `SMTP_APP_PASSWORD` in `.env` and restart the backend.
 
 Attempt to sign in. Expect to be told plainly, **within about fifteen seconds**, that the code could not be sent and that signing in again is how to retry. You should *not* be left on a code-entry page waiting.
 
@@ -111,7 +111,7 @@ Attempt to sign in. Expect to be told plainly, **within about fifteen seconds**,
 
 ---
 
-## Scenario 7 — Every width *(FR-029, done-gate 3)*
+## Scenario 7, Every width *(FR-029, done-gate 3)*
 
 Walk sign-in, code entry, choose-a-password, dashboard, and account administration at each width:
 

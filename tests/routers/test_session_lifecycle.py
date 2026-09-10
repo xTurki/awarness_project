@@ -77,7 +77,7 @@ def test_a_valid_session_still_skips_the_sign_in_page(client, make_user, sign_in
 def test_deactivation_refuses_an_existing_session_on_the_next_request(
     client, db, make_user, sign_in
 ):
-    """Not at expiry — on the very next request (SC-010)."""
+    """Not at expiry, on the very next request (SC-010)."""
     user = make_user(email="a@example.com")
     sign_in(user)
     assert client.get("/").status_code == 200

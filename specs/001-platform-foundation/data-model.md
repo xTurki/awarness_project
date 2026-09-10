@@ -25,11 +25,11 @@ A person who can sign in.
 
 ### Rules
 
-- **FR-001** — `email` is unique platform-wide; comparison and storage are lowercase, so `Ahmad@x.com` and `ahmad@x.com` are one account.
-- **FR-002** — `password_hash` holds an Argon2 digest and nothing else.
-- **FR-005** — a password of fewer than eight characters is refused wherever one is set: seeding, administrator creation, administrator reset, and the person's own choice.
-- **FR-010/011** — `must_set_password` is raised by administrator creation and administrator reset, and cleared only when the person sets their own.
-- **FR-016/017/018** — the two `login_code_*` columns are written together and cleared together. Both `NULL` means no sign-in is in progress.
+- **FR-001**, `email` is unique platform-wide; comparison and storage are lowercase, so `Ahmad@x.com` and `ahmad@x.com` are one account.
+- **FR-002**, `password_hash` holds an Argon2 digest and nothing else.
+- **FR-005**, a password of fewer than eight characters is refused wherever one is set: seeding, administrator creation, administrator reset, and the person's own choice.
+- **FR-010/011**, `must_set_password` is raised by administrator creation and administrator reset, and cleared only when the person sets their own.
+- **FR-016/017/018**, the two `login_code_*` columns are written together and cleared together. Both `NULL` means no sign-in is in progress.
 - **Never rendered.** This is a `table=True` model carrying two secrets; done-gate 5 forbids passing it to a template or returning it from an endpoint. Templates receive a `UserRead` built in the service layer.
 
 ### Login-code lifecycle
@@ -44,7 +44,7 @@ both NULL ──── password accepted ────▶ hash + expiry set, code
                        └── overwritten by any fresh sign-in for the same account
 ```
 
-There is no attempt counter and no lock. A code stops working when it expires, when it is used, or when a newer one replaces it — and nothing else.
+There is no attempt counter and no lock. A code stops working when it expires, when it is used, or when a newer one replaces it, and nothing else.
 
 ### Account state
 
@@ -65,7 +65,7 @@ Evidence that an account signed in successfully. Held here rather than in the br
 
 | Column | Type | Null | Notes |
 |---|---|---|---|
-| `id` | VARCHAR(64), PK | no | `secrets.token_urlsafe(32)`. Stored as issued — see research, accepted simplifications |
+| `id` | VARCHAR(64), PK | no | `secrets.token_urlsafe(32)`. Stored as issued, see research, accepted simplifications |
 | `user_id` | INT, FK → `user.id`, indexed | no | |
 | `created_at` | DATETIME | no | |
 | `expires_at` | DATETIME | no | `created_at` + 12 hours |
@@ -74,9 +74,9 @@ Evidence that an account signed in successfully. Held here rather than in the br
 
 ### Rules
 
-- **FR-022** — a request is authenticated by looking this row up, so deleting it withdraws access immediately.
-- **FR-023** — sign-out deletes the row.
-- **FR-024** — a row past `expires_at` is refused and deleted on sight.
+- **FR-022**, a request is authenticated by looking this row up, so deleting it withdraws access immediately.
+- **FR-023**, sign-out deletes the row.
+- **FR-024**, a row past `expires_at` is refused and deleted on sight.
 - Expired rows for all accounts are swept opportunistically on each successful sign-in. There is no scheduled cleanup in this phase.
 - The foreign key is enforced by InnoDB, not only by the ORM.
 
@@ -96,4 +96,4 @@ Evidence that an account signed in successfully. Held here rather than in the br
 
 ## Seed data
 
-`seed.py` creates seven accounts: one administrator, one instructor, five trainees. All are created with `must_set_password` **false** — demonstration accounts are exempt so the platform can be shown working without a detour (spec, Assumptions). Real accounts an administrator creates are never exempt.
+`seed.py` creates seven accounts: one administrator, one instructor, five trainees. All are created with `must_set_password` **false**, demonstration accounts are exempt so the platform can be shown working without a detour (spec, Assumptions). Real accounts an administrator creates are never exempt.

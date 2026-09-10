@@ -15,10 +15,10 @@ Conventions carry over: naive UTC `DATETIME`, `utf8mb4`, InnoDB, schema from `cr
 
 ### Rules
 
-- **FR-003 / FR-038** — either one requires a pass mark. A cycle that restarts on passing must know what passing means, so both are refused on a test with no `passing_score`.
-- **FR-004** — a retake interval shorter than `DUE_SOON_LEAD_DAYS` is refused. The warning would otherwise fire before the person had taken it.
-- **FR-039** — with neither set, no due date and no reminder is ever generated for that test.
-- **FR-005** — where `retake_interval_days` is set, `allowed_attempts` is ignored. A person may retake until they pass.
+- **FR-003 / FR-038**, either one requires a pass mark. A cycle that restarts on passing must know what passing means, so both are refused on a test with no `passing_score`.
+- **FR-004**, a retake interval shorter than `DUE_SOON_LEAD_DAYS` is refused. The warning would otherwise fire before the person had taken it.
+- **FR-039**, with neither set, no due date and no reminder is ever generated for that test.
+- **FR-005**, where `retake_interval_days` is set, `allowed_attempts` is ignored. A person may retake until they pass.
 - If both are set, the interval wins. The form offers one or the other.
 
 ---
@@ -37,8 +37,8 @@ One record that one person was told one thing about one module.
 | `title` | VARCHAR(255) | no | Rendered as written |
 | `body` | TEXT | yes | |
 | `created_at` | DATETIME | no | |
-| `read_at` | DATETIME | **yes** | Null means unseen — this drives the shell indicator |
-| `emailed_at` | DATETIME | **yes** | Null means not yet sent — this is what the job selects on |
+| `read_at` | DATETIME | **yes** | Null means unseen, this drives the shell indicator |
+| `emailed_at` | DATETIME | **yes** | Null means not yet sent, this is what the job selects on |
 
 ### The unique constraint that does the work
 
@@ -61,20 +61,20 @@ A send that fails leaves `emailed_at` null, so the next run retries it. Nothing 
 
 ### Record and message are different things
 
-One message may cover several records — a person overdue on three modules gets one email, and all three rows are stamped (FR-019, FR-023). The in-app list still shows three entries (FR-034).
+One message may cover several records, a person overdue on three modules gets one email, and all three rows are stamped (FR-019, FR-023). The in-app list still shows three entries (FR-034).
 
 A record always exists before any message is sent (FR-021). The record is the notification; the message is a delivery of it.
 
 ---
 
-## The due date — derived, never stored
+## The due date, derived, never stored
 
 There is no `due_at` column anywhere. `due.py` computes it from what already exists:
 
 | Test carries | Due date |
 |---|---|
 | A retake interval, most recent attempt **passed** | that attempt's `submitted_at` + interval |
-| A retake interval, **never passed** — attempted or not | `registration.registered_at` + interval |
+| A retake interval, **never passed**, attempted or not | `registration.registered_at` + interval |
 | A retake interval, most recent attempt did **not** pass, having passed earlier | that attempt's `submitted_at` |
 | A completion period, never passed | `registration.registered_at` + period |
 | A completion period, passed at any point | never due again (FR-037) |
@@ -82,9 +82,9 @@ There is no `due_at` column anywhere. `due.py` computes it from what already exi
 
 Deriving is what makes FR-007 true: an instructor changing the interval re-dates everyone at once, with nothing to migrate.
 
-**Every due date is a fixed calendar date.** No branch returns *now*, so the date an `overdue` row is keyed on does not move from one morning to the next — which is what makes that notification a single event rather than a daily one (FR-014).
+**Every due date is a fixed calendar date.** No branch returns *now*, so the date an `overdue` row is keyed on does not move from one morning to the next, which is what makes that notification a single event rather than a daily one (FR-014).
 
-**FR-008 gives a newcomer a full first cycle** measured from their registration, whether or not they have attempted and failed. **FR-009 then fixes which attempt starts every later cycle** — the most recent, and only if it passed. Someone who passed and then retook and scored below the pass mark is due immediately, which is the same rule Phases 2 and 3 already apply to what represents a person.
+**FR-008 gives a newcomer a full first cycle** measured from their registration, whether or not they have attempted and failed. **FR-009 then fixes which attempt starts every later cycle**, the most recent, and only if it passed. Someone who passed and then retook and scored below the pass mark is due immediately, which is the same rule Phases 2 and 3 already apply to what represents a person.
 
 ---
 
@@ -97,10 +97,10 @@ Phase 3:  no test available · not started · in progress · passed · failed
 Phase 4:  + due · overdue
 ```
 
-They appear everywhere Phase 3's states appear — the trainee's dashboard, the instructor's cohort view, and the module home page — because all three read the same function, each passing in a due date computed at the call site (FR-010).
+They appear everywhere Phase 3's states appear, the trainee's dashboard, the instructor's cohort view, and the module home page, because all three read the same function, each passing in a due date computed at the call site (FR-010).
 
-**FR-011** — passing clears both and sets the next due date a full interval away.
-**FR-012** — removing a registration clears both, since the row the derivation reads is gone.
+**FR-011**, passing clears both and sets the next due date a full interval away.
+**FR-012**, removing a registration clears both, since the row the derivation reads is gone.
 
 ---
 

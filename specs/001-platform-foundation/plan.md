@@ -1,4 +1,4 @@
-# Implementation Plan: Platform Foundation — Identity, Access & Shell
+# Implementation Plan: Platform Foundation, Identity, Access & Shell
 
 **Branch**: `001-platform-foundation` | **Date**: 2026-09-10 | **Spec**: [spec.md](./spec.md)
 
@@ -8,7 +8,7 @@
 
 Stand up the three-container platform and everything to do with identity: accounts in three roles, two-step sign-in (password, then a six-digit code by email), server-side sessions with immediate revocation, administrator account management, a forced password change on any account an administrator set up, and the responsive application shell every later phase renders inside.
 
-The technical approach is fixed by the project specification rather than open: FastAPI serving Jinja2 templates, SQLModel over MySQL 8, three containers behind Nginx, schema generated from the models with no migration tool. What this plan settles is the handful of implementation decisions that specification deliberately left to the phase — how to carry an in-progress sign-in between two requests, how to rate-limit without adding a fourth container, how to protect forms against cross-site posts when the login form has no session behind it yet, and how to run tests against a real MySQL rather than SQLite.
+The technical approach is fixed by the project specification rather than open: FastAPI serving Jinja2 templates, SQLModel over MySQL 8, three containers behind Nginx, schema generated from the models with no migration tool. What this plan settles is the handful of implementation decisions that specification deliberately left to the phase, how to carry an in-progress sign-in between two requests, how to rate-limit without adding a fourth container, how to protect forms against cross-site posts when the login form has no session behind it yet, and how to run tests against a real MySQL rather than SQLite.
 
 ## Technical Context
 
@@ -22,9 +22,9 @@ The technical approach is fixed by the project specification rather than open: F
 
 **Target Platform**: Linux server running Docker Compose; browsers from 360px phone widths upward
 
-**Project Type**: Server-rendered web application — three containers, one codebase, no separate frontend
+**Project Type**: Server-rendered web application, three containers, one codebase, no separate frontend
 
-**Performance Goals**: None specified beyond user-facing criteria in the spec — sign-in inside two minutes end to end, a code delivered inside sixty seconds, a mail failure reported inside fifteen. The platform serves one small organisation; throughput is not a design driver.
+**Performance Goals**: None specified beyond user-facing criteria in the spec, sign-in inside two minutes end to end, a code delivered inside sixty seconds, a mail failure reported inside fifteen. The platform serves one small organisation; throughput is not a design driver.
 
 **Constraints**: Only Nginx publishes a port · backend and database unreachable from outside · secrets from the environment only · all timestamps naive UTC · single `backend` instance (no horizontal scaling anywhere in the design) · outbound egress to `smtp.gmail.com:587` required, and sign-in fails closed without it
 
@@ -59,8 +59,8 @@ Checked against `.specify/memory/constitution.md` v4.0.0.
 | No `table=True` model returned or rendered | ✅ | Done-gate 5 |
 | Argon2 for passwords; codes stored hashed | ✅ | Same hasher, separate call sites |
 | Server-side sessions in MySQL; no JWT, no Redis | ✅ | |
-| Session cookies `HttpOnly`, `Secure`, `SameSite=Lax`; login rate-limited | ✅ | Rate limiting in-process — see research R2 |
-| CSRF on every state-changing form post | ✅ | Double-submit cookie — see research R3 |
+| Session cookies `HttpOnly`, `Secure`, `SameSite=Lax`; login rate-limited | ✅ | Rate limiting in-process, see research R2 |
+| CSRF on every state-changing form post | ✅ | Double-submit cookie, see research R3 |
 | Secrets from environment, `.env` git-ignored | ✅ | |
 | Mail sent inline in a worker thread under a hard timeout | ✅ | |
 | Scheduled work in-process only | N/A | Nothing scheduled in this phase |
@@ -83,14 +83,14 @@ Checked against `.specify/memory/constitution.md` v4.0.0.
 ```text
 specs/001-platform-foundation/
 ├── plan.md              # This file
-├── research.md          # Phase 0 output — implementation decisions
-├── data-model.md        # Phase 1 output — entities, constraints, transitions
-├── quickstart.md        # Phase 1 output — bring it up and prove it works
+├── research.md          # Phase 0 output, implementation decisions
+├── data-model.md        # Phase 1 output, entities, constraints, transitions
+├── quickstart.md        # Phase 1 output, bring it up and prove it works
 ├── contracts/
-│   └── routes.md        # Phase 1 output — the HTTP surface
+│   └── routes.md        # Phase 1 output, the HTTP surface
 ├── checklists/
 │   └── requirements.md  # From /speckit-specify
-└── tasks.md             # Phase 2 output (/speckit-tasks — not created here)
+└── tasks.md             # Phase 2 output (/speckit-tasks, not created here)
 ```
 
 ### Source Code (repository root)
@@ -137,7 +137,7 @@ tests/
 └── routers/
 ```
 
-**Structure Decision**: The layout is fixed by `lms-project-spec.md` §6.2 and is followed exactly. Two files are added that the project specification did not name: `app/security.py`, which holds the three cross-cutting primitives decided in research (hashing, CSRF, rate limiting) so they are not scattered, and `app/dependencies.py`, which holds the FastAPI dependencies that guard routes — kept out of `services/` because they touch `Request` and Principle II forbids that in the service layer.
+**Structure Decision**: The layout is fixed by `lms-project-spec.md` §6.2 and is followed exactly. Two files are added that the project specification did not name: `app/security.py`, which holds the three cross-cutting primitives decided in research (hashing, CSRF, rate limiting) so they are not scattered, and `app/dependencies.py`, which holds the FastAPI dependencies that guard routes, kept out of `services/` because they touch `Request` and Principle II forbids that in the service layer.
 
 `app/cli.py` from the project specification is **not** created: the break-glass command it held was removed when the security surface was reduced.
 

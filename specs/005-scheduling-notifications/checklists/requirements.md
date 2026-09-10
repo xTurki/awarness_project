@@ -37,21 +37,21 @@ This is the only phase in which the platform acts without anyone asking it to, w
 
 ### The three clarifications, resolved
 
-**A conflict between documents, now settled.** The project specification ran the retake clock from a person's most recent *passing* attempt, while Phases 2 and 3 had already decided the most recent attempt *of any kind* represents them. The clock now runs from the most recent attempt and only if it passed — one rule across the whole platform. `lms-project-spec.md` was corrected to match and is at v14.
+**A conflict between documents, now settled.** The project specification ran the retake clock from a person's most recent *passing* attempt, while Phases 2 and 3 had already decided the most recent attempt *of any kind* represents them. The clock now runs from the most recent attempt and only if it passed, one rule across the whole platform. `lms-project-spec.md` was corrected to match and is at v14.
 
 **A replacement test notifies everyone it made due**, with no grace period. The instructor is already warned before publishing what it will do.
 
-**A one-off test may carry a completion period** — "pass this within thirty days of being registered". This closes a gap the phase plan never covered: mandatory training assigned once was never chased, however long someone left it. It reuses the entire due-date and reminder mechanism rather than adding a second one, and stays optional, so a genuinely optional module can still be left unchased.
+**A one-off test may carry a completion period**, "pass this within thirty days of being registered". This closes a gap the phase plan never covered: mandatory training assigned once was never chased, however long someone left it. It reuses the entire due-date and reminder mechanism rather than adding a second one, and stays optional, so a genuinely optional module can still be left unchased.
 
 ### The consequence that will be noticed
 
-Running the clock from the most recent attempt means someone who passed, then retook the test to revise and scored below the pass mark, is **due immediately and overdue the next day** — and gets an email about it. The platform is at least consistent, since Phases 2 and 3 already work this way, and Phase 2's review makes passing again straightforward. But casual revision now has a cost, and people will notice it. Recorded in Assumptions rather than left to be discovered.
+Running the clock from the most recent attempt means someone who passed, then retook the test to revise and scored below the pass mark, is **due immediately and overdue the next day**, and gets an email about it. The platform is at least consistent, since Phases 2 and 3 already work this way, and Phase 2's review makes passing again straightforward. But casual revision now has a cost, and people will notice it. Recorded in Assumptions rather than left to be discovered.
 
 ### Content Quality note
 
-Implementation names were kept out deliberately. The requirements describe "a process that runs once a day without anyone signed in" rather than naming a scheduler, and "a notification record" rather than a table. FR-030 states the constraint that actually matters — no second machine, no separate service — as an outcome.
+Implementation names were kept out deliberately. The requirements describe "a process that runs once a day without anyone signed in" rather than naming a scheduler, and "a notification record" rather than a table. FR-030 states the constraint that actually matters, no second machine, no separate service, as an outcome.
 
-Concrete values that shape the experience — a fourteen-day warning, a single overdue notice, an early-morning run, opening the list marking it read, notifications never deleted — sit in Assumptions with the reasoning for each.
+Concrete values that shape the experience, a fourteen-day warning, a single overdue notice, an early-morning run, opening the list marking it read, notifications never deleted, sit in Assumptions with the reasoning for each.
 
 ### One thing worth seeing before planning
 

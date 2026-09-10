@@ -1,4 +1,4 @@
-# Feature Specification: Quizzes — Question Banks, Attempts & Scoring
+# Feature Specification: Quizzes, Question Banks, Attempts & Scoring
 
 **Feature Branch**: `003-quizzes`
 
@@ -48,7 +48,7 @@ An instructor writes questions for their module, chooses which of them make up a
 
 ### User Story 2 - Take a test and know the result (Priority: P1)
 
-A trainee opens a published test, answers its questions, submits, and is told their score and whether they passed — immediately, with no waiting for anyone.
+A trainee opens a published test, answers its questions, submits, and is told their score and whether they passed, immediately, with no waiting for anyone.
 
 **Why this priority**: This is the phase. Everything the platform exists to do converges here, and it is what produces the scores Phase 3 displays and Phase 4 schedules around.
 
@@ -60,7 +60,7 @@ A trainee opens a published test, answers its questions, submits, and is told th
 2. **Given** a question with one correct option, **When** it is presented, **Then** the trainee may select exactly one answer.
 3. **Given** a question with several correct options, **When** it is presented, **Then** the trainee may select more than one.
 4. **Given** a completed test, **When** the trainee submits it, **Then** a score and a pass-or-fail outcome appear immediately.
-5. **Given** a question with several correct options, **When** the trainee selects some but not all of them, **Then** that question scores nothing — there is no partial credit.
+5. **Given** a question with several correct options, **When** the trainee selects some but not all of them, **Then** that question scores nothing, there is no partial credit.
 6. **Given** a trainee who has used all permitted attempts, **When** they try to start another, **Then** they are refused and told why.
 7. **Given** a test outside its availability window, **When** a trainee tries to start it, **Then** they are refused.
 8. **Given** a trainee not registered on the module, **When** they request the test directly, **Then** they are refused.
@@ -90,17 +90,17 @@ A trainee is twelve questions into a timed test when their connection drops, the
 
 ### User Story 4 - Look back at what you did (Priority: P2)
 
-After submitting, a trainee can look at the attempt they just made — what they answered, what they scored, and whether they passed.
+After submitting, a trainee can look at the attempt they just made, what they answered, what they scored, and whether they passed.
 
 **Why this priority**: Awareness training that tells someone only a number teaches nothing. It also matters for recurring training, where the same person meets the same subject again.
 
-**Independent Test**: Complete an attempt, open its review, and confirm the trainee sees their own answers and result — and cannot see anyone else's.
+**Independent Test**: Complete an attempt, open its review, and confirm the trainee sees their own answers and result, and cannot see anyone else's.
 
 **Acceptance Scenarios**:
 
 1. **Given** a submitted attempt, **When** the trainee opens its review, **Then** they see each question, the answer they gave, and whether it was right.
 2. **Given** a trainee with several attempts at the same test, **When** they look at their history, **Then** they see each attempt with its date and score.
-3. **Given** a trainee who scored 40, then 90, then 70, **When** their result is shown anywhere, **Then** it is 70 — the most recent — and the earlier two remain in their history.
+3. **Given** a trainee who scored 40, then 90, then 70, **When** their result is shown anywhere, **Then** it is 70, the most recent, and the earlier two remain in their history.
 4. **Given** a submitted attempt, **When** the trainee reviews it, **Then** each question shows their answer, whether it was right, and the correct answer.
 3. **Given** a trainee, **When** they request another person's attempt directly, **Then** they are refused.
 4. **Given** an attempt still in progress, **When** the trainee opens the review, **Then** they are returned to the attempt rather than shown a partial result.
@@ -109,7 +109,7 @@ After submitting, a trainee can look at the attempt they just made — what they
 
 ### User Story 5 - Check on the people taking it (Priority: P2)
 
-An instructor opens their test and sees the attempts made on it — who has taken it, what they scored, whether they passed. Where a question turns out to have been wrong or unfair, the instructor corrects that attempt's score by hand.
+An instructor opens their test and sees the attempts made on it, who has taken it, what they scored, whether they passed. Where a question turns out to have been wrong or unfair, the instructor corrects that attempt's score by hand.
 
 **Why this priority**: An automatically scored test with no human override is a test whose mistakes cannot be undone. Instructors need a way to fix a bad question's consequences without rebuilding anything.
 
@@ -127,14 +127,14 @@ An instructor opens their test and sees the attempts made on it — who has take
 
 ### Edge Cases
 
-- **The availability window closes mid-attempt.** The attempt ends at whichever comes first — the time limit or the closing time — and is scored on what was answered.
+- **The availability window closes mid-attempt.** The attempt ends at whichever comes first, the time limit or the closing time, and is scored on what was answered.
 - **A test with no questions.** It cannot be published; the instructor is told why.
 - **An instructor needs to fix a test that people have already taken.** They cannot. The test is frozen from its first attempt onward. They unpublish it and build a replacement, and the old attempts keep their meaning because the test that produced them never changed.
 - **Two devices, one attempt.** The same trainee opens their in-progress attempt on a phone and a laptop. Both write to the same attempt; the last answer given to any question is the one that counts.
 - **Submitting twice.** The second submission is ignored rather than creating a second result.
 - **Every answer left blank.** The attempt submits and scores zero. It is a completed attempt, not an absent one.
 - **A pass mark higher than the total available.** Refused when the test is saved.
-- **An attempt started just before the window closes.** Permitted — the window governs starting, and the rule above governs the ending.
+- **An attempt started just before the window closes.** Permitted, the window governs starting, and the rule above governs the ending.
 - **The clock on the trainee's device is wrong.** Irrelevant. Time remaining is decided by the platform, and the countdown shown is decoration.
 - **An instructor overrides a score on an attempt still in progress.** Refused; only finished attempts can be corrected.
 
@@ -159,7 +159,7 @@ An instructor opens their test and sees the attempts made on it — who has take
 - **FR-010**: System MUST let an instructor publish and unpublish a test, and MUST hide unpublished tests from trainees entirely.
 - **FR-011**: System MUST refuse to publish a test that has no questions.
 - **FR-012**: System MUST refuse a pass mark that could not be reached with the points available.
-- **FR-013**: System MUST prevent any change to a test or to the questions in it once a single attempt has been made at it — no adding, removing, reordering, or rewording, and no change to its pass mark or scoring. An instructor who needs a different test MUST create one.
+- **FR-013**: System MUST prevent any change to a test or to the questions in it once a single attempt has been made at it, no adding, removing, reordering, or rewording, and no change to its pass mark or scoring. An instructor who needs a different test MUST create one.
 - **FR-014**: System MUST tell an instructor clearly why a test can no longer be edited, and MUST let them unpublish it so that no further attempts are made at it.
 
 **Taking a test**
@@ -179,7 +179,7 @@ An instructor opens their test and sees the attempts made on it — who has take
 **Scoring**
 
 - **FR-026**: System MUST score every submitted attempt without human involvement and MUST produce the score immediately.
-- **FR-027**: System MUST award a question's points only when the selected answers exactly match the correct ones — no partial credit for a partly correct answer.
+- **FR-027**: System MUST award a question's points only when the selected answers exactly match the correct ones, no partial credit for a partly correct answer.
 - **FR-028**: System MUST express a result both as a score and as a pass or fail decided against the test's pass mark.
 - **FR-029**: System MUST treat a person's **most recent** submitted attempt as the one that represents them, for their score, their pass-or-fail outcome, and anything later phases read. Earlier attempts remain visible in their history but do not stand for them.
 
@@ -197,13 +197,13 @@ An instructor opens their test and sees the attempts made on it — who has take
 
 - **FR-037**: System MUST present every screen in this phase usably at phone, tablet, and desktop widths, with no sideways scrolling of the page itself.
 - **FR-038**: System MUST make taking a test possible with a whole answer option tappable, not only a small control beside it.
-- **FR-039**: System MUST keep content and tests independently reachable — reading a module's pages MUST NOT be a precondition for starting its test.
+- **FR-039**: System MUST keep content and tests independently reachable, reading a module's pages MUST NOT be a precondition for starting its test.
 
 ### Key Entities
 
 - **Question**: Something asked, belonging to one module's bank. Holds its prompt, what it is worth, and its position. Owns its answer options.
 - **Answer option**: One of the choices offered for a question, and whether it is correct.
-- **Test**: A set of questions drawn from a module's bank, with the rules for taking it — when it is open, how long it runs, how many attempts, whether questions shuffle, and the mark needed to pass. Belongs to one module.
+- **Test**: A set of questions drawn from a module's bank, with the rules for taking it, when it is open, how long it runs, how many attempts, whether questions shuffle, and the mark needed to pass. Belongs to one module.
 - **Attempt**: One person's sitting of one test. Records when it began, when it must end, when it was submitted, whether it is in progress or finished, the order of questions it was given, and its score. The ending moment and the question order are fixed when it begins and never change afterwards.
 - **Answer given**: What a person chose for one question in one attempt, whether it was right, and what it earned. At most one per question per attempt.
 
@@ -233,13 +233,13 @@ An instructor opens their test and sees the attempts made on it — who has take
 - A score is expressed as a percentage of the points available, and the pass mark is a percentage too. Points per question exist so an instructor can weight a hard question, not so trainees are shown raw totals.
 - Shuffling reorders questions, not the options within a question. The setting is named for questions and that is what it does.
 - An attempt with no answers at all is still an attempt: it submits, scores zero, and counts against the attempts allowed.
-- The availability window governs when an attempt may *start*. An attempt that started inside the window runs to its own ending moment even if the window closes first — subject to the rule that the window's close also ends it, whichever comes first.
+- The availability window governs when an attempt may *start*. An attempt that started inside the window runs to its own ending moment even if the window closes first, subject to the rule that the window's close also ends it, whichever comes first.
 - A trainee may have only one attempt in progress at a time on a given test. Opening it on a second device continues the same attempt rather than starting another.
 - A test is frozen from its first attempt. Before that it may be edited freely; after it, not at all.
-- **A test is one scrolling page.** Every question is shown at once, in the attempt's fixed order, with submit at the end. There is no per-question navigation and no separate review screen — a trainee checks what they left blank by scrolling. The countdown stays visible while scrolling.
+- **A test is one scrolling page.** Every question is shown at once, in the attempt's fixed order, with submit at the end. There is no per-question navigation and no separate review screen, a trainee checks what they left blank by scrolling. The countdown stays visible while scrolling.
 - Instructions on a test are plain text. The rich-text editor built in Phase 1 is for module content, not for question prompts.
 
-> **A consequence of two of these decisions together.** The most recent attempt represents a person, and a review shows the correct answers. So someone can fail, read the answers, retake, and pass — and in Phase 4, where recurring tests allow unlimited retakes, that path is always open. The pass mark therefore measures that someone has seen the right answers and can reproduce them, not that they knew them unaided. For awareness training that is arguably the point; it is recorded here so it is a choice rather than a surprise.
+> **A consequence of two of these decisions together.** The most recent attempt represents a person, and a review shows the correct answers. So someone can fail, read the answers, retake, and pass, and in Phase 4, where recurring tests allow unlimited retakes, that path is always open. The pass mark therefore measures that someone has seen the right answers and can reproduce them, not that they knew them unaided. For awareness training that is arguably the point; it is recorded here so it is a choice rather than a surprise.
 
 **Dependencies**:
 
@@ -248,7 +248,7 @@ An instructor opens their test and sees the attempts made on it — who has take
 
 **Deliberately excluded**, so that their absence is a decision rather than an oversight:
 
-- Any question type other than multiple choice. No short answer, no essays, no matching, no ordering — and therefore nothing that waits on a human to mark it.
+- Any question type other than multiple choice. No short answer, no essays, no matching, no ordering, and therefore nothing that waits on a human to mark it.
 - Partial credit.
 - Drawing a random subset of questions from the bank for each attempt. A test is a fixed set of questions.
 - Question categories, tags, or difficulty levels.

@@ -6,7 +6,7 @@
 
 ## Summary
 
-An instructor sets how often a test must be retaken. From then on the platform works out who is due, tells them before it lapses and while it is lapsed, and keeps doing so — with nobody signed in and nobody remembering to check.
+An instructor sets how often a test must be retaken. From then on the platform works out who is due, tells them before it lapses and while it is lapsed, and keeps doing so, with nobody signed in and nobody remembering to check.
 
 This is the only part of the platform that acts on its own, so most of the design is about **running the same job twice being harmless**. One table, one daily job, one extra field on `test`, and the two states Phase 3 left for this phase to add.
 
@@ -14,13 +14,13 @@ This is the only part of the platform that acts on its own, so most of the desig
 
 **Language/Version**: Python 3.12
 
-**Primary Dependencies**: `APScheduler` — the only addition, and the only new dependency since Phase 1
+**Primary Dependencies**: `APScheduler`, the only addition, and the only new dependency since Phase 1
 
-**Storage**: MySQL 8 — one new table, two new columns on `test`. No new volume.
+**Storage**: MySQL 8, one new table, two new columns on `test`. No new volume.
 
 **Testing**: pytest against a disposable MySQL container. The daily job is a plain function, so tests call it directly rather than waiting for a scheduler.
 
-**Target Platform**: Unchanged. **Assumes exactly one `backend` instance** — two would mean two schedulers.
+**Target Platform**: Unchanged. **Assumes exactly one `backend` instance**, two would mean two schedulers.
 
 **Project Type**: Server-rendered web application, three containers
 
@@ -68,7 +68,7 @@ Checked against `.specify/memory/constitution.md` v4.0.0.
 5. No endpoint or template receives a `table=True` model instance
 6. Every module-scoped service function performs its own authorisation check
 
-> **Scope of gate 6 in this phase.** The gate governs functions a caller can reach. `daily_job.run_daily` and `due.py` are reached by neither — **no route invokes them**, the scheduler calls the job and tests call it directly, and it acts with system authority over every registration by design. There is nothing for them to authorise against, so the gate does not apply to them. It applies in full to everything else this phase adds: setting a schedule resolves through `module_service.get_for`, and a person reads only their own notifications.
+> **Scope of gate 6 in this phase.** The gate governs functions a caller can reach. `daily_job.run_daily` and `due.py` are reached by neither, **no route invokes them**, the scheduler calls the job and tests call it directly, and it acts with system authority over every registration by design. There is nothing for them to authorise against, so the gate does not apply to them. It applies in full to everything else this phase adds: setting a schedule resolves through `module_service.get_for`, and a person reads only their own notifications.
 
 **Result: PASS.** Complexity Tracking is empty.
 
@@ -84,7 +84,7 @@ specs/005-scheduling-notifications/
 ├── quickstart.md
 ├── contracts/routes.md
 ├── checklists/requirements.md
-└── tasks.md             # /speckit-tasks output — not created here
+└── tasks.md             # /speckit-tasks output, not created here
 ```
 
 ### Source Code (repository root)
@@ -98,12 +98,12 @@ backend/
     ├── models/
     │   └── notification.py       # new
     ├── services/
-    │   ├── due.py                # new — pure: given a test, registration, attempts, return the due date
-    │   ├── state.py              # from Phase 3 — extended with due and overdue
-    │   ├── notification_service.py  # new — create, list, mark seen
-    │   └── daily_job.py          # new — the whole scheduled run, one function
+    │   ├── due.py                # new, pure: given a test, registration, attempts, return the due date
+    │   ├── state.py              # from Phase 3, extended with due and overdue
+    │   ├── notification_service.py  # new, create, list, mark seen
+    │   └── daily_job.py          # new, the whole scheduled run, one function
     ├── routers/
-    │   └── notifications.py      # new — two routes
+    │   └── notifications.py      # new, two routes
     └── templates/
         ├── notifications/list.html
         ├── components/nav_badge.html
@@ -114,7 +114,7 @@ tests/services/{test_due,test_daily_job,test_notification}.py
 
 **Structure Decision**: Two additions follow the pattern set in Phases 2 and 3.
 
-`app/services/due.py` is a pure function alongside `scoring.py` and `state.py` — given a test, a registration, and that person's attempts, return their due date or `None`. No session, no clock passed implicitly. Due-date arithmetic has the most cases in this phase and is the easiest thing to get subtly wrong.
+`app/services/due.py` is a pure function alongside `scoring.py` and `state.py`, given a test, a registration, and that person's attempts, return their due date or `None`. No session, no clock passed implicitly. Due-date arithmetic has the most cases in this phase and is the easiest thing to get subtly wrong.
 
 `app/services/daily_job.py` holds the scheduled run as **one ordinary function taking a session and a date**. The scheduler calls it; tests call it directly with a fixed date and call it twice to prove nothing happens the second time. Nothing about the job requires a scheduler to be running to test it.
 

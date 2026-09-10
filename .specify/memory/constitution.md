@@ -1,8 +1,8 @@
 <!--
-SYNC IMPACT REPORT — v4.0.0 (current)
+SYNC IMPACT REPORT, v4.0.0 (current)
 =====================================
 Version change: 3.0.1 → 4.0.0
-Bump rationale: MAJOR. A mandatory rule was REMOVED — the requirement that a
+Bump rationale: MAJOR. A mandatory rule was REMOVED, the requirement that a
 mysqldump precede any schema change against an instance holding real data.
 Removals are backward-incompatible governance changes under this constitution's
 own policy, the same reasoning applied at 2.0.0.
@@ -25,14 +25,14 @@ Principles: all eight unchanged in name, number, and meaning.
 
 Prior reports retained below for history.
 
-SYNC IMPACT REPORT — v3.0.1
+SYNC IMPACT REPORT, v3.0.1
 ===========================
 Version change: 3.0.0 → 3.0.1
 Bump rationale: PATCH. Corrects a rule that contradicted 3.0.0 itself. No
 meaning changed anywhere else.
 
 The Email section still required a server-side break-glass for issuing a login
-code, and required it to "remain working" — but 3.0.0 removed that command. The
+code, and required it to "remain working", but 3.0.0 removed that command. The
 rule now states the actual consequence: with neither a resend route nor a
 bypass, a mail outage locks everyone out until mail is restored, so outbound
 reachability must be verified at deployment.
@@ -41,11 +41,11 @@ Found while re-checking the phase specifications after the 3.0.0 reduction.
 
 Prior reports retained below for history.
 
-SYNC IMPACT REPORT — v3.0.0
+SYNC IMPACT REPORT, v3.0.0
 ===========================
 Version change: 2.2.1 → 3.0.0
 Bump rationale: MAJOR. Mandatory rules were REMOVED, which is a backward-incompatible
-governance change under this constitution's own versioning policy — the same
+governance change under this constitution's own versioning policy, the same
 reasoning applied to the audit-log removal at 2.0.0.
 
 Trigger: the project owner asked for the security surface to be reduced, on the
@@ -73,12 +73,11 @@ Retained deliberately, because removing them costs more than it saves:
   environment; rate limiting on login.
 
 Principles: all eight unchanged in name, number, and meaning. The idempotency
-constraint under Scheduling and notifications is kept as a functional rule —
-sending someone the same reminder twice is a defect, not a security control.
+constraint under Scheduling and notifications is kept as a functional rule, sending someone the same reminder twice is a defect, not a security control.
 
 Prior reports retained below for history.
 
-SYNC IMPACT REPORT — v2.2.1
+SYNC IMPACT REPORT, v2.2.1
 ===========================
 Version change: 2.2.0 → 2.2.1
 Bump rationale: PATCH. Terminology only. Every rule keeps its meaning, its
@@ -106,7 +105,7 @@ changed as a result.
 
 Prior reports retained below for history.
 
-SYNC IMPACT REPORT — v2.2.0
+SYNC IMPACT REPORT, v2.2.0
 ===========================
 Version change: 2.1.0 → 2.2.0
 Bump rationale: MINOR. Guidance expanded, no rule removed. Nothing built under
@@ -137,12 +136,12 @@ overdue users to a module owner. Flagged as a risk, not assumed as scope.
 
 Prior reports retained below for history.
 
-SYNC IMPACT REPORT — v2.1.0
+SYNC IMPACT REPORT, v2.1.0
 ===========================
 Version change: 2.0.0 → 2.1.0
 Bump rationale: MINOR. Guidance materially expanded; a prohibition was lifted and
 replaced with tighter conditions. No principle changed, and nothing built under
-2.0.0 becomes non-compliant — a system with no scheduler still satisfies 2.1.0.
+2.0.0 becomes non-compliant, a system with no scheduler still satisfies 2.1.0.
 
 Note on why this is MINOR where the 2.0.0 audit change was MAJOR: removing the
 audit requirement took a capability OUT of the system, so work done under 1.1.0
@@ -171,7 +170,7 @@ has not been assumed.
 
 Prior reports retained below for history.
 
-SYNC IMPACT REPORT — v2.0.0
+SYNC IMPACT REPORT, v2.0.0
 ===========================
 Version change: 1.1.0 → 2.0.0
 Bump rationale: MAJOR. A mandatory governance rule was REMOVED, which is a
@@ -201,14 +200,14 @@ not as an oversight.
 
 Prior reports retained below for history.
 
-SYNC IMPACT REPORT — v1.1.0
+SYNC IMPACT REPORT, v1.1.0
 ===========================
 Version change: 1.0.0 → 1.1.0
 Bump rationale: MINOR. Two-factor authentication added to the constraints
 section: five Security rules, a new Email subsection, and done-gate 7. No
 principle changed.
 
-SYNC IMPACT REPORT — v1.0.0
+SYNC IMPACT REPORT, v1.0.0
 ===========================
 Version change: (unversioned scaffold) → 1.0.0
 Bump rationale: Initial ratification. The previous file was the unmodified core
@@ -258,7 +257,7 @@ router.
 
 Rationale: the repository layer was deliberately removed to reduce ceremony, which leaves this
 principle as the only barrier preventing query logic from spreading into HTTP handlers. It is
-mechanically checkable — a router's import list either contains those symbols or it does not.
+mechanically checkable, a router's import list either contains those symbols or it does not.
 
 ### II. Services Are HTTP-Agnostic
 
@@ -287,7 +286,7 @@ migration tool is adopted while the system holds no production data. A model cha
 applied by recreating the database (`docker compose down -v && docker compose up`) and re-running
 the seed script. Live tables MUST NOT be hand-edited to match a changed model.
 
-Rationale: `create_all()` only creates missing tables — it never alters an existing one, so a new
+Rationale: `create_all()` only creates missing tables, it never alters an existing one, so a new
 field on an existing model silently does nothing and the application then fails at runtime against
 a stale schema. Recreating is free precisely because there is no data to lose, and that condition
 is what this principle depends on. It therefore carries an expiry: see Governance → Scheduled
@@ -295,7 +294,7 @@ Amendments.
 
 ### V. Every Phase Ships Running Software
 
-No phase may be defined as infrastructure-only — there is no "the database phase" and no "the auth
+No phase may be defined as infrastructure-only, there is no "the database phase" and no "the auth
 phase". Every phase MUST end with `docker compose up` bringing all three tiers to a state in which
 a real user can log in and complete the capability that phase promised.
 
@@ -309,7 +308,7 @@ afterwards. Tests MUST execute against a disposable MySQL container. SQLite MUST
 substituted for the test database. Router tests are required wherever behaviour is non-obvious.
 
 Rationale: SQLite diverges from MySQL on foreign key enforcement, `VARCHAR` length limits, `JSON`
-typing, and string collation — which is precisely the set of guarantees this project relies on
+typing, and string collation, which is precisely the set of guarantees this project relies on
 MySQL to provide. A test suite that passes on SQLite would assert nothing about those guarantees.
 
 ### VII. Non-Goals Are Defended
@@ -327,7 +326,7 @@ incurred.
 
 Every additional layer, container, dependency, or abstraction MUST justify itself against a
 problem that exists now, not one that is anticipated. Where two designs both satisfy the
-requirement, the design with fewer moving parts wins — unless the simpler design weakens a
+requirement, the design with fewer moving parts wins, unless the simpler design weakens a
 guarantee named elsewhere in this constitution, as substituting SQLite would weaken Principle VI.
 
 Rationale: at this system's size, complexity is the dominant source of defects, and it compounds.
@@ -398,7 +397,7 @@ The stated exception exists so that "simpler" is never used to argue away a corr
   attempt recorded on the rows it covered, and MUST NOT be a substitute for them, so the two
   channels can never disagree about what a user was told.
 - One email MAY cover several rows. Where it does, it MUST stamp every row it included, and the
-  in-app list MUST still hold one row per underlying event — grouping is a delivery concern and
+  in-app list MUST still hold one row per underlying event, grouping is a delivery concern and
   MUST NOT reduce what the user can see or act on individually.
 - The scheduled job MUST be idempotent. Running it twice MUST produce neither a second row nor a
   second email: uniqueness constraints prevent the rows, and sending only unstamped rows prevents
@@ -419,7 +418,7 @@ The stated exception exists so that "simpler" is never used to argue away a corr
 Each phase is one Spec Kit cycle: specify → plan → tasks → build → deploy. A phase does not begin
 until the preceding phase has met its definition of done in full.
 
-**Definition of done — every phase, without exception**
+**Definition of done, every phase, without exception**
 
 1. `docker compose up` on a clean checkout brings all three tiers to a working state.
 2. The automated test suite passes against a MySQL container.
@@ -432,7 +431,7 @@ until the preceding phase has met its definition of done in full.
 **Review**
 
 Code review MUST verify compliance with the six gates above and with the Core Principles. A change
-that violates a principle is rejected or the principle is amended first — it is never waived
+that violates a principle is rejected or the principle is amended first, it is never waived
 silently for convenience.
 
 ## Governance
@@ -451,9 +450,9 @@ and commands read this file at runtime and are not edited as part of an amendmen
 
 Semantic versioning applies to governance, not to the software:
 
-- MAJOR — a principle is removed, or redefined in a way that invalidates work performed under it.
-- MINOR — a principle or section is added, or existing guidance is materially expanded.
-- PATCH — clarification, wording, or typo correction that does not change meaning.
+- MAJOR, a principle is removed, or redefined in a way that invalidates work performed under it.
+- MINOR, a principle or section is added, or existing guidance is materially expanded.
+- PATCH, clarification, wording, or typo correction that does not change meaning.
 
 **Compliance review**
 
@@ -465,7 +464,7 @@ removed.
 
 Principle IV is time-limited by design. It is void from the moment the first real user data is
 entered into a running instance, expected at the end of Phase 3. At that point this constitution
-MUST be amended — a MAJOR bump — to replace it with an explicit schema-change policy: either
+MUST be amended, a MAJOR bump, to replace it with an explicit schema-change policy: either
 Alembic, or hand-written `ALTER TABLE` scripts kept as the schema record.
 
 There is no backup requirement, because there is no backup. A schema change against an instance

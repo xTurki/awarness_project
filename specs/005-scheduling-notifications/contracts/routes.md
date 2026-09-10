@@ -2,7 +2,7 @@
 
 **Phase 1 output** for [plan.md](./plan.md).
 
-This phase adds **two routes** and one field to an existing form. Most of its behaviour is not reachable by HTTP at all — it happens in the daily job, which is documented below as a contract of its own because it is the interface that matters.
+This phase adds **two routes** and one field to an existing form. Most of its behaviour is not reachable by HTTP at all, it happens in the daily job, which is documented below as a contract of its own because it is the interface that matters.
 
 **Guards** carry over: `auth`, `module:write`.
 
@@ -50,7 +50,7 @@ The date is a parameter rather than read from the clock, so a test can run it fo
 
 1. For every active registration on a module whose test carries an interval or a completion period, compute the due date (`due.py`).
 2. Where the due date is within `DUE_SOON_LEAD_DAYS`, insert a `due_soon` notification for that person and module. Where it has passed, insert `overdue`.
-3. Insertions that violate the unique constraint are skipped — that is what makes a second run create nothing (FR-024).
+3. Insertions that violate the unique constraint are skipped, that is what makes a second run create nothing (FR-024).
 4. Group each person's unsent `due_soon` and `overdue` rows into **one** email.
 5. Send. Stamp `emailed_at` on every row that message covered.
 6. A send that fails leaves its rows unstamped, so a later run retries (FR-025).
@@ -97,6 +97,6 @@ No routes of their own. Two existing actions gain a notification, created and em
 | Situation | Response |
 |---|---|
 | No notifications at all | 200 with a clear statement, not an empty list |
-| Following a notification whose module you left | 404 — the registration is gone |
+| Following a notification whose module you left | 404, the registration is gone |
 | Setting an interval on a module you do not run | 403 |
 | Setting an interval with no pass mark | Back to the form, explaining that a pass mark is needed first |

@@ -3,10 +3,11 @@
 A small platform for assigning cybersecurity awareness training inside one
 organisation, tracking who has completed it, and chasing the people who have not.
 
-Built in five phases. **Phase 0 — identity, access, and the application shell —
-is the part that exists today.** Modules and content arrive in Phase 1, tests in
-Phase 2, results in Phase 3, and scheduling and notifications in Phase 4. The
-specifications for all five live under [`specs/`](specs/).
+Built in five phases. Two of them exist today: **Phase 0** brought identity,
+access, and the application shell, and **Phase 1** brought modules, their
+content, and registration. Tests arrive in Phase 2, results in Phase 3, and
+scheduling and notifications in Phase 4. The specifications for all five live
+under [`specs/`](specs/).
 
 ## Before you start
 
@@ -30,7 +31,7 @@ Open <http://localhost>. You should see the sign-in page.
 
 `seed.py` prints the seven demonstration accounts it created and their shared
 password: one administrator, one instructor, five trainees. They are exempt from
-the first-sign-in password change — **not** from the emailed code.
+the first-sign-in password change, **not** from the emailed code.
 
 ## Signing in
 
@@ -47,7 +48,7 @@ docker compose exec backend pytest
 ```
 
 That single command is the whole suite. Tests run against a disposable schema on
-the same MySQL server, never SQLite — this project depends on foreign keys, a
+the same MySQL server, never SQLite, this project depends on foreign keys, a
 unique index, and `utf8mb4`, and SQLite enforces none of them the same way.
 
 ## Changing a model
@@ -114,7 +115,7 @@ Each of these is a recorded decision, not an oversight. The reasoning is in
 docker-compose.yml     three services; only nginx publishes a port
 nginx/                 reverse proxy, and the only thing serving /static/
 backend/app/
-├── models/            the schema — SQLModel table classes
+├── models/            the schema, SQLModel table classes
 ├── schemas/           non-table models at every boundary, in and out
 ├── services/          business logic, authorisation, and every query
 ├── routers/           thin: parse, call one service, render or redirect
