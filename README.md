@@ -63,6 +63,36 @@ docker compose exec backend python seed.py
 This is free while there is no real data, and it is expected to stay that way
 until the end of Phase 3.
 
+## Removing a module permanently
+
+Removing a module from the platform is reversible: it disappears from every
+list while its pages, images, and registrations stay exactly where they are, and
+restoring it brings all of them back. There is no route that removes one for
+good, and that is deliberate.
+
+Permanent removal is a database operation, and **whoever performs it must also
+delete that module's image files**. Nothing in the application does this, and an
+image whose page was deleted is never collected on its own:
+
+```bash
+# 1. See what will go.
+docker compose exec db mysql -uroot -p -e \
+  "SELECT stored_name FROM lms.content_image WHERE module_id = <id>;"
+
+# 2. Delete those files from the volume.
+docker compose exec backend sh -c 'rm -f /data/uploads/<stored_name> ...'
+
+# 3. Then the rows, children first.
+docker compose exec db mysql -uroot -p -e "
+  DELETE FROM lms.content_image WHERE module_id = <id>;
+  DELETE FROM lms.page          WHERE module_id = <id>;
+  DELETE FROM lms.registration  WHERE module_id = <id>;
+  DELETE FROM lms.module        WHERE id        = <id>;"
+```
+
+Do step 2 before step 3. Once the rows are gone, nothing records which files
+belonged to that module, and they stay on the volume forever.
+
 ## What this deliberately does not do
 
 - **No self-registration.** Accounts come from an administrator or from the seed.

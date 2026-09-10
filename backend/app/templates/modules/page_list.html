@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Pages: {{ module.title }}{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-3">
+  <div>
+    <h1 class="h4 mb-0">Pages</h1>
+    <a class="small text-decoration-none" href="/modules/{{ module.id }}">{{ module.title }}</a>
+  </div>
+  <a class="btn btn-primary btn-sm" href="/modules/{{ module.id }}/pages/new">New page</a>
+</div>
+
+{% if pages %}
+  <p class="text-body-secondary small">
+    Trainees see published pages only, in this order. A draft is absent from
+    their view entirely.
+  </p>
+
+  <div class="d-flex flex-column gap-2">
+    {% for page in pages %}
+      <div class="d-flex flex-wrap gap-2 align-items-center border rounded p-2 bg-body">
+        <span class="text-body-secondary">{{ loop.index }}.</span>
+        <span class="me-auto">{{ page.title }}</span>
+
+        {% if page.is_published %}
+          <span class="badge text-bg-success">Published</span>
+        {% else %}
+          <span class="badge text-bg-secondary">Draft</span>
+        {% endif %}
+
+        {# Each button posts the complete order it wants, so the service rewrites
+           positions in one transaction rather than swapping in place. #}
+        {% if not loop.first %}
+          {% set index = loop.index0 %}
+          <form method="post" action="/modules/{{ module.id }}/pages/reorder" class="m-0">
+            <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token }}">
+            {% for item in pages[:index - 1] %}
+              <input type="hidden" name="order" value="{{ item.id }}">
+            {% endfor %}
+            <input type="hidden" name="order" value="{{ pages[index].id }}">
+            <input type="hidden" name="order" value="{{ pages[index - 1].id }}">
+            {% for item in pages[index + 1:] %}
+              <input type="hidden" name="order" value="{{ item.id }}">
+            {% endfor %}
+            <button type="submit" class="btn btn-sm btn-outline-secondary">Up</button>
+          </form>
+        {% endif %}
+
+        <a class="btn btn-sm btn-outline-secondary"
+           href="/modules/{{ module.id }}/pages/{{ page.id }}/edit">Edit</a>
+
+        <form method="post" action="/modules/{{ module.id }}/pages/{{ page.id }}/publish" class="m-0">
+          <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token }}">
+          <input type="hidden" name="is_published" value="{{ 'false' if page.is_published else 'true' }}">
+          <button type="submit" class="btn btn-sm btn-outline-secondary">
+            {{ "Unpublish" if page.is_published else "Publish" }}
+          </button>
+        </form>
+
+        <form method="post" action="/modules/{{ module.id }}/pages/{{ page.id }}/delete" class="m-0">
+          <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token }}">
+          <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+        </form>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <p class="text-body-secondary">
+    No pages yet. The first one you write goes last, and you can reorder afterwards.
+  </p>
+{% endif %}
+{% endblock %}

@@ -28,10 +28,16 @@ TOO_MANY = "Too many attempts. Wait a few minutes and try again."
 
 
 @router.get("/login")
-def login_form(request: Request):
-    if request.cookies.get(SESSION_COOKIE):
+def login_form(request: Request, db: Db = Depends(get_session)):
+    # A *valid* session sends them to the dashboard. A stale cookie must not:
+    # `/` would bounce it straight back here, and the two would loop forever.
+    if auth_service.session_is_valid(db, request.cookies.get(SESSION_COOKIE)):
         return RedirectResponse("/", status_code=status.HTTP_303_SEE_OTHER)
-    return render(request, "auth/login.html")
+
+    response = render(request, "auth/login.html")
+    if request.cookies.get(SESSION_COOKIE):
+        response.delete_cookie(SESSION_COOKIE, path="/")
+    return response
 
 
 @router.post("/login", dependencies=[Depends(csrf_protect)])
@@ -54,18 +60,13 @@ async def login_submit(
             status.HTTP_401_UNAUTHORIZED,
         )
     except EmailDeliveryFailed:
-        # Never send them to wait for a code that did not leave (FR-020).
-        return render(
-            request,
-            "auth/login.html",
-            {
-                "message": (
-                    "The code could not be sent, so nobody can sign in until mail is "
-                    "working again. Signing in again is how to retry."
-                ),
-                "email": email,
-            },
-            status.HTTP_503_SERVICE_UNAVAILABLE,
+        # The code exists and was printed to the server console, so it is
+        # reachable even when the mail provider refuses. Carry the failure to
+        # the code page rather than stopping here: the person is told plainly
+        # (FR-020), and can still finish signing in if they have the code.
+        return RedirectResponse(
+            f"/login/verify?email={email}&mail=failed",
+            status_code=status.HTTP_303_SEE_OTHER,
         )
 
     return RedirectResponse(
@@ -74,8 +75,15 @@ async def login_submit(
 
 
 @router.get("/login/verify")
-def verify_form(request: Request, email: str = ""):
-    return render(request, "auth/verify.html", {"email": email})
+def verify_form(request: Request, email: str = "", mail: str = ""):
+    context: dict = {"email": email}
+    if mail == "failed":
+        context["message"] = (
+            "The code could not be emailed. It was still issued, so enter it if you "
+            "have it another way. Otherwise sign in again once mail is working."
+        )
+        context["message_kind"] = "warning"
+    return render(request, "auth/verify.html", context)
 
 
 @router.post("/login/verify", dependencies=[Depends(csrf_protect)])

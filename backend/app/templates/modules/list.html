@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Modules{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-3">
+  <h1 class="h4 m-0">
+    {% if account.role == "administrator" %}All modules
+    {% elif account.role == "instructor" %}Modules you run
+    {% else %}Your training{% endif %}
+  </h1>
+
+  {% if account.role == "administrator" %}
+    <a class="btn btn-primary btn-sm" href="/modules/new">New module</a>
+  {% endif %}
+</div>
+
+<div class="row g-3">
+  {% for module in modules %}
+    <div class="col-12 col-lg-6">
+      <div class="card h-100">
+        <div class="card-body">
+          <h2 class="h6 card-title">
+            <a href="/modules/{{ module.id }}" class="stretched-link text-decoration-none">
+              {{ module.title }}
+            </a>
+          </h2>
+
+          {% if account.role != "trainee" %}
+            {% if module.is_published %}
+              <span class="badge text-bg-success">Published</span>
+            {% else %}
+              <span class="badge text-bg-secondary">Unpublished</span>
+            {% endif %}
+          {% endif %}
+
+          {% if module.description %}
+            <p class="card-text small text-body-secondary mt-2 mb-0">{{ module.description }}</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  {% else %}
+    <div class="col-12">
+      <p class="text-body-secondary">
+        {% if account.role == "trainee" %}
+          You are not on any modules yet. Somebody will put you on one.
+        {% else %}
+          No modules yet.
+        {% endif %}
+      </p>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}

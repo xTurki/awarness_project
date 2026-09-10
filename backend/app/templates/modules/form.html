@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}{{ "Edit module" if module else "New module" }}{% endblock %}
+
+{% block content %}
+<div class="form-narrow">
+  <h1 class="h4 mb-3">{{ "Edit module" if module else "New module" }}</h1>
+
+  <form method="post" action="{{ '/modules/' ~ module.id if module else '/modules' }}" novalidate>
+    <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token }}">
+
+    <div class="mb-3">
+      <label for="title" class="form-label">Title</label>
+      <input type="text" class="form-control" id="title" name="title"
+             value="{{ title|default('') }}" required autofocus>
+      <div class="form-text">The title identifies the module. There is no code.</div>
+    </div>
+
+    <div class="mb-3">
+      <label for="description" class="form-label">Description</label>
+      <textarea class="form-control" id="description" name="description"
+                rows="4">{{ description|default('') }}</textarea>
+    </div>
+
+    <button type="submit" class="btn btn-primary">
+      {{ "Save changes" if module else "Create module" }}
+    </button>
+    <a class="btn btn-link" href="/modules">Cancel</a>
+  </form>
+
+  {% if module %}
+    <hr class="my-4">
+
+    <div class="d-flex flex-wrap gap-2">
+      <form method="post" action="/modules/{{ module.id }}/publish" class="m-0">
+        <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token }}">
+        <input type="hidden" name="is_published" value="{{ 'false' if module.is_published else 'true' }}">
+        <button type="submit" class="btn btn-outline-secondary btn-sm">
+          {{ "Unpublish" if module.is_published else "Publish" }}
+        </button>
+      </form>
+
+      <form method="post" action="/modules/{{ module.id }}/delete" class="m-0">
+        <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token }}">
+        <button type="submit" class="btn btn-outline-danger btn-sm">Remove</button>
+      </form>
+    </div>
+
+    <p class="form-text mt-2 mb-0">
+      Removing is reversible and keeps the pages, images, and registrations.
+      Unpublishing is how a module is retired: it does not end.
+    </p>
+  {% endif %}
+</div>
+{% endblock %}

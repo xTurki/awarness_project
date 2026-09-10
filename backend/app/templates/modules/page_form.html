@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}{{ "Edit page" if page else "New page" }}{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="/static/vendor/quill/quill.snow.css">
+
+<div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-3">
+  <div>
+    <h1 class="h4 mb-0">{{ "Edit page" if page else "New page" }}</h1>
+    <a class="small text-decoration-none" href="/modules/{{ module.id }}/pages">{{ module.title }}</a>
+  </div>
+</div>
+
+<form method="post" id="pageForm"
+      action="{{ '/modules/' ~ module.id ~ '/pages/' ~ page.id if page else '/modules/' ~ module.id ~ '/pages' }}"
+      novalidate>
+  <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token }}">
+
+  <div class="mb-3">
+    <label for="title" class="form-label">Title</label>
+    <input type="text" class="form-control" id="title" name="title"
+           value="{{ title|default('') }}" required autofocus>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label" for="editor">Content</label>
+    <div id="editor" class="bg-body">{{ body|default('')|safe }}</div>
+    <input type="hidden" name="body" id="body">
+    <div class="form-text">
+      Headings, emphasis, lists, links, and images. Scripts and event handlers
+      are removed before anything is stored, so paste freely.
+    </div>
+  </div>
+
+  <button type="submit" class="btn btn-primary">Save</button>
+  <a class="btn btn-link" href="/modules/{{ module.id }}/pages">Cancel</a>
+</form>
+
+<div id="uploadMessage" class="alert alert-danger mt-3 d-none" role="alert"></div>
+
+<script src="/static/vendor/quill/quill.js"></script>
+<script>
+  // The toolbar is deliberately small: it produces exactly the tags the
+  // server-side allowlist keeps, so nothing an instructor writes is silently
+  // stripped after they have written it.
+  const quill = new Quill('#editor', {
+    theme: 'snow',
+    modules: {
+      toolbar: {
+        container: [
+          [{ header: [2, 3, 4, false] }],
+          ['bold', 'italic', 'underline'],
+          [{ list: 'ordered' }, { list: 'bullet' }],
+          ['blockquote', 'code-block'],
+          ['link', 'image'],
+          ['clean']
+        ],
+        handlers: { image: pickImage }
+      }
+    }
+  });
+
+  document.getElementById('pageForm').addEventListener('submit', function () {
+    document.getElementById('body').value = quill.root.innerHTML;
+  });
+
+  function pickImage() {
+    const input = document.createElement('input');
+    input.setAttribute('type', 'file');
+    input.setAttribute('accept', 'image/*');
+    input.click();
+
+    input.onchange = async function () {
+      const file = input.files[0];
+      if (!file) return;
+
+      const form = new FormData();
+      form.append('file', file);
+      form.append('{{ csrf_field }}', '{{ csrf_token }}');
+
+      const response = await fetch('/modules/{{ module.id }}/images', {
+        method: 'POST',
+        body: form
+      });
+      const payload = await response.json();
+
+      const box = document.getElementById('uploadMessage');
+      if (!response.ok) {
+        // Say what was wrong and name the limit, rather than failing blankly.
+        box.textContent = payload.error || 'That file could not be uploaded.';
+        box.classList.remove('d-none');
+        return;
+      }
+
+      box.classList.add('d-none');
+      const range = quill.getSelection(true);
+      quill.insertEmbed(range.index, 'image', payload.url);
+      quill.setSelection(range.index + 1);
+    };
+  }
+</script>
+{% endblock %}

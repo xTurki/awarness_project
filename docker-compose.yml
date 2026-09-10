@@ -36,6 +36,8 @@ services:
       # command work: docker compose exec backend pytest
       - ./tests:/app/tests:ro
       - ./pytest.ini:/app/pytest.ini:ro
+      # Instructor image uploads. The first file storage in the project.
+      - uploads:/data/uploads
     # No published port. Only nginx reaches it.
 
   nginx:
@@ -43,10 +45,18 @@ services:
     restart: unless-stopped
     depends_on:
       - backend
+    environment:
+      # nginx.conf is a template rendered at container start. Its
+      # client_max_body_size comes from this same number, plus a small margin
+      # for multipart overhead, so the two limits cannot drift apart.
+      UPLOAD_MAX_MB: ${UPLOAD_MAX_MB:-5}
     ports:
       - "80:80"
     volumes:
       - ./backend/app/static:/srv/static:ro
+      # Uploaded images are served by nginx as static files, read-only.
+      - uploads:/srv/uploads:ro
 
 volumes:
   db_data:
+  uploads:

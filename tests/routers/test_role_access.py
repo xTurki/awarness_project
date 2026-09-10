@@ -38,6 +38,15 @@ def test_administrative_navigation_is_present_for_an_administrator(client, make_
     assert "/admin/accounts" in page.text
 
 
-def test_each_role_sees_its_own_panel(client, make_user, sign_in):
-    sign_in(make_user(email="i@example.com", role="instructor"))
-    assert "Your modules" in client.get("/").text
+def test_each_role_sees_its_own_heading(client, make_user, sign_in):
+    """Phase 1 replaced the placeholder panels with the module list, so the
+    role-specific wording moved with it."""
+    headings = {
+        "instructor": "Modules you run",
+        "trainee": "Your training",
+        "administrator": "Modules",
+    }
+    for role, heading in headings.items():
+        sign_in(make_user(email=f"{role}@example.com", role=role))
+        assert heading in client.get("/").text
+        client.cookies.clear()

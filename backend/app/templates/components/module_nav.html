@@ -1,0 +1,31 @@
+{# One markup block, two behaviours from CSS: an offcanvas drawer below 992px,
+   a persistent column above it. Phases 2, 3, and 4 render inside this, so it is
+   worth getting right once here (research R9, FR-033). #}
+
+<button class="btn btn-outline-secondary btn-sm d-lg-none mb-3" type="button"
+        data-bs-toggle="offcanvas" data-bs-target="#moduleNav" aria-controls="moduleNav">
+  Pages
+</button>
+
+<div class="offcanvas-lg offcanvas-start" tabindex="-1" id="moduleNav"
+     aria-labelledby="moduleNavLabel">
+  <div class="offcanvas-header">
+    <h2 class="offcanvas-title h6" id="moduleNavLabel">{{ module.title }}</h2>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas"
+            data-bs-target="#moduleNav" aria-label="Close"></button>
+  </div>
+
+  <div class="offcanvas-body flex-column align-items-stretch">
+    <nav class="list-group list-group-flush w-100">
+      <a class="list-group-item list-group-item-action{% if not page %} active{% endif %}"
+         href="/modules/{{ module.id }}">Overview</a>
+
+      {% for item in pages %}
+        <a class="list-group-item list-group-item-action{% if page and page.id == item.id %} active{% endif %}"
+           href="/modules/{{ module.id }}/pages/{{ item.id }}">{{ item.title }}</a>
+      {% else %}
+        <span class="list-group-item text-body-secondary">No pages yet.</span>
+      {% endfor %}
+    </nav>
+  </div>
+</div>

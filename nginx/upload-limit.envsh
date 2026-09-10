@@ -1,0 +1,6 @@
+# Sourced by the nginx entrypoint before the template is rendered.
+# One number in .env decides both limits: the application refuses at
+# UPLOAD_MAX_MB, and nginx refuses one megabyte later, so an oversized upload
+# always reaches the application and gets an explanation rather than a blank
+# 413 from the proxy (research R4).
+export UPLOAD_MAX_PLUS_MARGIN=$(( ${UPLOAD_MAX_MB:-5} + 1 ))

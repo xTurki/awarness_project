@@ -28,11 +28,25 @@ class Settings(BaseSettings):
     smtp_port: int = 587
     smtp_timeout_seconds: int = 10
 
+    # Uploads. One number feeds both the application limit and the one nginx
+    # enforces, so the two cannot drift apart and produce a blank 413 the
+    # application never sees (research R4).
+    upload_max_mb: int = 5
+    upload_dir: str = "/data/uploads"
+
     # Timings and limits
     code_ttl_minutes: int = 10
     session_hours: int = 12
     login_rate_limit: int = 5
     login_rate_window_minutes: int = 5
+
+    # Checked by extension only. A renamed executable will be accepted and stored;
+    # it lands in a directory nginx serves as static content and does not run.
+    allowed_image_extensions: tuple[str, ...] = (".png", ".jpg", ".jpeg", ".gif", ".webp")
+
+    @property
+    def upload_max_bytes(self) -> int:
+        return self.upload_max_mb * 1024 * 1024
 
     @property
     def database_url(self) -> str:

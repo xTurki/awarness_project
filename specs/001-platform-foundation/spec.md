@@ -133,7 +133,7 @@ Email delivery fails — an outage, a blocked connection, an expired credential.
 
 **Acceptance Scenarios**:
 
-1. **Given** outbound email is failing, **When** someone attempts to sign in, **Then** they are told plainly that the code could not be sent and that signing in again is how to retry, rather than being left waiting for a code that will never arrive.
+1. **Given** outbound email is failing, **When** someone attempts to sign in, **Then** they reach the code-entry page carrying a plain notice that the code could not be emailed, was still issued, and can be entered if they have it another way.
 2. **Given** email delivery is slow, **When** sign-in is attempted, **Then** the attempt fails within a bounded time with a clear message rather than hanging.
 
 ---
@@ -179,7 +179,7 @@ Email delivery fails — an outage, a blocked connection, an expired credential.
 - **FR-017**: System MUST refuse a code that has already been used successfully.
 - **FR-018**: System MUST invalidate any outstanding code when a fresh sign-in is started for the same account.
 - **FR-019**: System MUST limit how frequently sign-in attempts may be made from the same source.
-- **FR-020**: System MUST tell a person plainly when a code could not be sent, and MUST make clear that signing in again is how to retry.
+- **FR-020**: System MUST tell a person plainly when a code could not be sent, and MUST make clear that signing in again is how to retry. The message is carried to the code-entry page rather than blocking there, because the code was still issued and is reachable from the server console; a mail outage therefore slows sign-in rather than stopping it.
 - **FR-021**: System MUST fail a code-sending attempt within a bounded time rather than leaving the person waiting indefinitely.
 
 **Staying signed in, and stopping**
@@ -239,6 +239,7 @@ Email delivery fails — an outage, a blocked connection, an expired credential.
 - A person choosing their first password is not asked for the administrator's password again. They have just proved who they are with that password and an emailed code; asking a third time adds friction without adding proof.
 - The demonstration accounts created at installation are exempt from the first-sign-in password change, so the platform can be shown working without a detour. Real accounts created by an administrator are never exempt.
 - Passwords must be at least eight characters. No composition rules.
+- **The sign-in code is printed to the server console**, every time, alongside being emailed. The rule forbidding codes in logs was removed when the security surface was reduced, and printing keeps the platform usable when the mail provider refuses to send. Anyone who can read the container log can sign in as anyone.
 - "Materially different navigation" between roles means at minimum that administrative navigation is absent for instructors and trainees.
 - **The interface is English, left-to-right.** One stylesheet, no direction handling anywhere in the shell that every later phase renders inside.
 

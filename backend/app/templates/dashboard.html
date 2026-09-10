@@ -5,48 +5,54 @@
 <h1 class="h4 mb-1">Welcome, {{ account.full_name }}</h1>
 <p class="text-body-secondary">Signed in as {{ account.role }}.</p>
 
-<div class="row g-3 mt-1">
+<h2 class="h6 mt-4">
+  {% if account.role == "administrator" %}Modules
+  {% elif account.role == "instructor" %}Modules you run
+  {% else %}Your training{% endif %}
+</h2>
 
-  {% if account.role == "administrator" %}
+{# One list. Phase 3 adds a state against each of these rows rather than a
+   second page listing the same modules again. #}
+<div class="row g-3">
+  {% for module in modules %}
     <div class="col-12 col-lg-6">
       <div class="card h-100">
         <div class="card-body">
-          <h2 class="h6 card-title">Accounts</h2>
-          <p class="card-text small text-body-secondary">
-            Create accounts, change roles, reset passwords, and switch accounts off.
-            Nobody registers themselves.
-          </p>
-          <a class="btn btn-sm btn-primary" href="/admin/accounts">Manage accounts</a>
+          <h3 class="h6 card-title">
+            <a href="/modules/{{ module.id }}" class="stretched-link text-decoration-none">
+              {{ module.title }}
+            </a>
+          </h3>
+
+          {% if account.role != "trainee" and not module.is_published %}
+            <span class="badge text-bg-secondary">Unpublished</span>
+          {% endif %}
+
+          {% if module.description %}
+            <p class="card-text small text-body-secondary mt-2 mb-0">{{ module.description }}</p>
+          {% endif %}
         </div>
       </div>
     </div>
-  {% endif %}
-
-  {% if account.role == "instructor" %}
-    <div class="col-12 col-lg-6">
-      <div class="card h-100">
-        <div class="card-body">
-          <h2 class="h6 card-title">Your modules</h2>
-          <p class="card-text small text-body-secondary">
-            Modules you run will appear here. Authoring arrives in Phase 1.
-          </p>
-        </div>
-      </div>
+  {% else %}
+    <div class="col-12">
+      <p class="text-body-secondary">
+        {% if account.role == "trainee" %}
+          You are not on any modules yet. Somebody will put you on one.
+        {% elif account.role == "instructor" %}
+          You do not run any modules yet.
+        {% else %}
+          No modules yet. <a href="/modules/new">Create the first one</a>.
+        {% endif %}
+      </p>
     </div>
-  {% endif %}
-
-  {% if account.role == "trainee" %}
-    <div class="col-12 col-lg-6">
-      <div class="card h-100">
-        <div class="card-body">
-          <h2 class="h6 card-title">Your training</h2>
-          <p class="card-text small text-body-secondary">
-            Training assigned to you will appear here. Modules arrive in Phase 1.
-          </p>
-        </div>
-      </div>
-    </div>
-  {% endif %}
-
+  {% endfor %}
 </div>
+
+{% if account.role == "administrator" %}
+  <div class="mt-4">
+    <a class="btn btn-sm btn-outline-secondary" href="/admin/accounts">Manage accounts</a>
+    <a class="btn btn-sm btn-primary" href="/modules/new">New module</a>
+  </div>
+{% endif %}
 {% endblock %}
