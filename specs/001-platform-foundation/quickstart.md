@@ -25,7 +25,7 @@ docker compose exec backend python seed.py
 
 Open `http://localhost`. You should see the sign-in form.
 
-The seed creates seven accounts — one administrator, one instructor, five trainees. Their addresses and passwords are printed by `seed.py`. **They are exempt from the first-sign-in password change**, so they can be used immediately.
+The seed creates seven accounts: one administrator, one instructor, five trainees. Their addresses and passwords are printed by `seed.py`. **They are exempt from the first-sign-in password change**, so they can be used immediately.
 
 > **Changing a model?** There are no migrations. Run `docker compose down -v && docker compose up -d` and seed again. This is expected and costs nothing while there is no real data.
 

@@ -41,7 +41,7 @@ Paths follow [plan.md](./plan.md) → Project Structure, continuing the layout o
 - [ ] T006 [P] Write `backend/app/schemas/quiz.py` — **read models**: non-table `QuestionRead`, `TestRead`, `AttemptRead`, and `AttemptAnswerRead`, so none of the five new `table=True` models reaches a template or a response (done-gate 5). **Input models**: `QuestionWrite` (prompt, points, options, correct), `TestWrite`, `AnswerSubmit` (question id and selected option ids), and `ScoreOverride`, through which every form post is validated — the constitution requires input validated through non-table models. `QuestionRead` must **not** carry `is_correct` when rendered to a trainee taking a test
 - [ ] T007 [P] Write `backend/app/services/scoring.py` — one pure function `score(questions, answers) -> (points_earned, points_possible)`. **No session, no clock, no I/O.** A question's points are earned only when the selected option set **exactly equals** the correct set — no partial credit (FR-027). A question with no answer row scores zero (research R5)
 - [ ] T008 [P] Write `tests/services/test_scoring.py` — a table of worked examples covering **single-answer, multi-answer, blank, and fully wrong**, plus the partial-selection case that must score zero. This is the test SC-007 asks for, and the one whose failure would otherwise be silent
-- [ ] T009 Recreate the database for the five new tables — `docker compose down -v && docker compose up -d --build`, then `docker compose exec backend python seed.py`. There are no migrations (quickstart Prerequisites)
+- [ ] T009 Bring the five new tables into the running database: `docker compose up -d --build`. `create_all()` creates missing tables at startup, so existing modules, pages, and accounts survive. `docker compose down -v` is **not** required here, for the same reason as Phase 1 (Constitution IV)
 
 **Checkpoint**: The tables exist and scoring is provably correct before anything calls it.
 
@@ -238,6 +238,6 @@ Everything else here is forms and queries. These are not:
 
 ### Notes
 
-- Five new tables mean `docker compose down -v && docker compose up -d` and seeding again. There are no migrations
+- Five new tables need only `docker compose up -d --build`. No column on an existing table changes, so nothing is dropped
 - A test is frozen from its first attempt. That is deliberate and is what lets old attempts keep their meaning — the test that produced them never changed
 - Commit after each task or logical group

@@ -1,6 +1,6 @@
 """The starting set of accounts (FR-004).
 
-One administrator, one instructor, five trainees — all exempt from the
+One administrator, one instructor, five trainees, all exempt from the
 first-sign-in password change, and running it twice creates nothing.
 """
 

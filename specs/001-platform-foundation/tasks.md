@@ -160,11 +160,11 @@ Paths are as fixed in [plan.md](./plan.md) → Project Structure, which follows 
 
 ### Tests for User Story 5
 
-- [X] T051 [P] [US5] Write `tests/test_seed.py` — seeding creates **one administrator, one instructor, and five trainees**, all with `must_set_password` **false**, and running it twice creates no duplicates (FR-004, data-model.md → Seed data)
+- [X] T051 [P] [US5] Write `tests/test_seed.py`: seeding creates **one administrator, one instructor, and five trainees**, all with `must_set_password` **false**, and running it twice creates no duplicates (FR-004, data-model.md → Seed data)
 
 ### Implementation for User Story 5
 
-- [X] T052 [US5] Write `backend/seed.py` — the seven accounts, each with a password meeting the eight-character minimum, printing the addresses and passwords it created. Demonstration accounts are **exempt** from the first-sign-in password change; accounts an administrator creates never are (spec Assumptions)
+- [X] T052 [US5] Write `backend/seed.py`: the seven accounts, each with a password meeting the eight-character minimum, printing the addresses and passwords it created. Demonstration accounts are **exempt** from the first-sign-in password change; accounts an administrator creates never are (spec Assumptions)
 - [X] T053 [US5] Write the setup section of `README.md` — `cp .env.example .env`, edit it, `docker compose up -d`, `docker compose exec backend python seed.py`, and the note that changing a model means `docker compose down -v && docker compose up -d` because there are no migrations (FR-030, quickstart)
 - [X] T054 [US5] Verify the boundaries from a shell: `curl http://localhost:3306` and `curl http://localhost:8000` are both refused, and `http://localhost` serves the sign-in page (FR-031, SC-007)
 - [X] T055 [US5] Verify `docker compose restart` leaves every account in place, confirming the MySQL named volume is doing its job (FR-034)
@@ -194,7 +194,7 @@ Paths are as fixed in [plan.md](./plan.md) → Project Structure, which follows 
 
 ## Phase 9: Polish & Cross-Cutting Concerns
 
-- [ ] T059 [P] Walk sign-in, code entry, choose-a-password, dashboard, and account administration at **360px, 768px, and 1280px** — usable at each, navigation as a drawer at 360px, no sideways page scrolling anywhere (FR-028, SC-003, done-gate 3)
+- [X] T059 [P] Walk sign-in, code entry, choose-a-password, dashboard, and account administration at **360px, 768px, and 1280px** — usable at each, navigation as a drawer at 360px, no sideways page scrolling anywhere (FR-028, SC-003, done-gate 3)
 - [X] T060 [P] Confirm the code field carries `autocomplete="one-time-code"` and `inputmode="numeric"`, so a phone offers the received code (FR-029)
 - [X] T061 Run done-gate 4 as a check: no module under `backend/app/routers/` imports `Session` or `select`
 - [X] T062 Run done-gate 5 as a check: no endpoint or template receives a `table=True` model instance
