@@ -18,6 +18,13 @@ It also completes the state vocabulary. Phase 3 delivered the five states it cou
 
 This is what turns the platform from a place where training happens into something that keeps training current. It is also the only part of the system that acts without a person triggering it, which is why most of its requirements are about not doing that twice.
 
+## Clarifications
+
+### Session 2026-09-10
+
+- Q: How often should a person who is overdue be reminded — every seven days, once only, or daily? → A: Once only. Overdue is announced once per due date, there is no repeating reminder, and the configurable reminder interval is removed.
+- Q: How long should a newly registered person have to pass a recurring test for the first time, before the platform calls them overdue? → A: One full interval from their registration date. Failed attempts in the meantime do not shorten it — the rule that a failing attempt ends a cycle applies only to someone who had already passed.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Set how often training must be repeated (Priority: P1)
@@ -41,9 +48,9 @@ An instructor decides their module's test must be retaken every ninety days, or 
 
 ---
 
-### User Story 2 - Be told before it lapses, and while it is lapsed (Priority: P1)
+### User Story 2 - Be told before it lapses, and once it has (Priority: P1)
 
-A trainee passed the phishing module ten months ago. Two weeks before it lapses they are told. If the date passes without them retaking it, they are reminded weekly until they do.
+A trainee passed the phishing module ten months ago. Two weeks before it lapses they are told. If the date passes without them retaking it, they are told once that it has lapsed, and the module stays marked overdue wherever they see it until they retake it.
 
 **Why this priority**: A due date nobody is told about is a spreadsheet, not a platform. This is the reason the phase exists.
 
@@ -53,7 +60,7 @@ A trainee passed the phishing module ten months ago. Two weeks before it lapses 
 
 1. **Given** a person whose due date is within the warning period, **When** the daily process runs, **Then** they are notified that the module is coming due, once.
 2. **Given** a person whose due date has passed, **When** the daily process runs, **Then** they are notified that it is overdue.
-3. **Given** a person still overdue a week later, **When** the daily process runs again, **Then** they are reminded again.
+3. **Given** a person still overdue a week later, **When** the daily process runs again, **Then** they receive nothing further about that due date — what persists is the overdue state on their dashboard, not a repeated message.
 4. **Given** a person overdue on three modules, **When** the daily process runs, **Then** they receive **one** message covering all three, not three messages.
 5. **Given** the daily process has already run today, **When** it is run a second time, **Then** nobody receives anything again and no duplicate record is created.
 6. **Given** a person who retakes and passes, **When** the daily process next runs, **Then** they are not reminded, and their next due date is a full interval away.
@@ -100,11 +107,11 @@ Someone is registered onto a module, or their test result becomes available. The
 
 ### Edge Cases
 
-- **Nobody has ever passed.** A person registered on a recurring module who has never passed it is due from the moment they were registered, and overdue from the day after.
-- **Someone passes, then retakes to revise and scores below the pass mark.** They are due immediately and overdue the next day, and will be reminded. The route out is to retake and pass, which the review from Phase 2 makes straightforward.
-- **Someone who never passes.** They are reminded weekly, indefinitely. Unlimited retakes mean they always have a way out, so it is never a trap — but it also never stops on its own.
+- **Nobody has ever passed.** A person registered on a recurring module who has never passed it has one full interval from their registration date. They are warned before it ends like everyone else, and are overdue only once it passes. Attempting and failing in the meantime does not shorten it.
+- **Someone passes, then retakes to revise and scores below the pass mark.** Their due date becomes the moment of that attempt, so they are due at once and overdue the next day, and are told so once. The route out is to retake and pass, which the review from Phase 2 makes straightforward.
+- **Someone who never passes.** They are told once, and the module stays marked overdue for them and on their instructor's module view until they pass. Unlimited retakes mean they always have a way out, and because nothing repeats there is nothing that has to be stopped.
 - **A registration is removed while someone is overdue.** They stop being due and stop being reminded. Existing notifications stay in their list.
-- **A person is registered onto a module they already passed under a previous test.** Phase 3 resets them to "not started", so they are due immediately.
+- **A person is registered onto a module they already passed under a previous test.** Phase 3 resets them to "not started", so their due date becomes their registration date plus one interval — which for a long-standing member of staff is already past, making them due at once. FR-020 says this is intended, and the instructor is warned before publishing a replacement.
 - **The daily process does not run.** Nothing is lost. The next run finds everyone who became due in the meantime and tells them then.
 - **The daily process runs while someone is mid-attempt.** Their attempt is untouched. If they were overdue when it started, they remain overdue until they pass.
 - **Email fails while the daily process is running.** The in-app record still exists; only the email is missing. The next run may retry it, because it was never marked as sent.
@@ -128,8 +135,8 @@ Someone is registered onto a module, or their test result becomes available. The
 **Working out who is due**
 
 - **FR-007**: System MUST derive a person's due date for a recurring test rather than storing it, so that changing the interval re-dates everyone at once.
-- **FR-008**: System MUST treat a person who has never passed a recurring test as due from the moment they were registered on its module.
-- **FR-009**: System MUST run the interval from a person's **most recent attempt, and only if that attempt passed**. Where their most recent attempt did not pass, they are due immediately. This is the same rule Phases 2 and 3 use to decide what represents a person, applied to dates.
+- **FR-008**: System MUST give a person who has never passed a recurring test a first due date of their registration date plus one full interval, so that a newcomer has the same time to complete it as anyone completing a later cycle. Attempts that did not pass do not shorten it.
+- **FR-009**: System MUST run the interval from a person's **most recent attempt, and only if that attempt passed**. Where their most recent attempt did not pass **and they had passed at some earlier point**, their due date is the moment of that attempt — they have lost currency. Where they have never passed at all, FR-008 governs instead. Every due date is therefore a fixed calendar date and never the current moment, which is what lets an overdue notification be created exactly once. This is the same rule Phases 2 and 3 use to decide what represents a person, applied to dates.
 - **FR-010**: System MUST add **due** and **overdue** to the states delivered in Phase 3, decided from the due date, and MUST show them everywhere those states are shown.
 - **FR-011**: System MUST stop treating a person as due or overdue as soon as they pass, and MUST set their next due date a full interval later.
 - **FR-012**: System MUST stop treating a person as due or overdue as soon as their registration on the module is removed.
@@ -137,7 +144,7 @@ Someone is registered onto a module, or their test result becomes available. The
 **Telling people**
 
 - **FR-013**: System MUST notify a person a configurable period before their due date, once.
-- **FR-014**: System MUST notify a person once their due date has passed, and repeat at a configurable interval until they pass.
+- **FR-014**: System MUST notify a person once their due date has passed, and MUST NOT notify them about that same due date again. What persists is the overdue state shown wherever states are shown, not a repeated message.
 - **FR-015**: System MUST notify a person when they are registered onto a module, at the moment it happens.
 - **FR-016**: System MUST notify a person when their test result becomes available, at the moment it happens.
 - **FR-017**: System MUST create a separate notification record for each module a notification concerns.
@@ -168,7 +175,7 @@ Someone is registered onto a module, or their test result becomes available. The
 - **FR-033**: System MUST refuse any person access to another person's notifications.
 - **FR-034**: System MUST keep the in-app list granular even where messages were combined, so a person overdue on three modules sees three entries.
 - **FR-035**: System MUST let an instructor set, on a test that does not recur, a period within which it should be completed, counted from when each person was registered on the module.
-- **FR-036**: System MUST treat a person who has not passed such a test by that point as due, and then overdue, using exactly the same reminders as a recurring test.
+- **FR-036**: System MUST treat a person who has not passed such a test by that point as due, and then overdue, using exactly the same notifications as a recurring test.
 - **FR-037**: System MUST stop treating such a test as outstanding once the person passes it, and MUST NOT make it due again.
 - **FR-038**: System MUST refuse a completion period on a test with no pass mark, for the same reason a retake interval is refused.
 - **FR-039**: System MUST generate no due date and no reminder for a test that has neither a retake interval nor a completion period.
@@ -205,13 +212,14 @@ Someone is registered onto a module, or their test result becomes available. The
 - **SC-015**: A one-off test with a completion period makes each person due at their own registration date plus that period, in 100% of cases.
 - **SC-016**: A test with neither a retake interval nor a completion period generates no notification, in 100% of cases.
 - **SC-017**: Every user-facing behaviour above is covered by an automated test that fails if the behaviour regresses.
+- **SC-018**: A person registered today on a module whose test repeats every 90 days is not shown as due or overdue before day 76, in 100% of cases.
 
 ## Assumptions
 
 **Chosen defaults**, adopted because the phase description did not fix them and a reasonable default exists:
 
 - A completion period is optional. An instructor who sets neither it nor a retake interval gets a test nobody is ever chased about, which is a legitimate choice for optional material.
-- People are warned **fourteen days** before a due date, and reminded every **seven days** once overdue. Both configurable.
+- People are warned **fourteen days** before a due date, which is configurable. Once that date passes they are told once and not again for it; the overdue state carries it from there.
 - The daily process runs early in the morning, so that anyone due is told before their working day rather than during it.
 - Opening the notification list marks its entries as seen. There is no separate action to dismiss one.
 - Notifications are never deleted. The list grows, which at this scale is not a problem worth solving in advance.
@@ -228,6 +236,7 @@ Someone is registered onto a module, or their test result becomes available. The
 **Deliberately excluded**, so that their absence is a decision rather than an oversight:
 
 - Any way for a person to turn notifications off, choose which they receive, or unsubscribe. Mandatory training that can be silently muted is not mandatory.
+- Any repetition of an overdue notification. A person is told once per due date, and the overdue state does the rest.
 - Notifying an instructor or administrator about anyone else's state.
 - Any channel other than in-app and email — no SMS, no push, no calendar invitations.
 - A queue, a worker process, or any second machine.

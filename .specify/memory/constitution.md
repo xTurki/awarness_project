@@ -1,6 +1,32 @@
 <!--
-SYNC IMPACT REPORT — v3.0.1 (current)
+SYNC IMPACT REPORT — v4.0.0 (current)
 =====================================
+Version change: 3.0.1 → 4.0.0
+Bump rationale: MAJOR. A mandatory rule was REMOVED — the requirement that a
+mysqldump precede any schema change against an instance holding real data.
+Removals are backward-incompatible governance changes under this constitution's
+own policy, the same reasoning applied at 2.0.0.
+
+Trigger: the owner decided there is no backup of any kind. A rule requiring a
+backup before a schema change cannot stand when no backup mechanism exists.
+
+Removed from Governance → Scheduled amendments:
+  - the mysqldump-before-schema-change requirement
+
+Replaced with a plain statement of the consequence: a schema change against
+real data risks that data with nothing to fall back on.
+
+Two further owner decisions recorded in the specifications rather than here,
+since the constitution carried no rule on either:
+  - the interface is English, left-to-right only
+  - there is no application logging beyond what the server prints
+
+Principles: all eight unchanged in name, number, and meaning.
+
+Prior reports retained below for history.
+
+SYNC IMPACT REPORT — v3.0.1
+===========================
 Version change: 3.0.0 → 3.0.1
 Bump rationale: PATCH. Corrects a rule that contradicted 3.0.0 itself. No
 meaning changed anywhere else.
@@ -440,7 +466,9 @@ removed.
 Principle IV is time-limited by design. It is void from the moment the first real user data is
 entered into a running instance, expected at the end of Phase 3. At that point this constitution
 MUST be amended — a MAJOR bump — to replace it with an explicit schema-change policy: either
-Alembic, or hand-written `ALTER TABLE` scripts kept as the schema record. Until that amendment is
-made, a `mysqldump` backup MUST precede any schema change against an instance holding real data.
+Alembic, or hand-written `ALTER TABLE` scripts kept as the schema record.
 
-**Version**: 3.0.1 | **Ratified**: 2026-09-09 | **Last Amended**: 2026-09-09
+There is no backup requirement, because there is no backup. A schema change against an instance
+holding real data risks that data with nothing to fall back on. This is the owner's decision.
+
+**Version**: 4.0.0 | **Ratified**: 2026-09-09 | **Last Amended**: 2026-09-09
