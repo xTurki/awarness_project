@@ -16,7 +16,7 @@ from app.database import engine
 from app.models.user import User
 from app.security import hash_secret
 
-SEED_PASSWORD = "demo-password"
+SEED_PASSWORD = "password"
 
 ACCOUNTS = [
     # The administrator uses the real sending address, so a fresh installation can

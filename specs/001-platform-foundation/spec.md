@@ -160,7 +160,7 @@ Email delivery fails — an outage, a blocked connection, an expired credential.
 - **FR-001**: System MUST hold accounts, each with an email address unique across the platform, a name, and exactly one of three roles: administrator, instructor, or trainee.
 - **FR-002**: System MUST store passwords only in a form from which the original cannot be recovered, using a deliberately slow hashing method.
 - **FR-003**: System MUST allow an account to be marked inactive, and MUST refuse both sign-in and continued access to an inactive account.
-- **FR-004**: System MUST provide a way to create a starting set of accounts — one administrator, one instructor, and five trainees — for a newly installed platform.
+- **FR-004**: System MUST provide a way to create a starting set of accounts for a newly installed platform: one administrator, one instructor, and five trainees. Five is what the later phases need, because registering several people in one action is a scenario they have to demonstrate.
 - **FR-005**: System MUST enforce and state a minimum password standard wherever a password is set.
 - **FR-006**: System MUST provide no way for a visitor to create an account. Accounts come only from an administrator or from the starting set.
 - **FR-007**: System MUST let an administrator see every account with its email address, name, role, and active state.

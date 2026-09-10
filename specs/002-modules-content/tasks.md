@@ -49,7 +49,7 @@ Paths follow [plan.md](./plan.md) → Project Structure, continuing Phase 0's la
 - [ ] T014 [P] Write `tests/services/test_module_access.py` — the full matrix for `get_for`: three actor kinds × published/unpublished/soft-deleted × assigned/registered/neither. This is the test that proves FR-009, SC-006, and SC-007
 - [ ] T015 [P] Write `backend/app/schemas/module.py` — **read models**: non-table `ModuleRead`, `PageRead`, and `RegistrationRead`, so that none of the four new `table=True` models ever reaches a template or a response (done-gate 5). **Input models**: `ModuleWrite`, `PageWrite`, `PageReorder`, and `RosterAdd`, through which every form post in this phase is validated before it reaches a service — the constitution requires input validated through non-table models, because SQLModel does not validate table classes
 - [ ] T016 [P] Write `backend/app/templates/components/module_nav.html` — **one** markup block: Bootstrap offcanvas below 992px, a persistent column above it, the two behaviours from CSS alone. Phases 2, 3, and 4 all render inside this (research R9, FR-033)
-- [ ] T017 Recreate the database for the four new tables — `docker compose down -v && docker compose up -d --build`, then `docker compose exec backend python seed.py`. There are no migrations, and `create_all()` never alters an existing table (Constitution IV, quickstart Prerequisites)
+- [ ] T017 Bring the four new tables into the running database: `docker compose up -d --build`. `create_all()` creates missing tables at startup, so the four appear and **existing accounts survive**. `docker compose down -v` is **not** required here: it is required only when a column changes on a table that already exists, and this phase changes none (Constitution IV)
 
 **Checkpoint**: Tables exist, HTML cannot be stored unsanitised, and one function decides who may see a module.
 
@@ -225,6 +225,6 @@ US1 → US2 → US3 → US4, validating the matching quickstart scenario after e
 
 ### Notes
 
-- Adding four tables means `docker compose down -v && docker compose up -d` and seeding again. There are no migrations
+- Four new tables need only `docker compose up -d --build`. Dropping the volume is for changed columns, not new tables, and this phase changes no column
 - Uploads are checked by extension only, images are never scanned, orphaned images are never collected, and concurrent edits lose the earlier one. All four are recorded decisions in research.md, not gaps
 - Commit after each task or logical group

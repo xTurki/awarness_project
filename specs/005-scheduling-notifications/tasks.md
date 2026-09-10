@@ -42,7 +42,7 @@ Paths follow [plan.md](./plan.md) → Project Structure, continuing the layout o
 - [ ] T007 [P] Write `backend/app/services/due.py` — a pure `due_date_for(test, registration, attempts) -> date | None`. No session, no implicit clock. With an interval: **never passed, attempted or not** → `registration.registered_at + interval`; **most recent attempt passed** → that attempt's `submitted_at + interval`; **most recent attempt did not pass, having passed earlier** → that attempt's `submitted_at`. With a completion period and no interval: passed at any point → `None`; otherwise `registered_at + period`. With neither → `None` (research R1, FR-007, FR-008, FR-009, FR-039)
 - [ ] T008 [P] Write `tests/services/test_due.py` — a table over every branch of T007, and in particular: a person registered today on a 90-day module is due in **90 days, not today** (FR-008); an early **failed** attempt does not shorten that first cycle (FR-008); someone who passed and then retook and failed is due from **that failing attempt** (FR-009); and — the assertion that protects FR-014 — **no branch ever returns today's date as a moving value**, so an `overdue` row's key does not shift from one morning to the next
 - [ ] T009 [P] Write `backend/app/schemas/notification.py` — a non-table `NotificationRead` so the new model never reaches a template (done-gate 5). The only input this phase adds is the two schedule fields, validated through Phase 2's `TestWrite` in T013
-- [ ] T010 Recreate the database for the new table and two columns — `docker compose down -v && docker compose up -d --build`, then `docker compose exec backend python seed.py`. There are no migrations (quickstart Prerequisites)
+- [ ] T010 Recreate the database: `docker compose down -v && docker compose up -d --build`, then `docker compose exec backend python seed.py`. **This is the one phase that genuinely needs the volume dropped**, because it adds two columns to `test`, a table that already exists, and `create_all()` creates missing tables but never alters one (Constitution IV, quickstart Prerequisites)
 
 **Checkpoint**: Every date this phase will act on is computed by one tested function.
 
@@ -217,7 +217,7 @@ Most of its requirements exist to stop one thing: **doing it twice**.
 
 ### Notes
 
-- One new table and two new columns mean `docker compose down -v && docker compose up -d` and seeding again. There are no migrations
+- The two new columns on `test` are what force `docker compose down -v` here. New tables alone would not: `create_all()` adds those at startup
 - An overdue test is announced **once**. What persists is the state on the dashboard, not repeated messaging — a decision taken while clarifying this phase
 - A newcomer gets a **full first interval** from their registration date, so nobody is overdue the morning after they are added
 - The design assumes exactly **one `backend` instance**. Two would run two schedulers; the unique constraint makes that wasted work rather than duplicate email, but it is one more place single-instance matters
