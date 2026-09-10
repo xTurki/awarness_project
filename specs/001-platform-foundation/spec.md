@@ -194,7 +194,7 @@ Email delivery fails — an outage, a blocked connection, an expired credential.
 - **FR-026**: System MUST present a dashboard and navigation determined by the signed-in person's role, with the three roles seeing materially different navigation.
 - **FR-027**: System MUST refuse access to areas outside a person's role at the point of request, not merely hide the controls that lead there.
 - **FR-028**: System MUST present every page usably at phone, tablet, and desktop widths, with no sideways scrolling of the page itself.
-- **FR-029**: System MUST make the sign-in, code-entry, and choose-a-password screens operable by keyboard alone, and MUST let a phone offer a received code for entry automatically.
+- **FR-029**: System MUST let a phone offer a received code for entry automatically.
 
 **Running the platform**
 

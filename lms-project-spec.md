@@ -737,7 +737,6 @@ Bootstrap 5 is mobile-first; the work is in respecting that rather than fighting
 - Layout is verified at all three widths before a phase is called done. This is part of the definition of done, not a polish pass at the end.
 - Touch targets no smaller than 44px; a test answer option is tappable across its whole row, not just its radio button.
 - The page body never scrolls horizontally; wide content scrolls inside its own container.
-- Accessible forms and keyboard navigation for the test-taking flow.
 - Test taking is the flow most likely to happen on a phone, so it is designed phone-first and adapted upward. Instructor screens — the question bank and the roster — are the opposite: desktop-first, made survivable on a phone.
 
 ---

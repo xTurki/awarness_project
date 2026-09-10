@@ -1,0 +1,39 @@
+{# One markup block, two behaviours from CSS: a drawer below 992px, a bar above.
+   Administrative navigation is absent for the other two roles, not disabled. #}
+<nav class="navbar navbar-expand-lg bg-body border-bottom">
+  <div class="container">
+    <a class="navbar-brand" href="/">Training</a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas"
+            data-bs-target="#mainNav" aria-controls="mainNav" aria-label="Open navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="mainNav" aria-labelledby="mainNavLabel">
+      <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="mainNavLabel">Menu</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+      </div>
+
+      <div class="offcanvas-body">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item"><a class="nav-link" href="/">Dashboard</a></li>
+
+          {% if account.role == "administrator" %}
+            <li class="nav-item"><a class="nav-link" href="/admin/accounts">Accounts</a></li>
+          {% endif %}
+        </ul>
+
+        <div class="d-flex align-items-center gap-3">
+          <span class="text-body-secondary small">
+            {{ account.full_name }} &middot; {{ account.role }}
+          </span>
+          <form method="post" action="/logout" class="m-0">
+            <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token }}">
+            <button type="submit" class="btn btn-outline-secondary btn-sm">Sign out</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>

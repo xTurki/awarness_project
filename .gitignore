@@ -3,6 +3,9 @@
 *.env
 !.env.example
 
+# Local notes holding the Gmail address and its App Password.
+Gmailemail.txt
+
 # Python
 __pycache__/
 *.py[cod]
