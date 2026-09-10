@@ -1,9 +1,15 @@
 # SME Cybersecurity Awareness Training Platform — Project Specification
 
-**Status:** Draft v14
+**Status:** Draft v17
 **Stack:** Docker · Nginx · Python / FastAPI / Jinja2 / HTMX / Bootstrap 5 · SQLModel · MySQL 8 · Gmail SMTP
 **Method:** Spec-driven development, phased delivery
 
+> **Changes from v17 — §7 reconciled with the phase specifications.** The domain model was written before Phases 1–4 were specified in detail and had fallen behind them in six places, all now corrected: the question bank belongs to the **module** with a `test_question` join rather than to one test; `Attempt` carries `ends_at` and `question_order`, fixed at creation, plus the scoring columns; `AttemptAnswer` holds `selected_option_ids` under a unique key per question; `Notification` points at a module rather than a polymorphic subject; `Test` uses `is_published`, `opens_at`, `closes_at`; `ContentImage` uses `content_type`. **Quiz** is renamed **Test** throughout, matching every phase specification and the word trainees see. §6.2's file layout is updated to the files the phase plans actually name.
+>
+> **Changes from v15:** An overdue test is announced **once**. The repeating weekly reminder and `OVERDUE_REMINDER_INTERVAL_DAYS` are removed — what persists is the overdue state on a trainee's dashboard, not the messaging. For "once" to be true, every due date is now a fixed calendar date: someone whose most recent attempt did not pass is due from that attempt, and someone who has never attempted from their registration date. Nothing derives to *now*. A newcomer also gets a **full first interval** from their registration date rather than being overdue the morning after they are added, and an early failed attempt does not shorten it. Both settled while clarifying Phase 4.
+>
+> **Changes from v14:** Three cross-cutting decisions recorded. The interface is **English, left-to-right** only. There is **no backup** of the database — the `mysqldump` requirement is removed. There is **no application logging** beyond whatever the server prints. All three are the owner's decisions, taken while clarifying Phases 0 and 1.
+>
 > **Changes from v13:** Phase 4 settled. The retake clock now runs from a person's **most recent** attempt and only if it passed — resolving a conflict with Phases 2 and 3, which already decided the most recent attempt represents a person. A one-off test may carry `completion_deadline_days`, so mandatory training assigned once is chased too. Publishing a replacement test notifies everyone it made due, with no grace period.
 >
 > **Changes from v12:** Phase 3 gains an instructor view of one module — who is registered, their state, and a way into their attempts. Its state vocabulary is fixed at five (no test available · not started · in progress · passed · failed); *due* and *overdue* need a retake interval and belong to Phase 4. State follows the module's currently published test, so replacing a test resets everyone on that module. No organisation-wide view exists for an administrator. Settled while specifying Phase 3.
@@ -18,7 +24,7 @@
 >
 > **Changes from v7:** **Module content added** (§6.6) — instructors author ordered pages inside the platform, Canvas-style, with a vendored rich-text editor, server-side HTML sanitising, and image upload. New `Page` and `ContentImage` tables, a second named volume, and Nginx serving uploads. Content and test are never gated against each other. Multiple-choice questions may have several correct answers, scored all-or-nothing. This reverses v7's "no content feature" and reopens file storage, narrowly — instructors upload images; trainees still upload nothing.
 >
-> **Changes from v6:** Attempt limits no longer apply to recurring tests — unlimited retakes until a trainee passes, removing the stuck state where someone could be permanently overdue with no way out. No content-serving feature: the four training modules are ordinary module records created by hand. Quizzes keep specific chosen questions rather than a random draw. No instructor progress view. §12 is now a record of where this specification deliberately diverges from the project proposal, which is a starting document and not a contract.
+> **Changes from v6:** Attempt limits no longer apply to recurring tests — unlimited retakes until a trainee passes, removing the stuck state where someone could be permanently overdue with no way out. No content-serving feature: the four training modules are ordinary module records created by hand. Tests keep specific chosen questions rather than a random draw. No instructor progress view. §12 is now a record of where this specification deliberately diverges from the project proposal, which is a starting document and not a contract.
 >
 > **Changes from v5:** Reframed from a school LMS to an **SME cybersecurity awareness platform**, matching the project proposal. Terms removed entirely — modules start and end whenever their instructor decides. Entities and roles renamed throughout: `Course`→`Module`, `Enrollment`→`Registration`, teacher→instructor, student→trainee, admin→administrator, and the unused `ta` role dropped. The Phase 3 gradebook is replaced by a trainee results view; `GradeColumn` and `GradeEntry` are gone, along with weighting, manual grade entry, and final marks.
 >
@@ -149,9 +155,9 @@ Explicitly out of scope. These exist to be pointed at when scope creep arrives. 
 | Web / static tier | **Nginx** | Serves CSS/JS/fonts directly, reverse-proxies everything else to FastAPI, terminates TLS. Keeps static file serving out of the Python process. |
 | Web framework | **FastAPI** | Async, typed, excellent dependency injection for auth and DB sessions. |
 | Templating | **Jinja2**, server-rendered | Avoids maintaining a second frontend codebase. |
-| Interactivity | **HTMX** | Inline grade editing and quiz navigation feel modern without a SPA framework. |
+| Interactivity | **HTMX** | Inline grade editing and test navigation feel modern without a SPA framework. |
 | CSS | **Bootstrap 5** + a custom theme layer | Fast to build; ships a mobile-first responsive grid for free; the theme layer is where the Canvas-like styling lives. |
-| Database | **MySQL 8** | InnoDB gives real foreign keys and transactions; native `JSON` column type covers quiz payloads. |
+| Database | **MySQL 8** | InnoDB gives real foreign keys and transactions; native `JSON` column type covers test payloads. |
 | ORM | **SQLModel** | One class defines both the table and the Pydantic schema, which removes a whole category of duplicated model code. Sits on SQLAlchemy, so dropping to raw SQLAlchemy for a hard query is always available. |
 | Schema management | **`create_all()` at startup** | No Alembic. Greenfield project with no data to preserve. See §5.3. |
 | Validation | **Pydantic v2**, via SQLModel | Request/response schemas. See the caveat in §5.2 — table models are not automatically safe response models. |
@@ -186,10 +192,10 @@ Sending a login code is the only outbound mail this system produces, and the use
 These are not general advice; each one is a concrete difference from the PostgreSQL assumptions in v1.
 
 - **Character set must be `utf8mb4`.** Anything else silently mangles emoji and many non-Latin scripts. Set it on the server, the database, and the connection string.
-- **Strings need a length.** SQLModel maps a bare `str` to `VARCHAR(255)`. That is fine for names and emails but wrong for a quiz question prompt — declare long text explicitly with a `Text` column type.
+- **Strings need a length.** SQLModel maps a bare `str` to `VARCHAR(255)`. That is fine for names and emails but wrong for a test question prompt — declare long text explicitly with a `Text` column type.
 - **Indexed string columns are length-limited.** A `utf8mb4` index key is capped; `VARCHAR(255)` is the practical maximum for a unique index such as `user.email`. Do not widen it casually.
 - **InnoDB, always.** It is the MySQL 8 default, but it is what makes constitution-level foreign key enforcement real. Never MyISAM.
-- **`JSON` is not `JSONB`.** MySQL stores and validates JSON but cannot index inside it the way PostgreSQL can. This is acceptable because quiz payloads are read whole, by primary key, and never searched into. Do not design a feature that queries inside a JSON column.
+- **`JSON` is not `JSONB`.** MySQL stores and validates JSON but cannot index inside it the way PostgreSQL can. This is acceptable because test payloads are read whole, by primary key, and never searched into. Do not design a feature that queries inside a JSON column.
 - **`DATETIME` carries no timezone.** Store UTC, as naive `DATETIME`, everywhere. Convert to the user's timezone in the template layer only. This makes the §11 timezone risk a code-review item on every date field.
 - **The driver is `PyMySQL`.** Connection URL: `mysql+pymysql://user:pass@db:3306/lms?charset=utf8mb4`. The host is `db` — the Compose service name — not `localhost`.
 
@@ -282,7 +288,9 @@ Three tiers, three containers, one `docker compose up`.
         │   ├── page.py
         │   ├── content_image.py
         │   ├── registration.py
-        │   ├── quiz.py
+        │   ├── question.py   # question + answer_option
+        │   ├── test.py       # test + test_question
+        │   ├── attempt.py    # attempt + attempt_answer
         │   └── notification.py
         │
         ├── schemas/          # non-table SQLModel in/out models
@@ -292,8 +300,14 @@ Three tiers, three containers, one `docker compose up`.
         │   ├── email_service.py
         │   ├── module_service.py
         │   ├── content_service.py
-        │   ├── quiz_service.py
+        │   ├── question_service.py
+        │   ├── test_service.py
+        │   ├── attempt_service.py
+        │   ├── scoring.py    # pure: rows in, score out
+        │   ├── state.py      # pure: rows in, state out
+        │   ├── due.py        # pure: rows in, due date out
         │   ├── results_service.py
+        │   ├── daily_job.py
         │   └── notification_service.py
         │
         ├── routers/          # HTTP endpoints, thin
@@ -301,7 +315,9 @@ Three tiers, three containers, one `docker compose up`.
         │   ├── admin.py
         │   ├── modules.py
         │   ├── content.py
-        │   ├── quizzes.py
+        │   ├── questions.py
+        │   ├── tests.py
+        │   ├── attempts.py
         │   ├── results.py
         │   └── notifications.py
         │
@@ -399,16 +415,17 @@ Throughout this section **module** means `Module` and **module owner** means the
 
 **Recurrence — set by the module owner**
 
-`Quiz.retake_interval_days`, nullable. Null is the default and means a one-off test, which covers most quizzes. A value means the test must be retaken on that cadence — a cybersecurity awareness module might use 90 or 365.
+`Test.retake_interval_days`, nullable. Null is the default and means a one-off test, which covers most tests. A value means the test must be retaken on that cadence — a cybersecurity awareness module might use 90 or 365.
 
 Due dates are **computed, never stored**:
 
 ```
-for each (user, quiz):
+for each (user, test):
     if retake_interval_days is set:
         last = that user's most recent submitted attempt
-        due_at = last.submitted_at + retake_interval_days   if last passed
-                 now                                        otherwise, or if none
+        due_at = registered_at + retake_interval_days       if they have never passed
+                 last.submitted_at + retake_interval_days   if last passed
+                 last.submitted_at                          if last did not pass
     elif completion_deadline_days is set:
         due_at = registration.registered_at + completion_deadline_days
                  (never due again once they pass)
@@ -416,17 +433,17 @@ for each (user, quiz):
         no due date, ever
 ```
 
-**The cycle runs from the most recent attempt, and only if it passed.** Someone who passed and then retook and failed is due immediately — the same rule Phases 2 and 3 use to decide what represents a person, applied to dates. A failed attempt therefore never clears an overdue state. This is what makes the recurrence meaningful for something like cybersecurity awareness, where the point is competence rather than attendance.
+**Once someone has passed, the cycle runs from their most recent attempt, and only if it passed.** Someone who passed and then retook and failed is due immediately — the same rule Phases 2 and 3 use to decide what represents a person, applied to dates. A failed attempt therefore never clears an overdue state. Someone who has **never** passed is measured from their registration instead, so failing an early attempt never shortens their first cycle. Every branch yields a **fixed date, never *now***, which is what lets the overdue notification for a cycle be sent exactly once. This is what makes the recurrence meaningful for something like cybersecurity awareness, where the point is competence rather than attendance.
 
-> **Validation rule:** `passing_score` is **required whenever `retake_interval_days` is set.** A recurring test with no pass mark has no way of knowing when its cycle restarts. This is checked when the owner saves the quiz, not discovered later by the scheduler.
+> **Validation rule:** `passing_score` is **required whenever `retake_interval_days` is set.** A recurring test with no pass mark has no way of knowing when its cycle restarts. This is checked when the owner saves the test, not discovered later by the scheduler.
 
 **Attempt limits do not apply to recurring tests.** When `retake_interval_days` is set, `allowed_attempts` is ignored and a trainee may retake as often as they need until they pass.
 
-This is not a convenience. Because the cycle restarts only on a pass, a trainee who exhausted a fixed attempt limit without passing would be permanently overdue, nagged every week, and unable to do anything about it — a stuck state with no exit that the trainee controls. Removing the limit removes the state. Mandatory training measures competence, not whether someone got it right first time, so there is nothing to protect by capping attempts.
+This is not a convenience. Because the cycle restarts only on a pass, a trainee who exhausted a fixed attempt limit without passing would be permanently overdue and unable to do anything about it — a stuck state with no exit that the trainee controls. Removing the limit removes the state. Mandatory training measures competence, not whether someone got it right first time, so there is nothing to protect by capping attempts.
 
-`allowed_attempts` still applies normally to one-off quizzes, where no such cycle exists.
+`allowed_attempts` still applies normally to one-off tests, where no such cycle exists.
 
-A user who has never passed a recurring test is due the moment they are registered. Because nothing is stored, an owner changing the interval re-dates every registered user at once — which is what "totally customisable" has to mean in practice.
+A user who has never passed a recurring test gets a first due date one full interval after their registration, so a newcomer has the same time to complete it as anyone completing a later cycle. Because nothing is stored, an owner changing the interval re-dates every registered user at once — which is what "totally customisable" has to mean in practice.
 
 **Triggers**
 
@@ -435,7 +452,7 @@ A user who has never passed a recurring test is due the moment they are register
 | Registered onto a module | When an administrator or instructor registers someone | No |
 | Result available | When an attempt reaches `graded` | No |
 | Test due soon | `DUE_SOON_LEAD_DAYS` before `due_at` | Yes |
-| Test overdue | After `due_at`, repeating every `OVERDUE_REMINDER_INTERVAL_DAYS` until an attempt is submitted | Yes |
+| Test overdue | Once, on the first run after `due_at` | Yes |
 
 **Delivery**
 
@@ -449,11 +466,11 @@ Email is a delivery attempt recorded on those rows via `emailed_at`, and **one e
 | Result available | One email, sent immediately |
 | Due soon / overdue | **One digest email per user per run**, listing every module due or overdue for them that day |
 
-The digest exists because these two triggers repeat. Thirty users with five overdue modules each is 30 emails a week rather than 150, which keeps the load well inside Gmail's limits and stops the reminders reading as spam to the person receiving them.
+The digest exists because one person can be due or overdue on several modules on the same day. Thirty users with five overdue modules each is 30 emails rather than 150, which keeps the load well inside Gmail's limits and stops the notices reading as spam to the person receiving them.
 
 A user therefore never receives an email about anything missing from their in-app list, and the two channels cannot disagree — they simply group differently.
 
-**Idempotency** rests on two things. The unique key `(user_id, kind, subject_type, subject_id, due_date)` prevents duplicate rows. The digest then sends only rows where `emailed_at IS NULL` and stamps every row it included. Re-running the daily job therefore finds nothing unsent and emails nobody.
+**Idempotency** rests on two things. The unique key `(user_id, kind, module_id, due_date)` prevents duplicate rows. The digest then sends only rows where `emailed_at IS NULL` and stamps every row it included. Re-running the daily job therefore finds nothing unsent and emails nobody.
 
 **The scheduler**
 
@@ -466,7 +483,6 @@ Its one real constraint is that it **assumes exactly one `backend` replica.** Tw
 | Setting | Default |
 |---|---|
 | `DUE_SOON_LEAD_DAYS` | 14 |
-| `OVERDUE_REMINDER_INTERVAL_DAYS` | 7 |
 | `SCHEDULER_RUN_HOUR_UTC` | 6 |
 
 ### 6.6 Module content
@@ -507,13 +523,14 @@ Content and test are both available from the module home page. A trainee may tak
 **Session** — id (opaque random token, primary key), user_id, created_at, expires_at, ip, user_agent
 > New in v2. Server-side sessions live here rather than in Redis. Logout deletes the row; expired rows are swept on login.
 
-**Module** — id, title, description (Text), state (`unpublished` | `published`), created_at
-> No `term`, no start date, no end date, and no archived state. A module is available when published and not otherwise. Retiring one means unpublishing it; training is continuous and is renewed by the retake interval in §6.5, not by closing the module off. Timing that actually matters lives on the quiz, as an availability window or a retake interval.
+**Module** — id, title, description (Text), is_published, created_at, deleted_at (nullable)
+> No `term`, no start date, no end date, and no archived state. A module is available when published and not otherwise. Retiring one means unpublishing it; training is continuous and is renewed by the retake interval in §6.5, not by closing the module off. Timing that actually matters lives on the test, as an availability window or a retake interval.
 
-**Page** — id, module_id, position, title, body (MediumText), state (`draft` | `published`), created_at, updated_at
+**Page** — id, module_id, title, body (MediumText), position, is_published, created_at, updated_at
+> `position` is unique within its module. `body` is **MediumText** rather than Text: MySQL truncates a `TEXT` column at 64KB silently, and formatted HTML reaches that sooner than prose does.
 > A module's content, authored in the app (§6.6). `body` holds sanitised HTML and is `MEDIUMTEXT` rather than `TEXT` — 64KB is not much once a page carries formatting markup, and hitting that ceiling would truncate an instructor's work silently.
 
-**ContentImage** — id, module_id, stored_name, original_name, mime_type, size_bytes, uploaded_by, uploaded_at
+**ContentImage** — id, module_id, stored_name, original_name, content_type, size_bytes, uploaded_by, uploaded_at
 > One row per uploaded image. The file itself lives in a named volume under `stored_name`, which is generated, never the name the instructor's file arrived with. `original_name` is kept for display only and is never used to build a path.
 > "Module" in the requirements is this entity, and "module owner" is the instructor registered on it. There is no code field — the title identifies it — and no self-registration flag, because people are always put on a module by someone else.
 
@@ -523,25 +540,40 @@ Content and test are both available from the module home page. A trainee may tak
 >
 > Note: a user's *global* role and their *role in a module* are separate. An instructor may be a trainee in another module. Modelling this correctly now avoids a painful schema rebuild later.
 
-**Quiz** — id, module_id, title, instructions (Text), state, available_from, available_until, time_limit_minutes, allowed_attempts, shuffle_questions, retake_interval_days (nullable), completion_deadline_days (nullable), passing_score (nullable)
-> `retake_interval_days` is the module owner's retake frequency (§6.5); null means a one-off test. `passing_score` is the mark at or above which an attempt counts as passed, and is **required whenever `retake_interval_days` is set**, because the recurrence cycle restarts on a pass. When `retake_interval_days` is set, `allowed_attempts` is ignored — retakes are unlimited until the trainee passes (§6.5). `available_from` / `available_until` remain the window a single sitting must fall inside; the interval is the cadence on which sittings recur.
+**Test** — id, module_id, title, instructions (Text), is_published, opens_at (nullable), closes_at (nullable), time_limit_minutes (nullable), allowed_attempts, shuffle_questions, retake_interval_days (nullable), completion_deadline_days (nullable), passing_score (nullable), created_at
+> Two states, held as a boolean rather than a state column: published or not. A test is **frozen from its first attempt** — no adding, removing, reordering, or rewording, and no change to its pass mark. Nothing records this; the check is whether any attempt row exists, because a stored flag could disagree with reality. An instructor who needs a different test unpublishes this one and builds a replacement.
+>
+> `retake_interval_days` is the module owner's retake frequency (§6.5); null means a one-off test. `passing_score` is the mark at or above which an attempt counts as passed, and is **required whenever `retake_interval_days` is set**, because the recurrence cycle restarts on a pass. When `retake_interval_days` is set, `allowed_attempts` is ignored — retakes are unlimited until the trainee passes (§6.5). `opens_at` / `closes_at` are the window a single sitting must **start** inside; the interval is the cadence on which sittings recur.
 
-**Question** — id, quiz_id, position, prompt (Text), points
+**Question** — id, module_id, prompt (Text), points, position, created_at
+> **The bank belongs to the module, not to one test.** A question may be used in more than one test, and a test is an ordered selection from the bank rather than everything in it.
+>
 > Multiple choice only. There is no `type` column, because there is only one type. A true/false question is a multiple-choice question with two options, so nothing is lost by not modelling it separately. Every question is machine-scorable, which is what keeps `passing_score` and the recurrence cycle in §6.5 fully automatic — no attempt ever waits on a human to mark it.
 >
 > **A question may have more than one correct option, and scoring is all-or-nothing.** The trainee's selected set must match the correct set exactly: miss a correct option or add a wrong one and the question scores zero. There is no partial credit, which keeps scoring a single set comparison and keeps the pass mark meaning exactly what it appears to mean. Questions with several correct answers render as checkboxes, those with one as radio buttons — the builder infers which from how many options are flagged correct, so the instructor never picks a mode.
 
-**AnswerOption** — id, question_id, text, is_correct
+**TestQuestion** — test_id, question_id, position — composite primary key
+> Which questions make up a test, and in what order the instructor chose.
+
+**AnswerOption** — id, question_id, text, is_correct, position
 > Any number of options on a question may be flagged correct. At least one must be, and at least two options must exist — both validated when the instructor saves the question, since neither is recoverable once a trainee is mid-attempt.
 
-**QuizAttempt** — id, quiz_id, trainee_id, attempt_number, started_at, submitted_at, state (`in_progress` | `submitted` | `graded`), score
-
-**AttemptAnswer** — id, attempt_id, question_id, response (JSON), is_correct, points_awarded
-
-**Notification** — id, user_id, kind (`registered` | `result` | `due_soon` | `overdue`), subject_type, subject_id, due_date (nullable), title, body (Text), created_at, read_at (nullable), emailed_at (nullable)
-> unique (user_id, kind, subject_type, subject_id, due_date)
+**Attempt** — id, test_id, user_id, attempt_number, started_at, ends_at, submitted_at (nullable), is_submitted, question_order (JSON), points_earned (nullable), points_possible (nullable), score_percent (nullable), passed (nullable), score_overridden
+> indexed on (test_id, user_id)
 >
-> The row is the notification. In-app rendering reads it, email delivery stamps `emailed_at` on it, and the unique key is what lets the daily job run twice without sending twice. `due_date` is part of the key so that next cycle's reminder is a distinct event rather than a duplicate of this one.
+> **`ends_at` and `question_order` are fixed when the attempt begins and never recomputed.** `ends_at` is `min(started_at + time_limit, closes_at)`, which is what makes an instructor's later edit harmless to an attempt already running; `question_order` is what makes a shuffled attempt resume in the same order it started in. `attempt_number` is derived by counting that person's existing attempts, never taken from the request.
+>
+> An attempt past `ends_at` becomes submitted the next time anyone reads it — there is no sweep. `score_percent` is replaced by an instructor's override, and `passed` follows whatever it holds.
+
+**AttemptAnswer** — id, attempt_id, question_id, selected_option_ids (JSON), is_correct (nullable), points_awarded (nullable), answered_at
+> unique (attempt_id, question_id)
+>
+> One row per question per attempt, whatever a trainee changes their mind. Each answer is its own write, made the moment it is given, so a dropped connection loses at most the click in flight. A question with no row is unanswered and scores zero.
+
+**Notification** — id, user_id, module_id, kind (`registered` | `result` | `due_soon` | `overdue`), due_date (nullable), title, body (Text), created_at, read_at (nullable), emailed_at (nullable)
+> unique (user_id, kind, module_id, due_date)
+>
+> The row is the notification. In-app rendering reads it, email delivery stamps `emailed_at` on it, and the unique key is what lets the daily job run twice without sending twice. Every notification concerns exactly one module, which is what keeps the in-app list granular where one email covered several rows. `due_date` is part of the key so that next cycle's notification is a distinct event rather than a duplicate of this one. Within a cycle the date does not move, so the overdue row is written once.
 
 All `*_at` fields are naive UTC `DATETIME` per §5.1.
 
@@ -557,7 +589,7 @@ Each phase is one Spec Kit cycle: specify → plan → tasks → build → deplo
 
 **Why first:** everything depends on identity, and since look-and-feel ranks high in priorities, the shell should be right early rather than retrofitted. Getting the container topology right on day one avoids retrofitting deployment onto a working app — the more expensive order. Two-factor belongs here for the same reason: building it alongside session auth means the login path is written once, and there are no existing accounts to migrate onto it.
 
-**Done when:** `docker compose up` on a clean machine brings up all three tiers; an administrator enters their password, receives a code by email, enters it, and reaches a styled dashboard; a wrong, expired, or already-used code is rejected; the administrator creates an account and that person is made to choose their own password at first sign-in; the last active administrator cannot switch themselves off; a seeded trainee sees a different navigation; the whole login flow is usable on a phone.
+**Done when:** `docker compose up` on a clean machine brings up all three tiers; an administrator enters their password, receives a code by email, enters it, and reaches a styled dashboard; a wrong, expired, or already-used code is rejected; the administrator creates an account and that person is made to choose their own password at first sign-in; a seeded trainee sees a different navigation; the whole login flow is usable on a phone.
 
 > **Sizing note.** Four to five weeks. Two-factor accounts for about half a week — the verify page, the mail path, rate limiting, and the negative-path tests. Administrator account management and the forced password change add roughly a further week.
 >
@@ -575,19 +607,19 @@ Each phase is one Spec Kit cycle: specify → plan → tasks → build → deplo
 
 **Done when:** an administrator creates a module and assigns an instructor; that instructor writes three pages, reorders them, leaves one as a draft, uploads an image into another, and publishes; five trainees are registered and see exactly the two published pages; and a page body containing `<script>` is stored stripped, not escaped-on-render.
 
-> **Sizing note.** Content authoring roughly doubles this phase, from about two weeks to four, making it the second largest after Quizzes. The editor, the sanitiser, and the upload path are each small; together they are not.
+> **Sizing note.** Content authoring roughly doubles this phase, from about two weeks to four, making it the second largest after Tests. The editor, the sanitiser, and the upload path are each small; together they are not.
 
 ---
 
-### Phase 2 — Quizzes
+### Phase 2 — Tests
 
-**Delivers:** question bank per module, quiz builder (**multiple choice only**), publish/availability windows, `passing_score` and a pass/fail outcome on every graded attempt, trainee attempt flow with save-as-you-go, auto-scoring, attempt review.
+**Delivers:** question bank per module, test builder (**multiple choice only**), publish/availability windows, `passing_score` and a pass/fail outcome on every graded attempt, trainee attempt flow with save-as-you-go, auto-scoring, attempt review.
 
 **Why here:** self-contained, high value, and it produces the scores Phase 3 consumes.
 
 **Highest-risk area of the project.** See §11.
 
-**Done when:** an instructor builds a ten-question quiz, three trainees take it — at least one on a phone — and correct scores appear immediately.
+**Done when:** an instructor builds a ten-question test, three trainees take it — at least one on a phone — and correct scores appear immediately.
 
 ---
 
@@ -611,7 +643,7 @@ State is decided from a person's most recent submitted attempt at the module's *
 
 ### Phase 4 — Scheduling & Notifications
 
-**Delivers:** `Quiz.retake_interval_days` and `Quiz.completion_deadline_days` with owner-facing controls; computed due dates; the `Notification` model; an in-app notification list in the application shell; email delivery layered on the same rows; the in-process daily scheduler; all four triggers from §6.5.
+**Delivers:** `Test.retake_interval_days` and `Test.completion_deadline_days` with owner-facing controls; computed due dates; the `Notification` model; an in-app notification list in the application shell; email delivery layered on the same rows; the in-process daily scheduler; all four triggers from §6.5.
 
 **Why here:** every trigger needs something to notify *about* — registration exists after Phase 1, results after Phase 2, and the status vocabulary the notifications use is settled in Phase 3. This is the first genuinely cross-cutting phase, which is exactly why it is not an early one.
 
@@ -637,7 +669,7 @@ Announcements · discussion boards · content pages within a module · CSV roste
 ### Instructor
 - View their own modules and rosters
 - Maintain the module's question bank
-- Build, edit, publish, and unpublish quizzes
+- Build, edit, publish, and unpublish tests
 - Set availability windows, time limits, attempt limits, and the pass mark
 - Set how often a test must be retaken
 - Register and deregister trainees on their own modules
@@ -646,7 +678,7 @@ Announcements · discussion boards · content pages within a module · CSV roste
 ### Trainee
 - View registered modules on a dashboard
 - Open a module and see its navigation
-- Take published quizzes within their availability window
+- Take published tests within their availability window
 - Resume an interrupted attempt
 - See their own status per module: not started, passed, failed, due, or overdue
 - Review their own past attempts and scores
@@ -678,7 +710,7 @@ Announcements · discussion boards · content pages within a module · CSV roste
 **Data integrity**
 - Foreign key constraints enforced by InnoDB, not just the ORM
 - Soft-delete for users and modules; hard delete only via administrator tooling
-- MySQL data on a named Docker volume; a documented `mysqldump` backup command, to be run before any schema change once real data exists
+- MySQL data on a named Docker volume. **There is no backup of any kind** — no snapshot, no dump, no export. Losing the machine or the volume loses the data
 
 **Notifications**
 - Every notification exists as a stored row before any email is sent. Email is a delivery attempt on that row, never a substitute for it
@@ -687,7 +719,7 @@ Announcements · discussion boards · content pages within a module · CSV roste
 - The scheduler runs in-process and assumes exactly one `backend` replica
 
 **Resilience — the critical one**
-- A quiz attempt must survive a browser crash, tab close, connection loss, or a phone locking mid-attempt
+- A test attempt must survive a browser crash, tab close, connection loss, or a phone locking mid-attempt
 - Answers persist to the server as the trainee progresses, not only on final submit
 - Server-side clock governs time limits; the client clock is display only
 - A resumed attempt shows remaining time calculated from `started_at`
@@ -703,10 +735,10 @@ Bootstrap 5 is mobile-first; the work is in respecting that rather than fighting
 | `> 992px` | desktop | full Canvas-like layout: persistent left module nav, multi-column dashboard |
 
 - Layout is verified at all three widths before a phase is called done. This is part of the definition of done, not a polish pass at the end.
-- Touch targets no smaller than 44px; a quiz answer option is tappable across its whole row, not just its radio button.
+- Touch targets no smaller than 44px; a test answer option is tappable across its whole row, not just its radio button.
 - The page body never scrolls horizontally; wide content scrolls inside its own container.
-- Accessible forms and keyboard navigation for the quiz-taking flow.
-- Quiz taking is the flow most likely to happen on a phone, so it is designed phone-first and adapted upward. Instructor screens — the question bank and the roster — are the opposite: desktop-first, made survivable on a phone.
+- Accessible forms and keyboard navigation for the test-taking flow.
+- Test taking is the flow most likely to happen on a phone, so it is designed phone-first and adapted upward. Instructor screens — the question bank and the roster — are the opposite: desktop-first, made survivable on a phone.
 
 ---
 
@@ -714,7 +746,7 @@ Bootstrap 5 is mobile-first; the work is in respecting that rather than fighting
 
 | Risk | Mitigation |
 |---|---|
-| **Quiz attempt state loss** — trainee loses connection or their phone locks during a timed quiz | Server-authoritative timing; incremental answer persistence; explicit `in_progress` state with resume path. Design this data model before writing Phase 2 code. |
+| **Test attempt state loss** — trainee loses connection or their phone locks during a timed test | Server-authoritative timing; incremental answer persistence; explicit `in_progress` state with resume path. Design this data model before writing Phase 2 code. |
 | **Stale schema from no-migrations** — a model gains a field, `create_all()` ignores it, the app fails at runtime | Until first real use the fix is `docker compose down -v && docker compose up`. Document it as the default workflow so it becomes reflexive. Then the §5.3 expiry checkpoint. |
 | **MySQL not ready when the backend starts** | Compose healthcheck with `condition: service_healthy`, plus connection retry in `database.py`. |
 | **`utf8mb4` set too late** — fixing charset after tables exist is painful | Set it in Phase 0 on server, database, and connection URL; assert it in a startup check. |
@@ -722,10 +754,10 @@ Bootstrap 5 is mobile-first; the work is in respecting that rather than fighting
 | **Queries leaking into routers** now that repositories are gone | Constitution principle 1, enforced strictly: a router importing `select` or `Session` fails review. |
 | **Leaking `password_hash`** via a table model used as a response or template context | Separate non-table read models; never return or render a `table=True` instance directly. |
 | **Total lockout when Google is unreachable** — with 2FA on every login and no resend route, an SMTP outage or a revoked App Password stops everyone logging in. Accepted knowingly. | A hard `SMTP_TIMEOUT_SECONDS` so a failure is a fast clear error rather than a hung request; egress to `smtp.gmail.com:587` verified at deploy time, not first use; a password can be reset directly in the database if it ever comes to that. |
-| **Burst email throttling** — a class of thirty logging in within a minute before a quiz | Google's daily cap is not the binding constraint; per-burst throttling is. The 10-minute code TTL means trainees can log in a few minutes ahead. If a class is ever throttled out, revisit the every-login rule for trainees specifically. |
+| **Burst email throttling** — a class of thirty logging in within a minute before a test | Google's daily cap is not the binding constraint; per-burst throttling is. The 10-minute code TTL means trainees can log in a few minutes ahead. If a class is ever throttled out, revisit the every-login rule for trainees specifically. |
 | **Brute force of the code**, since there is no attempt counter | Rate limiting on the verify endpoint is the sole control and must not be removed or weakened without replacing it. Expiry alone does not bound guessing. |
 | **A trainee who never passes is nagged indefinitely** — the cycle restarts only on a pass, so someone failing repeatedly stays overdue | Correct behaviour for mandatory training, and the digest holds it to one email a week. Unlimited retakes on recurring tests mean the trainee always has a way out, so it is never a locked state. Accepted limitation: nothing surfaces "who is persistently overdue" to the instructor, so a struggling trainee is visible only in their own inbox. |
-| **A recurring quiz saved without a pass mark** would have no way to know when its cycle restarts | `passing_score` is required whenever `retake_interval_days` is set, validated when the owner saves the quiz rather than discovered by the scheduler at 06:00. |
+| **A recurring test saved without a pass mark** would have no way to know when its cycle restarts | `passing_score` is required whenever `retake_interval_days` is set, validated when the owner saves the test rather than discovered by the scheduler at 06:00. |
 | **Digest hides urgency** — one email listing five modules is easier to ignore than five emails | Accepted; the in-app list keeps one entry per module, and the digest leads with the count and the nearest due date. Revisit only if modules are genuinely being missed. |
 | **Duplicate schedulers** if `backend` is ever run with more than one replica | The unique key on `Notification` degrades this to wasted work rather than double emails. Revisit properly *before* adding a replica, never after. |
 | **Stored XSS through the content editor** — instructor-authored HTML is read back by every trainee who opens the page | Server-side sanitising before storage (§6.6). Sanitising in the editor or at render time only does not count. |
@@ -749,7 +781,7 @@ Bootstrap 5 is mobile-first; the work is in respecting that rather than fighting
 | Proposal said | This specification does | Why |
 |---|---|---|
 | Content delivered as static HTML pages, explicitly not stored in the database | Instructors author ordered pages inside the platform; content is stored in the database and edited through a rich-text editor (§6.6) | Content that only a developer can change is content nobody updates. An instructor must be able to fix a page without a deployment |
-| Quizzes "pulled from the question bank", instructor picks a count | The instructor assembles a quiz from specific chosen questions | Simpler to build, review, and reason about. Nothing needs a random draw |
+| Tests "pulled from the question bank", instructor picks a count | The instructor assembles a test from specific chosen questions | Simpler to build, review, and reason about. Nothing needs a random draw |
 | Multiple-choice format, unspecified further | A question may have several correct options, scored all-or-nothing | "Select all the warning signs" is the natural shape of awareness questions |
 | "A clear view of their own trainees' progress" for instructors | Not built. Instructors get a roster; each trainee sees their own status | Not required for the phases planned. Its absence is recorded as a limitation in §11 |
 | "Basic notifications", displayed in-app | In-app list plus email, with a scheduler and digests (§6.5) | Recurring training is worthless if nobody is told a test is due |

@@ -16,6 +16,12 @@ An instructor builds a bank of multiple-choice questions for their module, assem
 
 **This is the largest and most fragile phase in the project.** Everything else either fails visibly or fails harmlessly. Here, a trainee can lose twenty minutes of work to a dropped connection, and the platform can be wrong about whether someone passed. The attempt model in this specification is written to make both impossible.
 
+## Clarifications
+
+### Session 2026-09-10
+
+- Q: When a trainee takes a test, do they see all the questions on one scrolling page, or one question at a time with next and previous? → A: All on one scrolling page
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Build a test (Priority: P1)
@@ -50,7 +56,7 @@ A trainee opens a published test, answers its questions, submits, and is told th
 
 **Acceptance Scenarios**:
 
-1. **Given** a published test within its window, **When** a registered trainee starts it, **Then** an attempt begins and the questions are presented one after another.
+1. **Given** a published test within its window, **When** a registered trainee starts it, **Then** an attempt begins and every question is shown on one scrolling page, with the submit control at the end.
 2. **Given** a question with one correct option, **When** it is presented, **Then** the trainee may select exactly one answer.
 3. **Given** a question with several correct options, **When** it is presented, **Then** the trainee may select more than one.
 4. **Given** a completed test, **When** the trainee submits it, **Then** a score and a pass-or-fail outcome appear immediately.
@@ -230,6 +236,7 @@ An instructor opens their test and sees the attempts made on it — who has take
 - The availability window governs when an attempt may *start*. An attempt that started inside the window runs to its own ending moment even if the window closes first — subject to the rule that the window's close also ends it, whichever comes first.
 - A trainee may have only one attempt in progress at a time on a given test. Opening it on a second device continues the same attempt rather than starting another.
 - A test is frozen from its first attempt. Before that it may be edited freely; after it, not at all.
+- **A test is one scrolling page.** Every question is shown at once, in the attempt's fixed order, with submit at the end. There is no per-question navigation and no separate review screen — a trainee checks what they left blank by scrolling. The countdown stays visible while scrolling.
 - Instructions on a test are plain text. The rich-text editor built in Phase 1 is for module content, not for question prompts.
 
 > **A consequence of two of these decisions together.** The most recent attempt represents a person, and a review shows the correct answers. So someone can fail, read the answers, retake, and pass — and in Phase 4, where recurring tests allow unlimited retakes, that path is always open. The pass mark therefore measures that someone has seen the right answers and can reproduce them, not that they knew them unaided. For awareness training that is arguably the point; it is recorded here so it is a choice rather than a surprise.

@@ -14,6 +14,14 @@ Phase 0 of the SME Cybersecurity Awareness Training Platform. It establishes who
 
 It deliberately contains no training modules, no content, and no quizzes. Those begin in Phase 1. What it delivers is an installation an administrator can sign into, put real people into, and hand out access from — the smallest thing that is genuinely useful, and the foundation every later phase assumes.
 
+## Clarifications
+
+### Session 2026-09-10
+
+- Q: What language should the interface be in, and does it need to read right-to-left? → A: English only, left-to-right
+- Q: How is the platform's data backed up? → A: It is not
+- Q: What does the platform log? → A: Nothing beyond what the server prints by default
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Sign in with a second factor (Priority: P1)
@@ -195,12 +203,12 @@ Email delivery fails — an outage, a blocked connection, an expired credential.
 - **FR-032**: System MUST wait for its data store to become ready at startup rather than failing.
 - **FR-033**: System MUST take all secrets from its environment, and MUST NOT carry any credential inside its published artefacts or configuration files held in version control.
 - **FR-034**: System MUST preserve its data across restarts.
-- **FR-035**: System MUST be kept under version control from this phase onward, in a shared repository every team member can work from.
+- **FR-035**: System MUST be kept under version control from this phase onward, in a **local repository**. There is no remote and no shared hosting — the owner's decision. Already satisfied: the repository was initialised before this phase began.
 - **FR-036**: Automated tests MUST be runnable on demand by any team member with a single documented command. Running them automatically on every change is deferred to a later phase.
 
 ### Key Entities
 
-- **Account**: A person who can sign in. Holds their email address, name, role, whether they are active, and their password in unrecoverable form. Records whether the person must choose a new password before continuing, which is set whenever an administrator creates the account or resets its password and cleared once they do. Also carries whatever is outstanding for a sign-in currently in progress — the pending code in unrecoverable form and the moment it stops being valid — both cleared once used.
+- **User**: A person who can sign in — the table is `user`, and the screens that manage them are called account administration. Holds their email address, name, role, whether they are active, and their password in unrecoverable form. Records whether the person must choose a new password before continuing, which is set whenever an administrator creates the account or resets its password and cleared once they do. Also carries whatever is outstanding for a sign-in currently in progress — the pending code in unrecoverable form and the moment it stops being valid — both cleared once used.
 - **Session**: Evidence that a particular account signed in successfully, held by the platform rather than by the browser. Records when it began, when it ceases to be valid, and enough about its origin to be recognised. Removed on sign-out, and removable at any time to withdraw access.
 
 ## Success Criteria *(mandatory)*
@@ -232,6 +240,7 @@ Email delivery fails — an outage, a blocked connection, an expired credential.
 - The demonstration accounts created at installation are exempt from the first-sign-in password change, so the platform can be shown working without a detour. Real accounts created by an administrator are never exempt.
 - Passwords must be at least eight characters. No composition rules.
 - "Materially different navigation" between roles means at minimum that administrative navigation is absent for instructors and trainees.
+- **The interface is English, left-to-right.** One stylesheet, no direction handling anywhere in the shell that every later phase renders inside.
 
 > **A consequence of not throttling code entry.** A six-digit code is one of a million, and nothing limits how many guesses may be submitted inside its ten-minute life. An attacker who already knows someone's password could therefore work through codes. This was accepted deliberately when the security surface was reduced; it is written here so that its absence is a decision on record rather than something nobody noticed.
 
@@ -242,6 +251,7 @@ Email delivery fails — an outage, a blocked connection, an expired credential.
 - The platform runs as a single instance. Nothing here assumes or supports more than one.
 - No training content, modules, tests, results, or notifications exist in this phase. Signing in, being administered, and seeing an appropriately shaped but largely empty workspace is the whole of it.
 - There is no existing data to preserve. The platform may be destroyed and recreated freely throughout this phase.
+- **Nothing is backed up.** The database lives in one Docker volume on one machine. If that machine or volume is lost, the data is gone and cannot be recovered.
 
 **Deliberately excluded**, so that their absence is a decision rather than an oversight:
 
@@ -250,3 +260,6 @@ Email delivery fails — an outage, a blocked connection, an expired credential.
 - A record of who did what — no audit trail exists in this platform.
 - A route to resend a code without starting sign-in again.
 - Any second-factor channel other than email.
+- Any backup, snapshot, or export of the database.
+- Application logging of any kind — no structured logs, no log files, no aggregation. Whatever the server prints to the console is all there is.
+- Arabic, right-to-left layout, or any second interface language.

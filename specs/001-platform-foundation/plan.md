@@ -34,7 +34,7 @@ The technical approach is fixed by the project specification rather than open: F
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-Checked against `.specify/memory/constitution.md` v3.0.1.
+Checked against `.specify/memory/constitution.md` v4.0.0.
 
 ### Principles
 

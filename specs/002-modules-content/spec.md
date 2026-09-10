@@ -16,6 +16,13 @@ By the end of this phase an administrator can set up a module, an instructor can
 
 This phase depends on Phase 1 of nothing — it builds directly on the accounts, roles, and sign-in delivered in `specs/001-platform-foundation`.
 
+## Clarifications
+
+### Session 2026-09-10
+
+- Q: Which language will instructors write module content in, and does the editor need to type right-to-left? → A: English, left-to-right
+- Q: Should a trainee's dashboard and their results page be the same page? → A: The same page — Phase 3 extends this dashboard rather than adding a second list
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Set up a module and put someone in charge of it (Priority: P1)
@@ -142,7 +149,7 @@ A trainee signs in, sees the modules they have been put on, opens one, and reads
 - **FR-019**: System MUST let an instructor upload an image for use in a page of a module they are assigned to.
 - **FR-020**: System MUST NOT provide any means for a trainee to upload a file of any kind.
 - **FR-021**: System MUST accept only image files, by extension, and MUST enforce a maximum upload size, telling the instructor clearly when a file is rejected.
-- **FR-022**: System MUST delete a module's uploaded images when that module is permanently removed.
+- **FR-022**: A module's uploaded images MUST be deleted when that module is permanently removed. Permanent removal is a database operation rather than an application route (FR-010), so this is a **documented manual procedure**, not something the platform performs on its own.
 
 **Registration**
 
@@ -157,11 +164,11 @@ A trainee signs in, sees the modules they have been put on, opens one, and reads
 
 **Finding and reading**
 
-- **FR-031**: System MUST list on a trainee's dashboard every module they hold an active registration on and no others.
+- **FR-031**: System MUST list on a trainee's dashboard every module they hold an active registration on and no others. Phase 3 extends this same page with a state against each module; it does not add a second list.
 - **FR-032**: System MUST give each module a home view from which its readable pages can be reached.
 - **FR-033**: System MUST present module navigation as persistent alongside the content on desktop widths, and as an openable drawer at phone widths.
 - **FR-034**: System MUST present every screen in this phase usably at phone, tablet, and desktop widths, with no sideways scrolling of the page itself.
-- **FR-035**: System MUST make content and any assessment reachable independently — reading the material MUST NOT be a precondition for anything else.
+- **FR-035**: System MUST make content and any assessment reachable independently — reading the material MUST NOT be a precondition for anything else. Assessment arrives in Phase 2, so this is asserted there, against that phase's FR-039.
 
 ### Key Entities
 
@@ -202,6 +209,7 @@ A trainee signs in, sees the modules they have been put on, opens one, and reads
 - **Modules are never archived and never conclude.** Training in an SME is continuous: a module stays available and its test is retaken on a cycle rather than the module being closed off. Retiring one means unpublishing it. This removes the archived state the earlier draft carried, and with it every question about what an archived module means for the people on it.
 - **A registration has no status.** With no invitation to accept and no module completion to record, states such as "invited" and "concluded" had nothing that could produce them. A person is on a module or is not.
 - Publishing a module with no pages is permitted but warned about, on the grounds that an empty module is more likely a mistake than an intention.
+- **The interface and all module content are English, left-to-right.** One editor configuration, one stylesheet, no direction handling anywhere. The report, demonstration, and marking are in English, so every screen is readable by an examiner.
 - Concurrent edits to the same page are resolved last-write-wins with no warning. Two instructors on one page at the same moment is rare enough in an organisation this size to accept losing the earlier edit.
 
 **Dependencies**:
@@ -213,6 +221,7 @@ A trainee signs in, sees the modules they have been put on, opens one, and reads
 
 - Any assessment. No questions, no tests, no scores — that is Phase 2.
 - Prerequisites or completion gating. Content and assessment are always both reachable; there is no "read this before that", no tracking of which pages a trainee has opened, and no unlock rules.
+- Arabic, right-to-left layout, or any second interface language. Adding one later means revisiting every template built from this phase onward.
 - Any form of self-registration. A person cannot put themselves on a module, and there is no page listing modules they are not on. Training here is assigned, not chosen.
 - Grouping modules into pathways, tracks, or sequences.
 - Uploading anything by a trainee, and uploading anything other than images by an instructor.

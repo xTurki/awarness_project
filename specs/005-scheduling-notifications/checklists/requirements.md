@@ -51,10 +51,10 @@ Running the clock from the most recent attempt means someone who passed, then re
 
 Implementation names were kept out deliberately. The requirements describe "a process that runs once a day without anyone signed in" rather than naming a scheduler, and "a notification record" rather than a table. FR-030 states the constraint that actually matters — no second machine, no separate service — as an outcome.
 
-Concrete values that shape the experience — a fourteen-day warning, weekly overdue reminders, an early-morning run, opening the list marking it read, notifications never deleted — sit in Assumptions with the reasoning for each.
+Concrete values that shape the experience — a fourteen-day warning, a single overdue notice, an early-morning run, opening the list marking it read, notifications never deleted — sit in Assumptions with the reasoning for each.
 
 ### One thing worth seeing before planning
 
-Overdue reminders repeat until a person passes, and recurring tests allow unlimited attempts. Someone who never passes is reminded weekly, indefinitely. They always have a route out, so it is not a trap — but nothing stops it on its own, and nobody but that person sees it happening unless an instructor opens the module view from Phase 3.
+An overdue test is announced once and never repeated; what persists is the state, not the messaging. Someone who never passes therefore stops hearing about it, and nobody but that person sees the state unless an instructor opens the module view from Phase 3. Recurring tests allow unlimited attempts, so there is always a route out.
 
 Spec is ready for `/speckit-plan`.

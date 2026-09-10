@@ -18,6 +18,12 @@ It is the smallest phase in the project and it **adds nothing to the data**. Eve
 
 **It replaces the gradebook** that earlier drafts carried. There are no grade columns, no weightings, no calculated final mark, and no manual grade entry. Everything is scored by machine and nothing concludes, so there is nothing to weight and no final mark to publish.
 
+## Clarifications
+
+### Session 2026-09-10
+
+- Q: Should a trainee's dashboard and their results page be the same page, or two separate pages? → A: The same page — a trainee's dashboard is their results page
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - See where you stand (Priority: P1)
@@ -112,7 +118,7 @@ An instructor opens a module they run and sees everyone registered on it, with e
 
 **What a person sees**
 
-- **FR-001**: System MUST give every signed-in person a single page listing each module they hold a registration on, and no module they do not.
+- **FR-001**: System MUST list, on a trainee's dashboard, each module they hold a registration on and no module they do not. This dashboard **is** the results page — there is no second, separate list of the same modules. Instructor and administrator dashboards are unaffected.
 - **FR-002**: System MUST show, against each listed module, the person's current state in it.
 - **FR-003**: System MUST distinguish these states: no test available · not started · in progress · passed · failed.
 - **FR-004**: System MUST show the score alongside any state where one exists.
@@ -189,6 +195,7 @@ This phase introduces no new entity. Everything it shows is derived from what al
 - Outstanding items sort above completed ones. Within outstanding, order by when the person was registered, oldest first.
 - A person registered on a module as its instructor does not see it among their own training. If they are also registered on it as a trainee, they do.
 - A score is shown as a percentage, matching how it is expressed everywhere else.
+- **A trainee's dashboard is their results page.** One route, one template, one list. The plain module list Phase 1 described for trainees is replaced by this one rather than sitting alongside it. Instructors and administrators keep their own dashboards, which show different things.
 - An instructor's view covers one module at a time. Nothing aggregates across modules, for anyone.
 
 > **A consequence of deciding state from the currently published test.** Replacing a test resets everyone registered on that module to "not started" — including people who passed the previous version yesterday. Correcting a single misspelled question therefore invalidates the whole group's training record, and once Phase 4 exists it will make all of them due at once and send them all a notification.
