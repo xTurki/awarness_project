@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}{{ "Edit account" if subject else "New account" }}{% endblock %}
+
+{% block content %}
+<div class="form-narrow">
+  <h1 class="h4 mb-3">{{ "Edit account" if subject else "New account" }}</h1>
+
+  <form method="post"
+        action="{{ '/admin/accounts/' ~ subject.id if subject else '/admin/accounts' }}"
+        novalidate>
+    <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token }}">
+
+    <div class="mb-3">
+      <label for="full_name" class="form-label">Full name</label>
+      <input type="text" class="form-control" id="full_name" name="full_name"
+             value="{{ full_name|default('') }}" required autofocus>
+    </div>
+
+    <div class="mb-3">
+      <label for="email" class="form-label">Email address</label>
+      <input type="email" class="form-control" id="email" name="email"
+             value="{{ email|default('') }}" required>
+    </div>
+
+    <div class="mb-3">
+      <label for="role" class="form-label">Role</label>
+      <select class="form-select" id="role" name="role" required>
+        {% for choice in roles %}
+          <option value="{{ choice }}" {% if role == choice %}selected{% endif %}>{{ choice }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    {% if not subject %}
+      <div class="mb-3">
+        <label for="password" class="form-label">Initial password</label>
+        <input type="password" class="form-control" id="password" name="password"
+               autocomplete="new-password" required>
+        <div class="form-text">
+          At least {{ minimum }} characters. They will be asked to choose their own
+          the first time they sign in.
+        </div>
+      </div>
+    {% endif %}
+
+    <button type="submit" class="btn btn-primary">
+      {{ "Save changes" if subject else "Create account" }}
+    </button>
+    <a class="btn btn-link" href="/admin/accounts">Cancel</a>
+  </form>
+
+  {% if subject %}
+    <hr class="my-4">
+    <h2 class="h6">Reset password</h2>
+    <p class="text-body-secondary small">
+      The person will be asked to choose their own password at their next sign-in.
+    </p>
+    <form method="post" action="/admin/accounts/{{ subject.id }}/password" novalidate>
+      <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token }}">
+      <div class="mb-3">
+        <label for="new_password" class="form-label">New password</label>
+        <input type="password" class="form-control" id="new_password" name="password"
+               autocomplete="new-password" required>
+        <div class="form-text">At least {{ minimum }} characters.</div>
+      </div>
+      <button type="submit" class="btn btn-outline-secondary">Reset password</button>
+    </form>
+  {% endif %}
+</div>
+{% endblock %}

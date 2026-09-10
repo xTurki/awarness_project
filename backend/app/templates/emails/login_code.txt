@@ -1,0 +1,10 @@
+Hello {full_name},
+
+Your sign-in code is: {code}
+
+It works once and expires in {minutes} minutes.
+
+If it expires, or if it does not arrive, simply sign in again — that issues a
+fresh code and stops the previous one working. Nobody can resend this one.
+
+If you did not try to sign in, you can ignore this message.

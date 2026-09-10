@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<h1 class="h4 mb-1">Welcome, {{ account.full_name }}</h1>
+<p class="text-body-secondary">Signed in as {{ account.role }}.</p>
+
+<div class="row g-3 mt-1">
+
+  {% if account.role == "administrator" %}
+    <div class="col-12 col-lg-6">
+      <div class="card h-100">
+        <div class="card-body">
+          <h2 class="h6 card-title">Accounts</h2>
+          <p class="card-text small text-body-secondary">
+            Create accounts, change roles, reset passwords, and switch accounts off.
+            Nobody registers themselves.
+          </p>
+          <a class="btn btn-sm btn-primary" href="/admin/accounts">Manage accounts</a>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  {% if account.role == "instructor" %}
+    <div class="col-12 col-lg-6">
+      <div class="card h-100">
+        <div class="card-body">
+          <h2 class="h6 card-title">Your modules</h2>
+          <p class="card-text small text-body-secondary">
+            Modules you run will appear here. Authoring arrives in Phase 1.
+          </p>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  {% if account.role == "trainee" %}
+    <div class="col-12 col-lg-6">
+      <div class="card h-100">
+        <div class="card-body">
+          <h2 class="h6 card-title">Your training</h2>
+          <p class="card-text small text-body-secondary">
+            Training assigned to you will appear here. Modules arrive in Phase 1.
+          </p>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}
