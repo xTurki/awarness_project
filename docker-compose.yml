@@ -42,6 +42,12 @@ services:
 
   nginx:
     build: ./nginx
+    networks:
+      default:
+        # Fixed, so the tunnel can be told where nginx is without asking a name
+        # server. Docker assigns addresses in start order otherwise, which is
+        # stable in practice and not stable by contract.
+        ipv4_address: 172.21.0.10
     restart: unless-stopped
     depends_on:
       - backend
@@ -65,12 +71,40 @@ services:
   # they run identically with this service absent, which is how the test suite
   # and every local check still see the same three containers.
   tunnel:
-    image: cloudflare/cloudflared:latest
+    # Pinned, like nginx and mysql. `latest` meant the running connector was
+    # six releases behind and saying so in its own logs, which is the kind of
+    # drift a pinned version makes visible instead of silent.
+    image: cloudflare/cloudflared:2026.9.1
     restart: unless-stopped
-    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+    # http2 rather than the default quic, which is TCP rather than UDP.
+    #
+    # quic-go asks for a 7 MiB UDP receive buffer and this container is granted
+    # 416 KiB of it, and says so in its own log. The limit is in the Docker VM,
+    # not the host, so it cannot be raised for one container. TCP needs no such
+    # buffer, so this avoids the warning rather than living with it.
+    #
+    # It did not cause the intermittent 502s. Those came from a second
+    # connector on this same tunnel that could not reach nginx.
+    command: tunnel --no-autoupdate --protocol http2 run --token ${CLOUDFLARE_TUNNEL_TOKEN}
     depends_on:
       - nginx
+    # The dashboard names the origin `http://nginx:80`. A hosts entry answers
+    # that name without asking any name server, so the connector reaches nginx
+    # by address and nothing outside this file has to know.
+    #
+    # Kept because it costs nothing, not because the resolver ever failed here:
+    # this connector has never logged a name it could not look up.
+    extra_hosts:
+      - "nginx:172.21.0.10"
     # No published port. The connection is outbound only.
+
+networks:
+  default:
+    ipam:
+      config:
+        # Declared rather than inherited, so the address pinned above is inside
+        # the subnet on any machine this is brought up on.
+        - subnet: 172.21.0.0/16
 
 volumes:
   db_data:

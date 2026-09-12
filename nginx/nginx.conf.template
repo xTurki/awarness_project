@@ -43,6 +43,23 @@ server {
         expires 1h;
     }
 
+    # A restart of the application takes a few seconds, and for those seconds
+    # nginx is up while nothing is behind it. Without this the visitor gets a
+    # raw gateway error from whatever sits in front, which reads as a broken
+    # platform rather than a busy one.
+    #
+    # Mapped to 503 rather than kept as 502: this is temporary and says so, so
+    # a cache in front does not treat it as the site being down.
+    error_page 502 503 504 =503 /maintenance.html;
+
+    location = /maintenance.html {
+        root /usr/share/nginx/html;
+        internal;
+        # Never cached. The whole point is that the next request gets the real
+        # page back.
+        add_header Cache-Control "no-store" always;
+    }
+
     location / {
         proxy_pass         http://backend;
         proxy_http_version 1.1;
