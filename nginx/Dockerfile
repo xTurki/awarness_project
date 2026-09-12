@@ -11,3 +11,7 @@ COPY nginx.conf.template /etc/nginx/templates/default.conf.template
 # The entrypoint sources .envsh files and runs them in name order, and the
 # envsubst step is numbered 20, so this must sort before it.
 COPY --chmod=0755 upload-limit.envsh /docker-entrypoint.d/15-upload-limit.envsh
+
+# Shown while the application behind nginx is restarting. Self-contained, so it
+# renders when nothing else in the stack is answering.
+COPY maintenance.html /usr/share/nginx/html/maintenance.html
