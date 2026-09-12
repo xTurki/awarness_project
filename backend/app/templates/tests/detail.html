@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}{{ test.title }}{% endblock %}
+
+{% block content %}
+{# The test is the last page of the module, so it is laid out as one: the same
+   sidebar, the same column, arrived at by reading forward rather than by going
+   somewhere else to look for it. #}
+<div class="row g-4">
+  <div class="col-12 col-lg-3">
+    {% with on_test = true %}{% include "components/module_nav.html" %}{% endwith %}
+  </div>
+
+  <div class="col-12 col-lg-9">
+
+    <div class="page-head d-flex flex-wrap gap-3 justify-content-between align-items-start">
+      <div>
+        <a class="crumb" href="/modules/{{ module.id }}">{{ module.title }}</a>
+        <h1 class="h3 m-0">{{ test.title }}</h1>
+        <p class="lead-sm mt-1">The last part of this module.</p>
+      </div>
+
+      {% if can_write %}
+        <div class="d-flex flex-wrap gap-2">
+          <a class="btn btn-sm btn-outline-secondary"
+             href="/modules/{{ module.id }}/tests/{{ test.id }}/edit">Settings</a>
+          <a class="btn btn-sm btn-outline-secondary" href="/tests/{{ test.id }}/attempts">Attempts</a>
+          <form method="post" class="m-0"
+                action="/modules/{{ module.id }}/tests/{{ test.id }}/publish">
+            <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token }}">
+            <input type="hidden" name="is_published" value="{{ 'false' if test.is_published else 'true' }}">
+            <button type="submit" class="btn btn-sm btn-outline-secondary">
+              {{ "Unpublish" if test.is_published else "Publish" }}
+            </button>
+          </form>
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="panel mb-4">
+      <div class="panel-head">Before you start</div>
+      <div class="panel-body">
+
+        {# The instructions the instructor wrote come first: they are the point
+           of arriving here, and the terms below are the small print. #}
+        {% if test.instructions %}
+          <p>{{ test.instructions }}</p>
+          <hr>
+        {% endif %}
+
+        {# Shown before starting, always (FR-009). #}
+        <ul class="list-unstyled mb-0">
+          <li><strong>Questions:</strong> {{ test.question_count }}</li>
+          <li><strong>Time limit:</strong>
+            {% if test.time_limit_minutes %}{{ test.time_limit_minutes }} minutes{% else %}none{% endif %}</li>
+          <li><strong>Attempts allowed:</strong>
+            {% if test.retake_interval_days %}as many as you need{% else %}{{ test.allowed_attempts }}{% endif %}</li>
+          <li><strong>Pass mark:</strong>
+            {% if test.passing_score is not none %}{{ test.passing_score }}%{% else %}none{% endif %}</li>
+
+          {# Shown to the people registered on it, not only to whoever set it
+             (Phase 4 FR-006). #}
+          {% if test.retake_interval_days %}
+            <li><strong>Repeats:</strong> every {{ test.retake_interval_days }} days</li>
+          {% elif test.completion_deadline_days %}
+            <li><strong>To be completed within:</strong>
+              {{ test.completion_deadline_days }} days of joining the module</li>
+          {% endif %}
+
+          {# Rendered in the reader's own zone. The UTC text is what shows with
+             no JavaScript, which is what the page said before. #}
+          {% if test.opens_at or test.closes_at %}
+            <li><strong>Open:</strong>
+              {% if test.opens_at %}
+                from <time data-utc="{{ test.opens_at.isoformat() }}"
+                           >{{ test.opens_at.strftime("%d %b %Y, %H:%M") }} UTC</time>
+              {% endif %}
+              {% if test.closes_at %}
+                until <time data-utc="{{ test.closes_at.isoformat() }}"
+                            >{{ test.closes_at.strftime("%d %b %Y, %H:%M") }} UTC</time>
+              {% endif %}
+              <span class="text-body-secondary">(<span data-timezone>UTC</span>)</span>
+            </li>
+          {% endif %}
+
+          {% if test.shuffle_questions %}
+            <li>Questions appear in a different order for each person.</li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+
+    {# The button appears only for somebody who can actually use it. Offering it
+       regardless and letting the service refuse is what produced a Start button
+       that answered "Not found". #}
+    {% if not cannot_start %}
+      <form method="post" action="/tests/{{ test.id }}/attempts" class="mb-3">
+        <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token }}">
+        <button type="submit" class="btn btn-primary btn-lg">
+          {% if attempts and not attempts[0].is_submitted %}Resume your attempt{% else %}Start the test{% endif %}
+        </button>
+      </form>
+    {% else %}
+      <div class="panel mb-3">
+        <div class="panel-body d-flex flex-wrap align-items-center gap-3">
+          <span class="badge text-bg-secondary">Cannot start</span>
+          <span class="text-body-secondary">
+            {{ cannot_start.text }}{% if cannot_start.at %}
+              <time data-utc="{{ cannot_start.at.isoformat() }}"
+                    >{{ cannot_start.at.strftime("%d %b %Y, %H:%M") }} UTC</time>.
+            {% endif %}
+          </span>
+        </div>
+      </div>
+    {% endif %}
+
+    {% if attempts %}
+      {# Phase 3 replaced the per-test list with one page per module, covering
+         every test the module has had. #}
+      <a class="btn btn-outline-secondary btn-sm" href="/results/modules/{{ module.id }}">
+        Your attempts ({{ attempts|length }})
+      </a>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

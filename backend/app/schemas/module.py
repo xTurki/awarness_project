@@ -11,6 +11,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, field_validator
 
+from app import art
 from app.models.registration import ROLES_IN_MODULE
 
 
@@ -22,14 +23,21 @@ class ModuleRead(BaseModel):
     title: str
     description: str | None
     is_published: bool
+    #: Resolved, never raw: a module with nothing chosen still arrives with a
+    #: pattern and a colour, so no template has to decide what to do about null.
+    art_pattern: str = art.PATTERNS[0]
+    art_colour: str = art.COLOURS[0]
 
     @classmethod
     def of(cls, row) -> "ModuleRead":
+        pattern, colour = art.parse(getattr(row, "art", None), row.id)
         return cls(
             id=row.id,
             title=row.title,
             description=row.description,
             is_published=row.is_published,
+            art_pattern=pattern,
+            art_colour=colour,
         )
 
 
@@ -90,12 +98,28 @@ class ImageRead(BaseModel):
 class ModuleWrite(BaseModel):
     title: str
     description: str | None = None
+    art_pattern: str = art.PATTERNS[0]
+    art_colour: str = art.COLOURS[0]
 
     @field_validator("title")
     @classmethod
     def _title_present(cls, value: str) -> str:
         if not value.strip():
             raise ValueError("A module needs a title.")
+        return value
+
+    @field_validator("art_pattern")
+    @classmethod
+    def _known_pattern(cls, value: str) -> str:
+        if value not in art.PATTERNS:
+            raise ValueError(f"Choose one of: {', '.join(art.PATTERNS)}.")
+        return value
+
+    @field_validator("art_colour")
+    @classmethod
+    def _known_colour(cls, value: str) -> str:
+        if value not in art.COLOURS:
+            raise ValueError(f"Choose one of: {', '.join(art.COLOURS)}.")
         return value
 
 

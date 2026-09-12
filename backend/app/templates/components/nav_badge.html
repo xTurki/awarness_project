@@ -1,0 +1,12 @@
+{# The shell indicator: a count of what the caller has not seen (FR-030).
+
+   The number is attached to every rendered page by `rendering.render`, from a
+   count taken while the session was resolved, so no page has to remember to ask
+   for it. Zero renders the link without a badge rather than a badge saying nought. #}
+<a class="nav-link position-relative" href="/notifications">
+  Notifications
+  {% if unread_notifications %}
+    <span class="badge rounded-pill text-bg-danger">{{ unread_notifications }}</span>
+    <span class="visually-hidden">unread</span>
+  {% endif %}
+</a>

@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Result: {{ test.title }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <a class="crumb" href="/modules/{{ module.id }}/tests/{{ test.id }}">{{ module.title }}</a>
+  <h1 class="h3">{{ test.title }}</h1>
+</div>
+
+<div class="card mb-4">
+  <div class="card-body d-flex flex-wrap gap-4 align-items-center">
+    <div>
+      <div class="display-5 fw-semibold lh-1">{{ attempt.score_percent }}%</div>
+      <div class="small text-body-secondary">Attempt {{ attempt.attempt_number }}</div>
+    </div>
+
+    {% if attempt.passed is not none %}
+      {% if attempt.passed %}
+        <span class="badge text-bg-success fs-6">Passed</span>
+      {% else %}
+        <span class="badge text-bg-danger fs-6">Failed</span>
+      {% endif %}
+      <span class="small text-body-secondary">Pass mark {{ test.passing_score }}%</span>
+    {% else %}
+      <span class="badge text-bg-secondary fs-6">No pass mark</span>
+    {% endif %}
+
+    {% if attempt.score_overridden %}
+      <span class="badge text-bg-info">Corrected by the instructor</span>
+    {% endif %}
+  </div>
+</div>
+
+{% for question, chosen, correct in review %}
+  <div class="card mb-3">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-start gap-2">
+        <h2 class="h6 mb-2">{{ question.position }}. {{ question.prompt }}</h2>
+        {% if correct is none %}
+          <span class="badge text-bg-secondary">Not answered</span>
+        {% elif correct %}
+          <span class="badge text-bg-success">Right</span>
+        {% else %}
+          <span class="badge text-bg-danger">Wrong</span>
+        {% endif %}
+      </div>
+
+      {% for option in question.options %}
+        <div class="pick{% if option.is_correct %} border-success bg-success-subtle{% endif %}"
+             style="cursor: default">
+          {% if option.id in chosen %}<strong>You chose:</strong>{% endif %}
+          {{ option.text }}
+          {% if option.is_correct %}
+            <span class="badge text-bg-success ms-1">Correct answer</span>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+{% endfor %}
+
+<a class="btn btn-outline-secondary" href="/results/modules/{{ module.id }}">Your attempts</a>
+{% endblock %}

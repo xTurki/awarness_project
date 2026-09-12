@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Security Awareness Training{% endblock %}
+
+{% block content %}
+{# The one page in the platform a visitor may see. `base.html` renders the
+   navigation only when there is an account, so this page carries none: there is
+   nowhere to go from here except in. #}
+<div class="row justify-content-center">
+  <div class="col-12 col-md-10 col-lg-8 col-xl-7">
+
+    <div class="text-center mb-4">
+      <span class="app-mark mb-3" style="width: 3rem; height: 3rem; font-size: 1.1rem">SA</span>
+      <h1 class="h3 mb-2">Security Awareness Training</h1>
+      <p class="text-body-secondary mb-0">
+        Cybersecurity training for the people who work here. Read the material,
+        sit the test, and keep your training current.
+      </p>
+    </div>
+
+    <div class="card">
+      <div class="card-body p-4 text-center">
+        <a class="btn btn-primary btn-lg px-5" href="/login">Log in</a>
+
+        {# Said plainly, because somebody arriving without an account needs to
+           know it is not an oversight that there is no sign-up button. #}
+        <p class="small text-body-secondary mt-4 mb-0">
+          Accounts are created by an administrator, and modules are assigned to
+          you. There is no sign-up: if you need access, ask the person who runs
+          your training.
+        </p>
+      </div>
+    </div>
+
+    <div class="row g-3 mt-1">
+      <div class="col-12 col-sm-4">
+        <div class="card h-100"><div class="card-body py-3">
+          <div class="fw-semibold small">Assigned to you</div>
+          <div class="small text-body-secondary">Your modules are chosen for your role.</div>
+        </div></div>
+      </div>
+      <div class="col-12 col-sm-4">
+        <div class="card h-100"><div class="card-body py-3">
+          <div class="fw-semibold small">Read, then sit the test</div>
+          <div class="small text-body-secondary">Each module ends with a short check.</div>
+        </div></div>
+      </div>
+      <div class="col-12 col-sm-4">
+        <div class="card h-100"><div class="card-body py-3">
+          <div class="fw-semibold small">Kept current</div>
+          <div class="small text-body-secondary">You are reminded before it lapses.</div>
+        </div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

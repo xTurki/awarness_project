@@ -10,10 +10,11 @@ from __future__ import annotations
 from sqlmodel import Session as DbSession
 from sqlmodel import select
 
+from app.models.module import Module
 from app.models.registration import Registration
 from app.models.user import User
 from app.schemas.module import RegistrationRead, RosterAdd
-from app.services import module_service
+from app.services import module_service, notification_service
 
 
 def roster(db: DbSession, actor: User, module_id: int) -> list[RegistrationRead]:
@@ -67,6 +68,15 @@ def register_many(db: DbSession, actor: User, module_id: int, data: RosterAdd) -
     """
     module_service.get_for_write(db, module_id, actor)
 
+    # Assigning an instructor is an administrator's act. An instructor may put
+    # trainees on a module they run, and nothing more: a module's owner cannot
+    # quietly give somebody else the same authority over it (FR-004, FR-005,
+    # FR-024).
+    if data.role_in_module == "instructor" and actor.role != "administrator":
+        raise module_service.NotPermitted(
+            "Only an administrator can assign an instructor to a module."
+        )
+
     already = {
         row.user_id
         for row in db.exec(
@@ -74,11 +84,12 @@ def register_many(db: DbSession, actor: User, module_id: int, data: RosterAdd) -
         ).all()
     }
 
-    added = 0
+    registered: list[User] = []
     for user_id in data.user_ids:
         if user_id in already:
             continue
-        if db.get(User, user_id) is None:
+        person = db.get(User, user_id)
+        if person is None:
             continue
         db.add(
             Registration(
@@ -86,10 +97,19 @@ def register_many(db: DbSession, actor: User, module_id: int, data: RosterAdd) -
             )
         )
         already.add(user_id)
-        added += 1
+        registered.append(person)
 
     db.commit()
-    return added
+
+    # Each of the fifteen names picked in one action is told about their own
+    # registration, and told now rather than on the next daily run (FR-015,
+    # FR-018). A mail failure leaves the record in place with `emailed_at` null
+    # and does not undo the registration (FR-025).
+    module = db.get(Module, module_id)
+    for person in registered:
+        notification_service.notify_registered(db, person, module)
+
+    return len(registered)
 
 
 def remove(db: DbSession, actor: User, module_id: int, user_id: int) -> None:

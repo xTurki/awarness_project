@@ -31,6 +31,11 @@ class Module(SQLModel, table=True):
 
     is_published: bool = Field(default=False, nullable=False)
 
+    # The cover: a pattern and a colour, as "hexagons.teal". Nullable, and a
+    # null draws one derived from the id, so this column was added to a live
+    # database without backfilling a row (app/art.py).
+    art: str | None = Field(default=None, max_length=32, nullable=True)
+
     created_at: datetime = Field(default_factory=utcnow, nullable=False)
 
     # NULL means live. Set to soft-delete, cleared to restore (FR-010).

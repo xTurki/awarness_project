@@ -14,5 +14,8 @@ itsdangerous==2.2.0
 nh3==0.2.20
 anyio==4.8.0
 python-multipart==0.0.20
+# The daily due-date sweep, in the backend process. The constitution permits
+# scheduled work in-process and forbids a broker or a worker container.
+APScheduler==3.11.0
 pytest==8.3.4
 httpx==0.28.1

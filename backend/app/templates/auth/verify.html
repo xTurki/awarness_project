@@ -3,27 +3,58 @@
 
 {% block content %}
 <div class="form-narrow">
-  <h1 class="h4 mb-3">Check your email</h1>
-  <p class="text-body-secondary small">
-    We sent a six-digit code to <strong>{{ email }}</strong>. It works once and expires shortly.
-  </p>
 
-  <form method="post" action="/login/verify" novalidate>
-    <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token }}">
-    <input type="hidden" name="email" value="{{ email }}">
+  <div class="text-center mb-4">
+    <a class="app-brand justify-content-center" href="/">
+      <span class="app-mark">SA</span>
+      <span>Security Awareness</span>
+    </a>
+  </div>
 
-    <div class="mb-3">
-      <label for="code" class="form-label">Six-digit code</label>
-      {# autocomplete + inputmode so a phone offers the code from the notification #}
-      <input type="text" class="form-control form-control-lg text-center" id="code" name="code"
-             inputmode="numeric" pattern="[0-9]*" maxlength="6"
-             autocomplete="one-time-code" required autofocus>
+  {# development-only block. `development_code` is None whenever
+     SHOW_LOGIN_CODE is off, so this disappears in production without the page
+     knowing why. Delete this block, app/development.py, and the two lines
+     marked development-only in auth_service.py and routers/auth.py to remove
+     the feature for good. #}
+  {% if development_code %}
+    <div class="alert alert-warning" role="alert">
+      <div class="fw-semibold">Development build</div>
+      <div class="small mb-2">
+        The code is shown here because mail delivery is not relied on yet. This
+        block is removed before the platform is used for real.
+      </div>
+      <div class="fs-3 text-center font-monospace" style="letter-spacing: .35rem">
+        {{ development_code }}
+      </div>
     </div>
+  {% endif %}
 
-    <button type="submit" class="btn btn-primary w-100">Sign in</button>
-  </form>
+  <div class="card">
+    <div class="card-body p-4">
+      <h1 class="h4 mb-1">Check your email</h1>
+      <p class="text-body-secondary small">
+        We sent a six-digit code to <strong>{{ email }}</strong>. It works once and expires shortly.
+      </p>
 
-  <p class="text-body-secondary small mt-3 mb-0">
+      <form method="post" action="/login/verify" novalidate>
+        <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token }}">
+        <input type="hidden" name="email" value="{{ email }}">
+
+        <div class="mb-4">
+          <label for="code" class="form-label">Six-digit code</label>
+          {# autocomplete + inputmode so a phone offers the code from the notification #}
+          <input type="text" class="form-control form-control-lg text-center code-entry"
+                 id="code" name="code"
+                 inputmode="numeric" pattern="[0-9]*" maxlength="6"
+                 autocomplete="one-time-code" required autofocus>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100">Sign in</button>
+      </form>
+    </div>
+  </div>
+
+  <p class="text-body-secondary small mt-3 mb-0 text-center">
     Code expired or never arrived? <a href="/login">Sign in again</a>, that issues a fresh one.
   </p>
 </div>

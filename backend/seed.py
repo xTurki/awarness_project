@@ -22,12 +22,12 @@ ACCOUNTS = [
     # The administrator uses the real sending address, so a fresh installation can
     # be signed into with a code that actually arrives. Everyone else is a placeholder.
     ("computingproject6@gmail.com", "admin", "administrator"),
-    ("instructor@example.com", "Iris Instructor", "instructor"),
-    ("trainee1@example.com", "Trainee One", "trainee"),
-    ("trainee2@example.com", "Trainee Two", "trainee"),
-    ("trainee3@example.com", "Trainee Three", "trainee"),
-    ("trainee4@example.com", "Trainee Four", "trainee"),
-    ("trainee5@example.com", "Trainee Five", "trainee"),
+    ("ins@e.com", "Iris Instructor", "instructor"),
+    ("1@e.com", "Trainee One", "trainee"),
+    ("2@e.com", "Trainee Two", "trainee"),
+    ("3@e.com", "Trainee Three", "trainee"),
+    ("4@e.com", "Trainee Four", "trainee"),
+    ("5@e.com", "Trainee Five", "trainee"),
 ]
 
 

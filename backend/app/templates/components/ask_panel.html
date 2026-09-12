@@ -1,0 +1,75 @@
+{# The study assistant, under the page it is about.
+
+   Rendered two ways from one template: included in the page on first load, and
+   returned on its own by the ask route, which htmx swaps back into this same
+   element. One template, so an answer, a refusal and a failure cannot drift
+   into looking like three different things.
+
+   The thread rides in hidden fields and posts back with the next question.
+   That is the whole of "it remembers": nothing is stored, and closing the page
+   ends it.
+
+   Absent entirely where no API key is configured, so the platform runs exactly
+   as it did before this existed.
+#}
+{% if assistant_available %}
+<div class="panel mt-4" id="ask-panel">
+  <div class="panel-head">
+    <span>Ask about this page</span>
+    <span class="badge text-bg-light border">Assistant</span>
+  </div>
+
+  <div class="panel-body">
+
+    {% if thread %}
+      <div class="ask-thread mb-3">
+        {% for asked, answered in thread %}
+          <div class="ask-turn">
+            <p class="ask-q">{{ asked }}</p>
+            <p class="ask-a">{{ answered }}</p>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="text-body-secondary small mb-3">
+        Ask anything about what you are reading. The assistant is given this
+        page, so it answers from the material you are being tested on. It is
+        not a marker and it does not see your results.
+      </p>
+    {% endif %}
+
+    {% if ask_error %}
+      <div class="alert alert-warning py-2 px-3 small" role="alert">{{ ask_error }}</div>
+    {% endif %}
+
+    <form hx-post="/modules/{{ module.id }}/pages/{{ page.id }}/ask"
+          hx-target="#ask-panel"
+          hx-swap="outerHTML"
+          hx-disabled-elt="find button, find textarea"
+          hx-indicator="#ask-waiting">
+      <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token }}">
+
+      {# Posted back so the assistant can follow "why?" and "what about the
+         second one?". Paired by position on the far side. #}
+      {% for asked, answered in thread %}
+        <input type="hidden" name="asked" value="{{ asked }}">
+        <input type="hidden" name="answered" value="{{ answered }}">
+      {% endfor %}
+
+      <label for="question" class="form-label visually-hidden">Your question</label>
+      <div class="d-flex flex-column flex-sm-row gap-2">
+        <textarea class="form-control" id="question" name="question" rows="2"
+                  placeholder="What does this mean?">{{ ask_keep|default('') }}</textarea>
+        <button type="submit" class="btn btn-primary align-self-start align-self-sm-stretch">
+          Ask
+        </button>
+      </div>
+
+      <div class="form-text mt-2">
+        <span id="ask-waiting" class="htmx-indicator">Thinking...</span>
+      </div>
+    </form>
+
+  </div>
+</div>
+{% endif %}

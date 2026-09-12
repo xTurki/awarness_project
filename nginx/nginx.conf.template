@@ -2,6 +2,17 @@
 # writes the result to /etc/nginx/conf.d/. Only variables present in the
 # environment are substituted, so nginx's own $host and $scheme survive.
 
+# Behind the Cloudflare tunnel, cloudflared reaches nginx over plain http on
+# the compose network, so nginx own $scheme is always "http" even when the
+# browser is on https. Preferring the header the tunnel sends is what keeps the
+# Secure cookie flag correct; falling back to $scheme keeps direct access on
+# the local network working unchanged.
+map $http_x_forwarded_proto $client_scheme {
+    default $scheme;
+    https   https;
+    http    http;
+}
+
 upstream backend {
     server backend:8000;
 }
@@ -40,7 +51,7 @@ server {
         proxy_set_header X-Real-IP         $remote_addr;
         proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
         # The application decides the Secure cookie flag from this header.
-        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Proto $client_scheme;
 
         proxy_read_timeout 30s;
     }

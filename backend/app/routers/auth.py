@@ -9,6 +9,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, Form, Request, status
 from fastapi.responses import RedirectResponse
 
+from app import development
 from app.database import Db, get_session
 from app.dependencies import SESSION_COOKIE, current_account
 from app.rendering import render
@@ -83,6 +84,11 @@ def verify_form(request: Request, email: str = "", mail: str = ""):
             "have it another way. Otherwise sign in again once mail is working."
         )
         context["message_kind"] = "warning"
+
+    # development-only: None in production, and the template shows nothing.
+    # Deleting app/development.py and this line removes the feature entirely.
+    context["development_code"] = development.code_for(email)
+
     return render(request, "auth/verify.html", context)
 
 

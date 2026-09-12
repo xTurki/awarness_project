@@ -1,0 +1,10 @@
+Hello {full_name},
+
+{lead}
+
+{lines}
+
+Sign in to the training platform to take them. Your notifications are also
+waiting for you there.
+
+You are receiving this because you are registered on the modules listed above.

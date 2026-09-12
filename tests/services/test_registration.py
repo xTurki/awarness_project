@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import pytest
 from sqlalchemy.exc import IntegrityError
+from sqlmodel import select
 
 from app.models.module import Module
 from app.models.registration import Registration
@@ -142,3 +143,91 @@ def test_a_registration_carries_no_status(db, admin, module, five):
 
     assert not hasattr(row, "status")
     assert not hasattr(row, "state")
+
+
+# ------------------------------------------------- assigning an instructor
+
+
+def test_an_administrator_assigns_an_instructor_to_a_module(
+    db, admin, module, make_user
+):
+    """FR-004. Until this was wired up there was no way to do it at all: the
+    form had no role field and the route never read one, so everybody added
+    through the roster became a trainee."""
+    person = make_user(email="iris@example.com", role="instructor")
+
+    registration_service.register_many(
+        db, admin, module.id, RosterAdd(user_ids=[person.id], role_in_module="instructor")
+    )
+
+    row = db.exec(
+        select(Registration).where(
+            Registration.module_id == module.id, Registration.user_id == person.id
+        )
+    ).first()
+    assert row.role_in_module == "instructor"
+
+
+def test_the_assigned_instructor_can_then_write_to_the_module(
+    db, admin, module, make_user
+):
+    """The point of assigning them: `module:write` follows the registration,
+    not the platform role (FR-007, FR-026)."""
+    person = make_user(email="iris@example.com", role="instructor")
+
+    with pytest.raises((module_service.NotFound, module_service.NotPermitted)):
+        module_service.get_for_write(db, module.id, person)
+
+    registration_service.register_many(
+        db, admin, module.id, RosterAdd(user_ids=[person.id], role_in_module="instructor")
+    )
+
+    assert module_service.get_for_write(db, module.id, person).id == module.id
+
+
+def test_an_instructor_cannot_assign_another_instructor(db, module, make_user):
+    """FR-005 with FR-024: a module's owner may add trainees, and may not hand
+    somebody else the same authority over it."""
+    owner = make_user(email="owner@example.com", role="instructor")
+    db.add(
+        Registration(user_id=owner.id, module_id=module.id, role_in_module="instructor")
+    )
+    db.commit()
+    candidate = make_user(email="other@example.com", role="instructor")
+
+    with pytest.raises(module_service.NotPermitted):
+        registration_service.register_many(
+            db, owner, module.id,
+            RosterAdd(user_ids=[candidate.id], role_in_module="instructor"),
+        )
+
+    assert (
+        db.exec(
+            select(Registration).where(
+                Registration.module_id == module.id,
+                Registration.user_id == candidate.id,
+            )
+        ).first()
+        is None
+    )
+
+
+def test_an_instructor_may_still_register_trainees(db, module, make_user, five):
+    owner = make_user(email="owner@example.com", role="instructor")
+    db.add(
+        Registration(user_id=owner.id, module_id=module.id, role_in_module="instructor")
+    )
+    db.commit()
+
+    added = registration_service.register_many(
+        db, owner, module.id, RosterAdd(user_ids=[five[0].id], role_in_module="trainee")
+    )
+
+    assert added == 1
+
+
+def test_an_unknown_capacity_is_refused(db):
+    from pydantic import ValidationError
+
+    with pytest.raises(ValidationError):
+        RosterAdd(user_ids=[1], role_in_module="manager")

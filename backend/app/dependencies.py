@@ -17,6 +17,7 @@ from sqlmodel import select
 from app.database import get_session, utcnow
 from app.models.session import Session as SessionRow
 from app.models.user import User
+from app.services import notification_service
 
 SESSION_COOKIE = "session"
 
@@ -27,34 +28,61 @@ def _redirect(location: str) -> HTTPException:
     )
 
 
-def current_account(
-    request: Request, db: DbSession = Depends(get_session)
-) -> User:
+def _resolve_account(request: Request, db: DbSession) -> User | None:
+    """Who is signed in, or None. Never redirects, and never raises.
+
+    Shared by the two dependencies below, which differ only in what they do
+    with None. Keeping the resolution in one place is what stops a second copy
+    of the session rules drifting: an expired row is deleted here, on sight, for
+    both of them (FR-024).
+    """
+    token = request.cookies.get(SESSION_COOKIE)
+    if not token:
+        return None
+
+    row = db.get(SessionRow, token)
+    if row is None:
+        return None
+
+    if row.expires_at <= utcnow():
+        db.delete(row)  # refused and deleted on sight (FR-024)
+        db.commit()
+        return None
+
+    user = db.get(User, row.user_id)
+    if user is None or not user.is_active:
+        return None
+
+    request.state.session_token = token
+    # Attached here rather than in each route, so the shell indicator cannot be
+    # missing from a page somebody forgot about (Phase 4 FR-030).
+    request.state.unread_notifications = notification_service.unread_count(db, user)
+    return user
+
+
+def current_account(request: Request, db: DbSession = Depends(get_session)) -> User:
     """The signed-in account, or a redirect to sign-in.
 
     Every request re-reads the session row and re-checks `is_active`, which is
     what makes deactivation take effect on the very next request rather than at
     expiry (FR-003, FR-022).
     """
-    token = request.cookies.get(SESSION_COOKIE)
-    if not token:
+    user = _resolve_account(request, db)
+    if user is None:
         raise _redirect("/login")
-
-    row = db.get(SessionRow, token)
-    if row is None:
-        raise _redirect("/login")
-
-    if row.expires_at <= utcnow():
-        db.delete(row)  # refused and deleted on sight (FR-024)
-        db.commit()
-        raise _redirect("/login")
-
-    user = db.get(User, row.user_id)
-    if user is None or not user.is_active:
-        raise _redirect("/login")
-
-    request.state.session_token = token
     return user
+
+
+def optional_account(
+    request: Request, db: DbSession = Depends(get_session)
+) -> User | None:
+    """The signed-in account, or None, for the one page a visitor may see.
+
+    Only the landing page uses this. Everything else in the platform sits
+    behind `require_password_set`, and a page that renders differently for a
+    visitor is exactly the thing worth keeping to one.
+    """
+    return _resolve_account(request, db)
 
 
 def require_password_set(user: User = Depends(current_account)) -> User:

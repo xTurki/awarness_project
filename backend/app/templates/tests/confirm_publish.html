@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Replace the published test?{% endblock %}
+
+{% block content %}
+<div class="form-narrow">
+  <div class="page-head">
+    <h1 class="h3">This will reset everyone on the module</h1>
+  </div>
+
+  <div class="card"><div class="card-body p-4">
+
+  {# "This will reset trainees" is ignored. "This will reset 30 people" is not
+     (FR-027, research R6). The count comes from the same state function the
+     results pages use, so the number shown is the number that changes. #}
+  <div class="alert alert-warning" role="alert">
+    <p class="mb-2">
+      <strong>{{ affected }}</strong>
+      {{ "person has" if affected == 1 else "people have" }} passed
+      <strong>{{ current.title }}</strong>.
+    </p>
+    <p class="mb-0">
+      Publishing <strong>{{ replacement.title }}</strong> makes it the module's
+      current test. Everyone reverts to <strong>not started</strong>, because the
+      module now asks something different. Their old attempts stay in their
+      history, but decide nothing.
+    </p>
+  </div>
+
+  <p class="text-body-secondary small">
+    Once anyone attempts the new test it freezes too, so it is worth being sure
+    of it first.
+  </p>
+
+  <form method="post" action="/modules/{{ module.id }}/tests/{{ replacement.id }}/publish">
+    <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token }}">
+    <input type="hidden" name="is_published" value="true">
+    <input type="hidden" name="confirmed" value="true">
+    <button type="submit" class="btn btn-warning">
+      Publish it and reset {{ affected }}
+      {{ "person" if affected == 1 else "people" }}
+    </button>
+    <a class="btn btn-link" href="/modules/{{ module.id }}/tests/{{ replacement.id }}">Cancel</a>
+  </form>
+  </div></div>
+</div>
+{% endblock %}

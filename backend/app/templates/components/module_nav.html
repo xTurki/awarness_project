@@ -2,30 +2,44 @@
    a persistent column above it. Phases 2, 3, and 4 render inside this, so it is
    worth getting right once here (research R9, FR-033). #}
 
-<button class="btn btn-outline-secondary btn-sm d-lg-none mb-3" type="button"
+<button class="btn btn-outline-secondary btn-sm d-lg-none mb-3 w-100" type="button"
         data-bs-toggle="offcanvas" data-bs-target="#moduleNav" aria-controls="moduleNav">
-  Pages
+  Pages in this module
 </button>
 
 <div class="offcanvas-lg offcanvas-start" tabindex="-1" id="moduleNav"
      aria-labelledby="moduleNavLabel">
-  <div class="offcanvas-header">
-    <h2 class="offcanvas-title h6" id="moduleNavLabel">{{ module.title }}</h2>
+  <div class="offcanvas-header border-bottom">
+    <h2 class="offcanvas-title h6 mb-0" id="moduleNavLabel">{{ module.title }}</h2>
     <button type="button" class="btn-close" data-bs-dismiss="offcanvas"
             data-bs-target="#moduleNav" aria-label="Close"></button>
   </div>
 
-  <div class="offcanvas-body flex-column align-items-stretch">
-    <nav class="list-group list-group-flush w-100">
-      <a class="list-group-item list-group-item-action{% if not page %} active{% endif %}"
-         href="/modules/{{ module.id }}">Overview</a>
+  <div class="offcanvas-body flex-column align-items-stretch p-lg-0">
+    <div class="panel w-100">
+      <div class="panel-head d-none d-lg-flex">Pages</div>
+      <nav class="side-nav nav flex-column p-2 w-100">
+        <a class="nav-link{% if not page %} active{% endif %}"
+           href="/modules/{{ module.id }}">Overview</a>
 
-      {% for item in pages %}
-        <a class="list-group-item list-group-item-action{% if page and page.id == item.id %} active{% endif %}"
-           href="/modules/{{ module.id }}/pages/{{ item.id }}">{{ item.title }}</a>
-      {% else %}
-        <span class="list-group-item text-body-secondary">No pages yet.</span>
-      {% endfor %}
-    </nav>
+        {% for item in pages %}
+          <a class="nav-link{% if page and page.id == item.id %} active{% endif %}"
+             href="/modules/{{ module.id }}/pages/{{ item.id }}">{{ item.title }}</a>
+        {% else %}
+          <span class="nav-link text-body-secondary">No pages yet.</span>
+        {% endfor %}
+
+        {# The test is the last page of the module, not a separate place to go
+           looking for. Somebody reads the material in order and arrives at it. #}
+        {% if final_test %}
+          <hr class="my-2">
+          <a class="nav-link{% if on_test %} active{% endif %} d-flex align-items-center justify-content-between gap-2"
+             href="/modules/{{ module.id }}/tests/{{ final_test.id }}">
+            <span>{{ final_test.title }}</span>
+            <span class="badge text-bg-light border">Test</span>
+          </a>
+        {% endif %}
+      </nav>
+    </div>
   </div>
 </div>

@@ -105,15 +105,20 @@ def _window_seconds() -> int:
     return settings.login_rate_window_minutes * 60
 
 
-def rate_limit_exceeded(key: str) -> bool:
-    """Fixed window, five attempts per key per five minutes by default."""
+def rate_limit_exceeded(key: str, limit: int | None = None) -> bool:
+    """Fixed window, five attempts per key per five minutes by default.
+
+    `limit` overrides that for callers whose sensible ceiling is not a sign-in
+    ceiling: asking a tutor twenty questions while reading is ordinary, while
+    twenty sign-in attempts is not.
+    """
     now = time.monotonic()
     cutoff = now - _window_seconds()
 
     recent = [stamp for stamp in _attempts[key] if stamp > cutoff]
     _attempts[key] = recent
 
-    if len(recent) >= settings.login_rate_limit:
+    if len(recent) >= (settings.login_rate_limit if limit is None else limit):
         return True
 
     recent.append(now)

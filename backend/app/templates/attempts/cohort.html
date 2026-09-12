@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Attempts: {{ test.title }}{% endblock %}
+
+{% block content %}
+<div class="mb-3">
+  <h1 class="h5 mb-1">Attempts</h1>
+  <a class="small text-decoration-none" href="/modules/{{ module.id }}/tests/{{ test.id }}">{{ test.title }}</a>
+</div>
+
+{% if people %}
+  <div class="panel mb-4"><div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead>
+        <tr>
+          <th scope="col">Name</th>
+          <th scope="col">Attempt</th>
+          <th scope="col">Submitted</th>
+          <th scope="col">Score</th>
+          <th scope="col">Outcome</th>
+          <th scope="col">Correct the score</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for person in people %}
+          {% for row in person.attempts %}
+            <tr>
+              <td>{% if loop.first %}{{ person.full_name }}{% endif %}</td>
+              <td>{{ row.attempt_number }}</td>
+              <td class="text-nowrap">
+                {% if row.submitted_at %}{{ row.submitted_at.strftime("%Y-%m-%d %H:%M") }}
+                {% else %}in progress{% endif %}
+              </td>
+              <td>
+                {% if row.score_percent is not none %}{{ row.score_percent }}%{% else %}none{% endif %}
+                {% if row.score_overridden %}<span class="badge text-bg-info">corrected</span>{% endif %}
+              </td>
+              <td>
+                {% if row.passed is none %}
+                  <span class="badge text-bg-secondary">none</span>
+                {% elif row.passed %}
+                  <span class="badge text-bg-success">Passed</span>
+                {% else %}
+                  <span class="badge text-bg-danger">Failed</span>
+                {% endif %}
+              </td>
+              <td class="text-nowrap">
+                {% if row.is_submitted %}
+                  <form method="post" action="/attempts/{{ row.id }}/score" class="d-flex gap-1 m-0">
+                    <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token }}">
+                    <input type="number" class="form-control form-control-sm" style="width: 5rem"
+                           name="score_percent" min="0" max="100" value="{{ row.score_percent }}">
+                    <button type="submit" class="btn btn-sm btn-outline-secondary">Set</button>
+                  </form>
+                {% else %}
+                  <span class="small text-body-secondary">not finished</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div></div>
+
+  <p class="small text-body-secondary">
+    Open any attempt to see the answers that person gave.
+  </p>
+{% else %}
+  <p class="text-body-secondary">Nobody has attempted this test yet.</p>
+{% endif %}
+{% endblock %}

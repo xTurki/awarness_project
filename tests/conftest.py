@@ -92,6 +92,35 @@ def db(engine):
     reset_rate_limits()
 
 
+@pytest.fixture(autouse=True)
+def mail(monkeypatch):
+    """No test ever opens an SMTP connection.
+
+    Phase 4 sends mail from inside ordinary service calls, including the submit
+    path that dozens of existing tests exercise. Without this every one of them
+    would sit on a real socket until the SMTP timeout. Tests that care about
+    what was sent read this list; the rest simply never notice it.
+    """
+    sent: list[tuple[str, str, str]] = []
+
+    def fake_send(to: str, subject: str, body: str) -> None:
+        sent.append((to, subject, body))
+
+    monkeypatch.setattr("app.services.email_service.send_email_now", fake_send)
+    return sent
+
+
+@pytest.fixture()
+def failing_mail(monkeypatch):
+    """Every send refused, so a test can watch a record stay unstamped."""
+    from app.services.email_service import EmailDeliveryFailed
+
+    def refuse(to: str, subject: str, body: str) -> None:
+        raise EmailDeliveryFailed("no route to host")
+
+    monkeypatch.setattr("app.services.email_service.send_email_now", refuse)
+
+
 @pytest.fixture()
 def client(db):
     """A test client whose requests share the test's transaction.

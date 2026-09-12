@@ -1,0 +1,110 @@
+{# A module's cover: a repeating geometric pattern in a chosen colour.
+
+   Four of the six are drawn from the Najdi vocabulary, as a geometric reading
+   of it rather than a reproduction of any particular historical work: the
+   stepped merlons that crown a mud-brick wall, the pierced triangular openings
+   set into one, the arcade that carries it, and the running zigzag frieze.
+
+   Drawn here rather than uploaded, which is why this needs no file storage and
+   no image route. An SVG `pattern` tiles itself, so one small tile definition
+   fills any size of banner and stays crisp at any zoom.
+
+   The pattern and colour come from `module.art` through `app/art.py`. A module
+   with nothing chosen still gets a cover, derived from its id, so the column
+   was added to a live database without backfilling a single row.
+
+   `currentColor` is used throughout, so the colour class on the wrapper drives
+   the strokes and each pattern follows the light and dark themes.
+
+   Usage:
+     {% with module = row %}{% include "components/module_art.html" %}{% endwith %}
+     {% with module = row, art_tall = true %}...{% endwith %}   on a page header
+     {% with module = row, art_preview = "shurfat.teal" %}...   in the picker
+#}
+{% if art_preview %}
+  {% set pattern = art_preview.split(".")[0] %}
+  {% set colour = art_preview.split(".")[1] %}
+  {% set tile = art_preview|replace(".", "-") %}
+{% else %}
+  {% set pattern = module.art_pattern %}
+  {% set colour = module.art_colour %}
+  {% set tile = "m" ~ module.id ~ "-" ~ pattern %}
+{% endif %}
+
+<div class="module-art module-art-{{ colour }}{% if art_tall %} module-art-tall{% endif %}{% if art_preview %} module-art-swatch{% endif %}"
+     role="presentation">
+  <svg width="100%" height="100%" aria-hidden="true" focusable="false">
+    <defs>
+      {% if pattern == "shurfat" %}
+        {# Shurfat: the stepped merlons crowning a Najdi wall. Each tile is one
+           merlon standing on the coping course, so a row of them reads as the
+           top of a wall repeated. #}
+        <pattern id="art-{{ tile }}" width="22" height="22" patternUnits="userSpaceOnUse">
+          <path d="M3 21V16H7V11H11V6H15V11H19V16H23V21"
+                fill="none" stroke="currentColor" stroke-width="1.1"
+                stroke-linejoin="miter"/>
+          <path d="M-8 21V16H-4V11H0V6H4"
+                fill="none" stroke="currentColor" stroke-width="1.1"/>
+          <path d="M0 21.6H22" stroke="currentColor" stroke-width="1.1" opacity="0.55"/>
+        </pattern>
+
+      {% elif pattern == "mushabak" %}
+        {# Mushabak: the pierced triangular openings set into a Najdi wall,
+           alternating point-up and point-down so the light through them makes
+           a band. #}
+        <pattern id="art-{{ tile }}" width="20" height="20" patternUnits="userSpaceOnUse">
+          <path d="M10 2.5L16.5 9.5H3.5Z" fill="none" stroke="currentColor" stroke-width="1.1"/>
+          <path d="M0 12.5L6.5 19.5H-6.5Z" fill="none" stroke="currentColor" stroke-width="1.1"/>
+          <path d="M20 12.5L26.5 19.5H13.5Z" fill="none" stroke="currentColor" stroke-width="1.1"/>
+          <path d="M10 11.5L16.5 11.5M3.5 11.5L-3 11.5"
+                stroke="currentColor" stroke-width="1.1" opacity="0.4"/>
+        </pattern>
+
+      {% elif pattern == "zigzag" %}
+        {# A running zigzag frieze, in bands, as it appears around the head of
+           a wall or a doorway. #}
+        <pattern id="art-{{ tile }}" width="20" height="18" patternUnits="userSpaceOnUse">
+          <path d="M0 7L5 1L10 7L15 1L20 7"
+                fill="none" stroke="currentColor" stroke-width="1.2"/>
+          <path d="M0 16L5 10L10 16L15 10L20 16"
+                fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.75"/>
+        </pattern>
+
+      {% elif pattern == "uqud" %}
+        {# Uqud: an arcade. The piers stand on the tile edges, so each one is
+           shared with its neighbour and a row of tiles reads as a continuous
+           colonnade rather than as separate arches with gaps between them.
+
+           The arch is drawn slightly pointed, which is how a Najdi arcade
+           carries a wall above it. #}
+        <pattern id="art-{{ tile }}" width="20" height="22" patternUnits="userSpaceOnUse">
+          <path d="M0 21V12C0 5.4 4 2.2 10 2.2C16 2.2 20 5.4 20 12V21"
+                fill="none" stroke="currentColor" stroke-width="1.15"/>
+          <path d="M0 21.6H20" stroke="currentColor" stroke-width="1.15" opacity="0.55"/>
+          <circle cx="10" cy="4.4" r="1.1" fill="currentColor" opacity="0.45"/>
+        </pattern>
+
+      {% elif pattern == "diamonds" %}
+        {# Small interlocking rhombi: each tile holds one whole diamond and the
+           four corner quarters of its neighbours, so the lattice closes up. #}
+        <pattern id="art-{{ tile }}" width="16" height="16" patternUnits="userSpaceOnUse">
+          <path d="M8 1L15 8L8 15L1 8Z" fill="none" stroke="currentColor" stroke-width="1"/>
+          <path d="M0 0L1 0L0 1Z M16 0L15 0L16 1Z M0 16L0 15L1 16Z M16 16L16 15L15 16Z"
+                fill="currentColor" opacity="0.5"/>
+        </pattern>
+
+      {% else %}
+        {# Overlapping circles, offset on alternate rows so the gaps between
+           them make a second pattern of their own. #}
+        <pattern id="art-{{ tile }}" width="20" height="20" patternUnits="userSpaceOnUse">
+          <circle cx="5" cy="5" r="6" fill="none" stroke="currentColor" stroke-width="1"/>
+          <circle cx="15" cy="15" r="6" fill="none" stroke="currentColor" stroke-width="1"/>
+          <circle cx="5" cy="5" r="1.6" fill="currentColor" opacity="0.55"/>
+          <circle cx="15" cy="15" r="1.6" fill="currentColor" opacity="0.55"/>
+        </pattern>
+      {% endif %}
+    </defs>
+
+    <rect width="100%" height="100%" fill="url(#art-{{ tile }})"/>
+  </svg>
+</div>

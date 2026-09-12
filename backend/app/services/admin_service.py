@@ -26,6 +26,21 @@ class AccountNotFound(Exception):
     pass
 
 
+class CannotAdministerSelf(Exception):
+    """An administrator was acting on their own account.
+
+    Nobody administers themselves. That single rule is what makes zero
+    administrators unreachable, and it needs no counting to do it: removing an
+    administrator requires an acting administrator, and the acting one is the
+    account that cannot be touched. Two accounts therefore floor at one, and one
+    account floors at one.
+
+    It replaced a guard that counted "the last administrator", which had to
+    distinguish active from inactive and deactivating from demoting, and got
+    each of those subtly wrong before this rule made all of them unnecessary.
+    """
+
+
 def _require_administrator(actor: User) -> None:
     if actor.role != "administrator":
         raise NotPermitted()
@@ -35,19 +50,40 @@ def _normalise(email: str) -> str:
     return email.strip().lower()
 
 
+def _refuse_self(actor: User, user_id: int) -> None:
+    """The whole guard.
+
+    Presentation hides the row; this is the enforcement. A crafted request is
+    refused exactly as a click would be, which is the difference between a rule
+    and a suggestion.
+    """
+    if actor.id == user_id:
+        raise CannotAdministerSelf(
+            "You cannot change your own account here. Another administrator can "
+            "do it for you."
+        )
+
+
 def _email_taken(db: DbSession, email: str, *, excluding: int | None = None) -> bool:
     found = db.exec(select(User).where(User.email == email)).first()
     return found is not None and found.id != excluding
 
 
 def list_accounts(db: DbSession, actor: User) -> list[UserRead]:
+    """Everyone except the caller.
+
+    Their own account is absent rather than present and inert: a row whose
+    controls all refuse is a row that invites the click and then explains why
+    it did nothing.
+    """
     _require_administrator(actor)
     rows = db.exec(select(User).order_by(User.full_name)).all()
-    return [UserRead.of(row) for row in rows]
+    return [UserRead.of(row) for row in rows if row.id != actor.id]
 
 
 def get_account(db: DbSession, actor: User, user_id: int) -> UserRead:
     _require_administrator(actor)
+    _refuse_self(actor, user_id)
     row = db.get(User, user_id)
     if row is None:
         raise AccountNotFound()
@@ -80,6 +116,7 @@ def create_account(db: DbSession, actor: User, data: UserCreate) -> UserRead:
 
 def update_account(db: DbSession, actor: User, user_id: int, data: UserUpdate) -> UserRead:
     _require_administrator(actor)
+    _refuse_self(actor, user_id)
 
     row = db.get(User, user_id)
     if row is None:
@@ -102,6 +139,7 @@ def reset_password(db: DbSession, actor: User, user_id: int, password: str) -> U
     """Raises `must_set_password` exactly as creation does, so the person chooses
     their own at the next sign-in (FR-010)."""
     _require_administrator(actor)
+    _refuse_self(actor, user_id)
 
     row = db.get(User, user_id)
     if row is None:
@@ -120,6 +158,7 @@ def set_active(db: DbSession, actor: User, user_id: int, is_active: bool) -> Use
     """Deactivation takes effect on that account's very next request, because
     `current_account` re-checks this column every time (FR-003)."""
     _require_administrator(actor)
+    _refuse_self(actor, user_id)
 
     row = db.get(User, user_id)
     if row is None:

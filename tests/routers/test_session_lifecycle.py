@@ -21,7 +21,9 @@ def test_signing_out_ends_the_session(client, make_user, sign_in, csrf):
     assert response.status_code == 303
     assert response.headers["location"] == "/login"
 
-    assert client.get("/").status_code == 303, "protected pages must be unreachable"
+    # `/modules`, not `/`: the landing page is meant to answer a visitor, and
+    # asserting against it would test nothing.
+    assert client.get("/modules").status_code == 303, "protected pages must be unreachable"
     assert token_id is not None
 
 
@@ -43,7 +45,7 @@ def test_an_expired_session_is_refused_and_deleted(client, db, make_user, sign_i
     db.add(row)
     db.commit()
 
-    response = client.get("/")
+    response = client.get("/modules")
     assert response.status_code == 303
     assert response.headers["location"] == "/login"
     assert db.get(SessionRow, token_id) is None, "an expired row is deleted on sight"
@@ -80,12 +82,14 @@ def test_deactivation_refuses_an_existing_session_on_the_next_request(
     """Not at expiry, on the very next request (SC-010)."""
     user = make_user(email="a@example.com")
     sign_in(user)
-    assert client.get("/").status_code == 200
+    assert client.get("/modules").status_code == 200
 
     user.is_active = False
     db.add(user)
     db.commit()
 
-    response = client.get("/")
+    # `/modules`, not `/`: a deactivated account is turned away from the
+    # platform, and `/` answers a visitor with the landing page by design.
+    response = client.get("/modules")
     assert response.status_code == 303
     assert response.headers["location"] == "/login"

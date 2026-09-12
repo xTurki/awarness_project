@@ -3,7 +3,12 @@
 
 {% block content %}
 <div class="form-narrow">
-  <h1 class="h4 mb-3">{{ "Edit module" if module else "New module" }}</h1>
+  <div class="page-head">
+    <a class="crumb" href="/modules">All modules</a>
+    <h1 class="h3">{{ "Edit module" if module else "New module" }}</h1>
+  </div>
+
+  <div class="card"><div class="card-body p-4">
 
   <form method="post" action="{{ '/modules/' ~ module.id if module else '/modules' }}" novalidate>
     <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token }}">
@@ -21,33 +26,75 @@
                 rows="4">{{ description|default('') }}</textarea>
     </div>
 
+    {# The cover. Shown as the patterns themselves rather than as a list of
+       words, because "pentagons" in a dropdown tells you nothing about what
+       the card will look like.
+
+       The choices are built from the same two lists the service validates
+       against (app/art.py), so the form cannot offer something that would then
+       be refused. #}
+    <fieldset class="mb-4">
+      <legend class="form-label">Cover pattern</legend>
+      <div class="d-flex flex-wrap gap-2 mb-3">
+        {% set chosen_pattern = art_pattern|default(art_patterns[0]) %}
+        {% set chosen_colour = art_colour|default(art_colours[0]) %}
+        {% for name in art_patterns %}
+          <label class="art-choice" style="width: 5rem"
+                 title="{{ art_descriptions[name] }}">
+            <input type="radio" name="art_pattern" value="{{ name }}"
+                   {% if name == chosen_pattern %}checked{% endif %}>
+            {% with art_preview = name ~ "." ~ chosen_colour %}
+              {% include "components/module_art.html" %}
+            {% endwith %}
+            <span class="art-name">{{ art_labels[name] }}</span>
+          </label>
+        {% endfor %}
+      </div>
+
+      <legend class="form-label">Cover colour</legend>
+      <div class="d-flex flex-wrap gap-2">
+        {% for name in art_colours %}
+          <label class="art-choice" style="width: 4.5rem">
+            <input type="radio" name="art_colour" value="{{ name }}"
+                   {% if name == chosen_colour %}checked{% endif %}>
+            {% with art_preview = chosen_pattern ~ "." ~ name %}
+              {% include "components/module_art.html" %}
+            {% endwith %}
+            <span class="art-name">{{ name }}</span>
+          </label>
+        {% endfor %}
+      </div>
+
+      <div class="form-text mt-2">
+        {{ art_descriptions[chosen_pattern] }}. Pick one of each, then save to
+        see them together on the module page.
+      </div>
+    </fieldset>
+
     <button type="submit" class="btn btn-primary">
       {{ "Save changes" if module else "Create module" }}
     </button>
     <a class="btn btn-link" href="/modules">Cancel</a>
   </form>
+  </div></div>
 
   {% if module %}
     <hr class="my-4">
 
-    <div class="d-flex flex-wrap gap-2">
-      <form method="post" action="/modules/{{ module.id }}/publish" class="m-0">
-        <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token }}">
-        <input type="hidden" name="is_published" value="{{ 'false' if module.is_published else 'true' }}">
-        <button type="submit" class="btn btn-outline-secondary btn-sm">
-          {{ "Unpublish" if module.is_published else "Publish" }}
-        </button>
-      </form>
-
-      <form method="post" action="/modules/{{ module.id }}/delete" class="m-0">
-        <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token }}">
-        <button type="submit" class="btn btn-outline-danger btn-sm">Remove</button>
-      </form>
-    </div>
+    {# Publishing moved to the module page itself, beside the badge that says
+       whether anybody can see it. Only Remove is left here, which is where a
+       destructive action belongs: behind a step, not on the page somebody
+       passes through daily. #}
+    <form method="post" action="/modules/{{ module.id }}/delete" class="m-0">
+      <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token }}">
+      <button type="submit" class="btn btn-outline-danger btn-sm">Remove</button>
+    </form>
 
     <p class="form-text mt-2 mb-0">
       Removing is reversible and keeps the pages, images, and registrations.
-      Unpublishing is how a module is retired: it does not end.
+      To retire a module without removing it, unpublish it from
+      <a href="/modules/{{ module.id }}">the module page</a>: a module does not
+      end.
     </p>
   {% endif %}
 </div>

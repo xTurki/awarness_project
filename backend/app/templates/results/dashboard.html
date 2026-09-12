@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Your training{% endblock %}
+
+{% block content %}
+{# A trainee's dashboard is their results page. One route, one template, one
+   list. There is no second page listing the same modules (FR-001). #}
+
+<div class="page-head">
+  <h1 class="h3">Your training</h1>
+  <p class="lead-sm">
+    Everything you are on, and what is outstanding. Anything still to do is at the top.
+  </p>
+</div>
+
+{% if rows %}
+  <div class="panel">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle">
+        <thead>
+          <tr>
+            <th scope="col">Module</th>
+            <th scope="col">State</th>
+            <th scope="col">Score</th>
+            <th scope="col" class="text-end"><span class="visually-hidden">Open</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+            <tr>
+              <td>
+                <a href="/modules/{{ row.module_id }}" class="row-title">{{ row.title }}</a>
+              </td>
+              <td>
+                {% with state = row.state %}{% include "components/state_badge.html" %}{% endwith %}
+              </td>
+              <td class="text-body-secondary">
+                {% if row.score_percent is not none %}{{ row.score_percent }}%{% else %}&mdash;{% endif %}
+              </td>
+              <td class="text-nowrap text-end">
+                <a class="btn btn-sm btn-outline-secondary" href="{{ row.link }}">
+                  {% if row.state == "in progress" %}Resume
+                  {% elif row.state == "no test available" %}Open
+                  {% else %}Details{% endif %}
+                </a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% else %}
+  {# A statement, not an empty frame (FR-024). #}
+  <div class="panel">
+    <div class="nothing">
+      <span class="nothing-mark">&#9675;</span>
+      <p>You are not on any modules yet. Somebody will put you on one.</p>
+    </div>
+  </div>
+{% endif %}
+{% endblock %}

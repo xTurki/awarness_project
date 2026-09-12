@@ -10,13 +10,14 @@ from fastapi import APIRouter, Depends, Form, HTTPException, Request, status
 from fastapi.responses import RedirectResponse
 from pydantic import ValidationError
 
+from app import art
 from app.database import Db, get_session
 from app.dependencies import require_password_set, require_role
 from app.rendering import render
 from app.schemas.module import ModuleRead, ModuleWrite
 from app.schemas.user import UserRead
 from app.security import csrf_protect
-from app.services import content_service, module_service
+from app.services import content_service, module_service, results_service
 
 router = APIRouter(tags=["modules"])
 
@@ -51,11 +52,18 @@ def create(
     request: Request,
     title: str = Form(...),
     description: str = Form(""),
+    art_pattern: str = Form(art.PATTERNS[0]),
+    art_colour: str = Form(art.COLOURS[0]),
     db: Db = Depends(get_session),
     account=Depends(require_role("administrator")),
 ):
     try:
-        data = ModuleWrite(title=title, description=description or None)
+        data = ModuleWrite(
+            title=title,
+            description=description or None,
+            art_pattern=art_pattern,
+            art_colour=art_colour,
+        )
     except ValidationError:
         return render(
             request,
@@ -64,6 +72,10 @@ def create(
                 "account": UserRead.of(account),
                 "title": title,
                 "description": description,
+                # Carried back, so a missing title does not also discard the
+                # cover they picked.
+                "art_pattern": art_pattern,
+                "art_colour": art_colour,
                 "message": "A module needs a title.",
             },
             status.HTTP_400_BAD_REQUEST,
@@ -96,6 +108,8 @@ def home(
             "module": ModuleRead.of(module),
             "pages": pages,
             "can_write": can_write,
+            "my_state": results_service.state_for_module(db, module_id, account),
+            "final_test": results_service.current_test_row(db, module_id),
         },
     )
 
@@ -120,6 +134,8 @@ def edit_form(
             "module": ModuleRead.of(module),
             "title": module.title,
             "description": module.description,
+            "art_pattern": ModuleRead.of(module).art_pattern,
+            "art_colour": ModuleRead.of(module).art_colour,
         },
     )
 
@@ -130,12 +146,22 @@ def update(
     module_id: int,
     title: str = Form(...),
     description: str = Form(""),
+    art_pattern: str = Form(art.PATTERNS[0]),
+    art_colour: str = Form(art.COLOURS[0]),
     db: Db = Depends(get_session),
     account=Depends(require_role("administrator")),
 ):
     try:
         module_service.update(
-            db, account, module_id, ModuleWrite(title=title, description=description or None)
+            db,
+            account,
+            module_id,
+            ModuleWrite(
+                title=title,
+                description=description or None,
+                art_pattern=art_pattern,
+                art_colour=art_colour,
+            ),
         )
     except ValidationError:
         return render(
@@ -145,6 +171,10 @@ def update(
                 "account": UserRead.of(account),
                 "title": title,
                 "description": description,
+                # Carried back, so a missing title does not also discard the
+                # cover they picked.
+                "art_pattern": art_pattern,
+                "art_colour": art_colour,
                 "message": "A module needs a title.",
             },
             status.HTTP_400_BAD_REQUEST,

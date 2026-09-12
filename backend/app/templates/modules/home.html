@@ -2,25 +2,58 @@
 {% block title %}{{ module.title }}{% endblock %}
 
 {% block content %}
-<div class="row">
+<div class="row g-4">
   <div class="col-12 col-lg-3">
     {% include "components/module_nav.html" %}
   </div>
 
   <div class="col-12 col-lg-9">
-    <div class="d-flex flex-wrap gap-2 justify-content-between align-items-start mb-3">
+
+    {# A band rather than a panel here: it introduces the page without pushing
+       the content below the fold on a phone. #}
+    {% with art_tall = true %}{% include "components/module_art.html" %}{% endwith %}
+
+    <div class="page-head d-flex flex-wrap gap-3 justify-content-between align-items-start mt-3">
       <div>
-        <h1 class="h4 mb-1">{{ module.title }}</h1>
-        {% if not module.is_published %}
-          <span class="badge text-bg-secondary">Unpublished</span>
-        {% endif %}
+        <a class="crumb" href="/modules">All modules</a>
+        <h1 class="h3">{{ module.title }}</h1>
+        <div class="d-flex flex-wrap gap-2 mt-2">
+          {% if not module.is_published %}
+            <span class="badge text-bg-secondary">Unpublished</span>
+          {% endif %}
+          {# The caller's own state, on a page that already exists rather than a
+             new route (Phase 3 contracts). #}
+          {% if my_state %}
+            {% with state = my_state %}{% include "components/state_badge.html" %}{% endwith %}
+          {% endif %}
+        </div>
       </div>
 
       {% if can_write %}
         <div class="d-flex flex-wrap gap-2">
           <a class="btn btn-sm btn-outline-secondary" href="/modules/{{ module.id }}/pages">Pages</a>
+          <a class="btn btn-sm btn-outline-secondary" href="/modules/{{ module.id }}/tests">Tests</a>
           <a class="btn btn-sm btn-outline-secondary" href="/modules/{{ module.id }}/roster">Roster</a>
+
+          {# Publishing is an administrator's act (FR-005), and it belongs on
+             this page rather than behind Settings: the badge that says whether
+             anybody can see this module is a few centimetres away, and the
+             route already returns here afterwards.
+
+             Primary while the module is unpublished, because that is the next
+             thing somebody building one wants to do. Outlined once it is live,
+             because unpublishing is a step back rather than the obvious move. #}
           {% if account.role == "administrator" %}
+            <form method="post" action="/modules/{{ module.id }}/publish" class="m-0">
+              <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token }}">
+              <input type="hidden" name="is_published"
+                     value="{{ 'false' if module.is_published else 'true' }}">
+              <button type="submit"
+                      class="btn btn-sm {{ 'btn-outline-secondary' if module.is_published else 'btn-primary' }}">
+                {{ "Unpublish" if module.is_published else "Publish" }}
+              </button>
+            </form>
+
             <a class="btn btn-sm btn-outline-secondary" href="/modules/{{ module.id }}/edit">Settings</a>
           {% endif %}
         </div>
@@ -31,18 +64,28 @@
       <p class="text-body-secondary">{{ module.description }}</p>
     {% endif %}
 
-    {% if pages %}
-      <p class="mb-2">Start here:</p>
-      <a class="btn btn-primary" href="/modules/{{ module.id }}/pages/{{ pages[0].id }}">
-        {{ pages[0].title }}
-      </a>
-    {% else %}
-      {# An empty module is not an error. It is a module with nothing in it yet. #}
-      <p class="text-body-secondary">
-        This module has no readable pages yet.
-        {% if can_write %} Add one from <a href="/modules/{{ module.id }}/pages">Pages</a>.{% endif %}
-      </p>
-    {% endif %}
+    <div class="panel">
+      <div class="panel-body">
+        {% if pages %}
+          <div class="small text-body-secondary mb-2">Start here</div>
+          <a class="btn btn-primary" href="/modules/{{ module.id }}/pages/{{ pages[0].id }}">
+            {{ pages[0].title }}
+          </a>
+        {% else %}
+          {# An empty module is not an error. It is a module with nothing in it yet. #}
+          <p class="text-body-secondary mb-0">
+            This module has no readable pages yet.
+            {% if can_write %} Add one from <a href="/modules/{{ module.id }}/pages">Pages</a>.{% endif %}
+          </p>
+        {% endif %}
+
+        <hr>
+        <a class="btn btn-outline-secondary btn-sm" href="/modules/{{ module.id }}/tests">
+          Tests on this module
+        </a>
+      </div>
+    </div>
+
   </div>
 </div>
 {% endblock %}

@@ -2,65 +2,107 @@
 {% block title %}Roster: {{ module.title }}{% endblock %}
 
 {% block content %}
-<div class="mb-3">
-  <h1 class="h4 mb-0">Roster</h1>
-  <a class="small text-decoration-none" href="/modules/{{ module.id }}">{{ module.title }}</a>
+<div class="page-head">
+  <a class="crumb" href="/modules/{{ module.id }}">{{ module.title }}</a>
+  <h1 class="h3">Roster</h1>
+  <p class="lead-sm">Everyone on this module, and in what capacity.</p>
 </div>
 
-<div class="table-responsive mb-4">
-  <table class="table table-sm align-middle bg-body">
-    <thead>
-      <tr>
-        <th scope="col">Name</th>
-        <th scope="col">Email</th>
-        <th scope="col">On this module as</th>
-        <th scope="col"><span class="visually-hidden">Actions</span></th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for person in roster %}
+<div class="panel mb-4">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead>
         <tr>
-          <td>{{ person.full_name }}</td>
-          <td class="text-break">{{ person.email }}</td>
-          <td>{{ person.role_in_module }}</td>
-          <td class="text-nowrap">
-            <form method="post"
-                  action="/modules/{{ module.id }}/roster/{{ person.user_id }}/remove" class="m-0">
-              <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token }}">
-              <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
-            </form>
-          </td>
+          <th scope="col">Name</th>
+          <th scope="col">Email</th>
+          <th scope="col">On this module as</th>
+          <th scope="col" class="text-end"><span class="visually-hidden">Actions</span></th>
         </tr>
-      {% else %}
-        <tr><td colspan="4" class="text-body-secondary">Nobody is on this module yet.</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        {% for person in roster %}
+          <tr>
+            <td class="fw-semibold">{{ person.full_name }}</td>
+            <td class="text-break text-body-secondary">{{ person.email }}</td>
+            <td>
+              {% if person.role_in_module == "instructor" %}
+                <span class="badge text-bg-primary">instructor</span>
+              {% else %}
+                <span class="badge text-bg-secondary">trainee</span>
+              {% endif %}
+            </td>
+            <td class="text-nowrap text-end">
+              <form method="post"
+                    action="/modules/{{ module.id }}/roster/{{ person.user_id }}/remove" class="m-0">
+                <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token }}">
+                <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
+              </form>
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="4">
+            <div class="nothing">
+              <span class="nothing-mark">&#9675;</span>
+              <p>Nobody is on this module yet.</p>
+            </div>
+          </td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
 
-<h2 class="h6">Register people</h2>
-<p class="text-body-secondary small">
-  Select several and register them in one action. Anyone already on the module
-  is skipped.
-</p>
+<div class="panel">
+  <div class="panel-head">Register people</div>
+  <div class="panel-body">
 
-{% if candidates %}
-  <form method="post" action="/modules/{{ module.id }}/roster">
-    <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token }}">
+    {% if candidates %}
+      <form method="post" action="/modules/{{ module.id }}/roster">
+        <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token }}">
 
-    <div class="mb-3" style="max-width: 32rem">
-      <label for="user_ids" class="form-label">Accounts</label>
-      <select class="form-select" id="user_ids" name="user_ids" multiple size="8">
-        {% for person in candidates %}
-          <option value="{{ person.id }}">{{ person.full_name }} ({{ person.email }})</option>
-        {% endfor %}
-      </select>
-      <div class="form-text">Hold Ctrl, or Command on a Mac, to select more than one.</div>
-    </div>
+        {# Asked before the names, not after. A dropdown sitting below a
+           filled-in list is easy to walk past, and walking past it registers
+           people in the wrong capacity without saying so.
 
-    <button type="submit" class="btn btn-primary">Register selected</button>
-  </form>
-{% else %}
-  <p class="text-body-secondary">Every account is already on this module.</p>
-{% endif %}
+           Assigning an instructor is an administrator's act, so the choice is
+           absent for anybody else rather than shown and refused (FR-004,
+           FR-005). With the field absent the route registers trainees, which is
+           the whole of what an instructor may do on their own module (FR-024). #}
+        {% if account.role == "administrator" %}
+          <div class="mb-3" style="max-width: 32rem">
+            <label for="role_in_module" class="form-label">1. Register them as</label>
+            <select class="form-select" id="role_in_module" name="role_in_module">
+              <option value="trainee" selected>Trainee, they take the training</option>
+              <option value="instructor">Instructor, they build and run the module</option>
+            </select>
+            <div class="form-text">
+              A capacity on this module only. It is independent of the account's
+              own role, so the same person may instruct here and train elsewhere.
+            </div>
+          </div>
+        {% endif %}
+
+        <div class="mb-3" style="max-width: 32rem">
+          <label for="user_ids" class="form-label">
+            {% if account.role == "administrator" %}2. Accounts{% else %}Accounts{% endif %}
+          </label>
+          <select class="form-select" id="user_ids" name="user_ids" multiple size="8">
+            {% for person in candidates %}
+              <option value="{{ person.id }}">{{ person.full_name }} ({{ person.email }})</option>
+            {% endfor %}
+          </select>
+          <div class="form-text">
+            Hold Ctrl, or Command on a Mac, to select more than one. Anyone
+            already on the module is skipped.
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Register selected</button>
+      </form>
+    {% else %}
+      <p class="text-body-secondary mb-0">Every account is already on this module.</p>
+    {% endif %}
+
+  </div>
+</div>
 {% endblock %}

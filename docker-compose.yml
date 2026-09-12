@@ -57,6 +57,21 @@ services:
       # Uploaded images are served by nginx as static files, read-only.
       - uploads:/srv/uploads:ro
 
+  # Publishes the platform at project.mylocaldomainserver.online. It makes an
+  # outbound connection to Cloudflare and serves through that, so the router
+  # needs no forwarded port and the machine needs no public address.
+  #
+  # It is not part of the platform. The three tiers above are the platform, and
+  # they run identically with this service absent, which is how the test suite
+  # and every local check still see the same three containers.
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+    depends_on:
+      - nginx
+    # No published port. The connection is outbound only.
+
 volumes:
   db_data:
   uploads:

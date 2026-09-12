@@ -1,0 +1,8 @@
+Hello {full_name},
+
+Your result for {test_title} on {module_title} is ready.
+
+Score: {score}
+Outcome: {outcome}
+
+Sign in to the training platform to see which questions you got right.

@@ -3,7 +3,11 @@
 
 {% block content %}
 <div class="form-narrow">
-  <h1 class="h4 mb-3">{{ "Edit account" if subject else "New account" }}</h1>
+  <div class="page-head">
+    <h1 class="h3">{{ "Edit account" if subject else "New account" }}</h1>
+  </div>
+
+  <div class="card"><div class="card-body p-4">
 
   <form method="post"
         action="{{ '/admin/accounts/' ~ subject.id if subject else '/admin/accounts' }}"
@@ -66,5 +70,6 @@
       <button type="submit" class="btn btn-outline-secondary">Reset password</button>
     </form>
   {% endif %}
+  </div></div>
 </div>
 {% endblock %}

@@ -2,51 +2,69 @@
 {% block title %}Accounts{% endblock %}
 
 {% block content %}
-<div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-3">
-  <h1 class="h4 m-0">Accounts</h1>
+<div class="page-head d-flex flex-wrap gap-3 justify-content-between align-items-center">
+  <div>
+    <h1 class="h3 m-0">Accounts</h1>
+    <p class="lead-sm">
+      Everyone else who can sign in. Nobody creates their own account, and
+      nobody administers their own: another administrator changes yours.
+    </p>
+  </div>
   <a class="btn btn-primary btn-sm" href="/admin/accounts/new">New account</a>
 </div>
 
-{# The table scrolls inside its own box, so the page itself never scrolls sideways. #}
-<div class="table-responsive">
-  <table class="table table-sm align-middle bg-body">
-    <thead>
-      <tr>
-        <th scope="col">Name</th>
-        <th scope="col">Email</th>
-        <th scope="col">Role</th>
-        <th scope="col">Active</th>
-        <th scope="col"><span class="visually-hidden">Actions</span></th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for person in accounts %}
+<div class="panel">
+  {# The table scrolls inside its own box, so the page itself never scrolls sideways. #}
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead>
         <tr>
-          <td>{{ person.full_name }}</td>
-          <td class="text-break">{{ person.email }}</td>
-          <td>{{ person.role }}</td>
-          <td>
-            {% if person.is_active %}
-              <span class="badge text-bg-success">Active</span>
-            {% else %}
-              <span class="badge text-bg-secondary">Off</span>
-            {% endif %}
-          </td>
-          <td class="text-nowrap">
-            <a class="btn btn-sm btn-outline-secondary" href="/admin/accounts/{{ person.id }}">Edit</a>
-            <form method="post" action="/admin/accounts/{{ person.id }}/active" class="d-inline">
-              <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token }}">
-              <input type="hidden" name="is_active" value="{{ 'false' if person.is_active else 'true' }}">
-              <button type="submit" class="btn btn-sm btn-outline-secondary">
-                {{ "Deactivate" if person.is_active else "Reactivate" }}
-              </button>
-            </form>
-          </td>
+          <th scope="col">Name</th>
+          <th scope="col">Email</th>
+          <th scope="col">Role</th>
+          <th scope="col">Active</th>
+          <th scope="col" class="text-end"><span class="visually-hidden">Actions</span></th>
         </tr>
-      {% else %}
-        <tr><td colspan="5" class="text-body-secondary">No accounts yet.</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        {% for person in accounts %}
+          <tr>
+            <td class="fw-semibold">{{ person.full_name }}</td>
+            <td class="text-break text-body-secondary">{{ person.email }}</td>
+            <td class="text-body-secondary text-capitalize">{{ person.role }}</td>
+            <td>
+              {% if person.is_active %}
+                <span class="badge text-bg-success">Active</span>
+              {% else %}
+                <span class="badge text-bg-secondary">Off</span>
+              {% endif %}
+            </td>
+            <td class="text-nowrap text-end">
+              {# Every row here belongs to somebody else, because the caller is
+                 not in this list. Nobody administers their own account, which
+                 is what makes zero administrators unreachable without counting
+                 anything. The service refuses it too, so a crafted request
+                 fails exactly as a click would. #}
+              <a class="btn btn-sm btn-outline-secondary" href="/admin/accounts/{{ person.id }}">Edit</a>
+              <form method="post" action="/admin/accounts/{{ person.id }}/active" class="d-inline">
+                <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token }}">
+                <input type="hidden" name="is_active" value="{{ 'false' if person.is_active else 'true' }}">
+                <button type="submit" class="btn btn-sm btn-outline-secondary">
+                  {{ "Deactivate" if person.is_active else "Reactivate" }}
+                </button>
+              </form>
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="5">
+            <div class="nothing">
+              <span class="nothing-mark">&#9675;</span>
+              <p>No other accounts yet.</p>
+            </div>
+          </td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
 {% endblock %}

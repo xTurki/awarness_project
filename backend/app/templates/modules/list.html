@@ -2,8 +2,8 @@
 {% block title %}Modules{% endblock %}
 
 {% block content %}
-<div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-3">
-  <h1 class="h4 m-0">
+<div class="page-head d-flex flex-wrap gap-3 justify-content-between align-items-center">
+  <h1 class="h3 m-0">
     {% if account.role == "administrator" %}All modules
     {% elif account.role == "instructor" %}Modules you run
     {% else %}Your training{% endif %}
@@ -16,21 +16,24 @@
 
 <div class="row g-3">
   {% for module in modules %}
-    <div class="col-12 col-lg-6">
+    <div class="col-12 col-md-6 col-xl-4">
       <div class="card h-100">
-        <div class="card-body">
-          <h2 class="h6 card-title">
-            <a href="/modules/{{ module.id }}" class="stretched-link text-decoration-none">
+        {% include "components/module_art.html" %}
+        <div class="card-body d-flex flex-column">
+          <h2 class="h6 card-title mb-2">
+            <a href="/modules/{{ module.id }}" class="stretched-link row-title">
               {{ module.title }}
             </a>
           </h2>
 
           {% if account.role != "trainee" %}
-            {% if module.is_published %}
-              <span class="badge text-bg-success">Published</span>
-            {% else %}
-              <span class="badge text-bg-secondary">Unpublished</span>
-            {% endif %}
+            <div>
+              {% if module.is_published %}
+                <span class="badge text-bg-success">Published</span>
+              {% else %}
+                <span class="badge text-bg-secondary">Unpublished</span>
+              {% endif %}
+            </div>
           {% endif %}
 
           {% if module.description %}
@@ -41,13 +44,18 @@
     </div>
   {% else %}
     <div class="col-12">
-      <p class="text-body-secondary">
-        {% if account.role == "trainee" %}
-          You are not on any modules yet. Somebody will put you on one.
-        {% else %}
-          No modules yet.
-        {% endif %}
-      </p>
+      <div class="panel">
+        <div class="nothing">
+          <span class="nothing-mark">&#9675;</span>
+          <p>
+            {% if account.role == "trainee" %}
+              You are not on any modules yet. Somebody will put you on one.
+            {% else %}
+              No modules yet.
+            {% endif %}
+          </p>
+        </div>
+      </div>
     </div>
   {% endfor %}
 </div>
