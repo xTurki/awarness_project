@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Notifications{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <h1 class="h3">Notifications</h1>
+  <p class="lead-sm">
+    Everything you have been told, newest first. This is the record; an email is
+    only a delivery of it.
+  </p>
+</div>
+
+{% if rows %}
+  {# One entry per module, even where several were combined into one email:
+     somebody overdue on three modules sees three of these (FR-034). #}
+  <div class="panel">
+    <div class="list-group list-group-flush">
+      {% for row in rows %}
+        <a href="{{ row.link }}" class="list-group-item list-group-item-action px-4 py-3">
+          <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
+            <span class="fw-semibold">
+              {% if not row.is_seen %}
+                <span class="badge text-bg-primary align-middle me-1">New</span>
+              {% endif %}
+              {{ row.title }}
+            </span>
+            <span class="small text-body-secondary text-nowrap">
+              <time data-utc="{{ row.created_at.isoformat() }}"
+                    >{{ row.created_at.strftime("%d %b %Y") }}</time>
+            </span>
+          </div>
+          {% if row.body %}
+            <div class="small mt-1">{{ row.body }}</div>
+          {% endif %}
+          <div class="small text-body-secondary mt-1">{{ row.module_title }}</div>
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+{% else %}
+  {# A statement, not an empty frame. #}
+  <div class="panel">
+    <div class="nothing">
+      <span class="nothing-mark">&#9675;</span>
+      <p>
+        Nothing has been sent to you yet. When training falls due, or you are added
+        to a module, it will appear here.
+      </p>
+    </div>
+  </div>
+{% endif %}
+{% endblock %}

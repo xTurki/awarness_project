@@ -95,7 +95,7 @@ def edit_form(
 ):
     try:
         subject = admin_service.get_account(db, actor, user_id)
-    except admin_service.AccountNotFound:
+    except (admin_service.AccountNotFound, admin_service.CannotAdministerSelf):
         raise _not_found()
 
     return render(
@@ -133,7 +133,7 @@ def update(
             request, actor, user_id, email, full_name, role,
             "Another account already uses that email address.",
         )
-    except admin_service.AccountNotFound:
+    except (admin_service.AccountNotFound, admin_service.CannotAdministerSelf):
         raise _not_found()
 
     return RedirectResponse("/admin/accounts", status_code=status.HTTP_303_SEE_OTHER)
@@ -154,7 +154,7 @@ def reset_password(
             request, actor, user_id, None, None, None,
             f"Password must be at least {MIN_PASSWORD_LENGTH} characters.",
         )
-    except admin_service.AccountNotFound:
+    except (admin_service.AccountNotFound, admin_service.CannotAdministerSelf):
         raise _not_found()
 
     return RedirectResponse("/admin/accounts", status_code=status.HTTP_303_SEE_OTHER)
@@ -170,7 +170,9 @@ def set_active(
 ):
     try:
         admin_service.set_active(db, actor, user_id, is_active == "true")
-    except admin_service.AccountNotFound:
+    except (admin_service.AccountNotFound, admin_service.CannotAdministerSelf):
+        # Your own account is not in the list, so a request naming it is not a
+        # mistake to explain: as far as this page is concerned it does not exist.
         raise _not_found()
 
     return RedirectResponse("/admin/accounts", status_code=status.HTTP_303_SEE_OTHER)

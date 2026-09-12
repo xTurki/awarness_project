@@ -12,6 +12,7 @@ from pathlib import Path
 from sqlmodel import Session as DbSession
 from sqlmodel import select
 
+from app import development
 from app.config import settings
 from app.database import utcnow
 from app.models.session import Session as SessionRow
@@ -69,6 +70,10 @@ async def start_login(db: DbSession, email: str, password: str) -> None:
     # when the security surface was reduced, and this keeps the platform usable
     # when the mail provider is refusing to send.
     print(f"[login code] {user.email}: {code}", flush=True)
+
+    # development-only: hold the code so the verification page can show it.
+    # Deleting app/development.py and this line removes the feature entirely.
+    development.remember_code(user.email, code)
 
     body = _EMAIL_TEMPLATE.read_text(encoding="utf-8").format(
         full_name=user.full_name,
@@ -160,6 +165,10 @@ def _clear_code(db: DbSession, user: User) -> None:
     user.login_code_expires_at = None
     db.add(user)
     db.commit()
+
+    # development-only: a used code stops being offered on the page. This is the
+    # one place codes are cleared, so it is the one place this belongs.
+    development.forget(user.email)
 
 
 def _sweep_expired_sessions(db: DbSession) -> None:

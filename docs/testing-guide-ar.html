@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>دليل اختبار منصة التوعية</title>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+  :root {
+    --ground:      #f6f8fa;
+    --surface:     #ffffff;
+    --surface-alt: #eef1f5;
+    --line:        #dfe4ea;
+    --line-soft:   #eaeef3;
+    --ink:         #0f1720;
+    --ink-soft:    #556270;
+    --ink-faint:   #8794a3;
+    --accent:      #1d4ed8;
+    --accent-soft: #eaf0fe;
+    --clay:        #9c5238;
+    --clay-soft:   #f7ece7;
+
+    --ok:       #146c43;
+    --ok-soft:  #e6f3ec;
+    --warn:     #96660a;
+    --warn-soft:#fdf1da;
+    --bad:      #b02a37;
+    --bad-soft: #fbe9eb;
+
+    --display: "Noto Kufi Arabic", "Segoe UI", Tahoma, sans-serif;
+    --body: "IBM Plex Sans Arabic", "Segoe UI", Tahoma, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+
+    --r: 12px;
+    --r-sm: 8px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:      #0d1218;
+      --surface:     #151c25;
+      --surface-alt: #1b232e;
+      --line:        #2a3542;
+      --line-soft:   #222c37;
+      --ink:         #e7ecf2;
+      --ink-soft:    #9dabbb;
+      --ink-faint:   #6d7d8e;
+      --accent:      #8ab0ff;
+      --accent-soft: #18233a;
+      --clay:        #d99372;
+      --clay-soft:   #2a1c16;
+  
+      --ok:       #5ac486;
+      --ok-soft:  #142a1f;
+      --warn:     #e0aa46;
+      --warn-soft:#2a2010;
+      --bad:      #f08b8b;
+      --bad-soft: #2b1618;
+      
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground:      #0d1218;
+    --surface:     #151c25;
+    --surface-alt: #1b232e;
+    --line:        #2a3542;
+    --line-soft:   #222c37;
+    --ink:         #e7ecf2;
+    --ink-soft:    #9dabbb;
+    --ink-faint:   #6d7d8e;
+    --accent:      #8ab0ff;
+    --accent-soft: #18233a;
+    --clay:        #d99372;
+    --clay-soft:   #2a1c16;
+
+    --ok:       #5ac486;
+    --ok-soft:  #142a1f;
+    --warn:     #e0aa46;
+    --warn-soft:#2a2010;
+    --bad:      #f08b8b;
+    --bad-soft: #2b1618;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 16px;
+    line-height: 1.85;
+    margin: 0;
+  }
+
+  .doc {
+    max-width: 56rem;
+    margin: 0 auto;
+    padding-inline: 20px;
+    padding-block: 40px 72px;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+
+  h1, h2, h3 { font-family: var(--display); line-height: 1.4; text-wrap: balance; margin: 0; }
+  h1 { font-size: clamp(1.7rem, 4.5vw, 2.3rem); font-weight: 700; letter-spacing: -0.01em; }
+  h2 { font-size: clamp(1.2rem, 3vw, 1.45rem); font-weight: 600; }
+  h3 { font-size: 1.02rem; font-weight: 600; }
+  p { margin: 0; }
+
+  .eyebrow {
+    font-family: var(--display);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    color: var(--clay);
+    margin-bottom: 10px;
+  }
+
+  /* ---- the masthead ------------------------------------------------ */
+
+  .masthead { display: flex; flex-direction: column; gap: 18px; }
+  .lede { color: var(--ink-soft); font-size: 1.05rem; max-width: 44rem; }
+
+  .shurfat { display: block; width: 100%; height: 16px; color: var(--clay); opacity: 0.5; }
+
+  .where {
+    display: flex; flex-wrap: wrap; gap: 10px 28px;
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: var(--r); padding: 16px 20px;
+  }
+  .where div { display: flex; flex-direction: column; gap: 2px; }
+  .where dt { font-size: 0.76rem; color: var(--ink-faint); font-weight: 500; }
+  .where dd { margin: 0; font-family: var(--mono); font-size: 0.9rem; direction: ltr; text-align: right; }
+  .where a { color: var(--accent); text-decoration: none; }
+  .where a:hover { text-decoration: underline; }
+
+  /* ---- sections ---------------------------------------------------- */
+
+  section { display: flex; flex-direction: column; gap: 18px; }
+  .section-head { display: flex; flex-direction: column; gap: 6px; }
+  .section-head p { color: var(--ink-soft); max-width: 46rem; }
+
+  /* ---- personas ---------------------------------------------------- */
+
+  .personas { display: grid; gap: 16px; }
+  @media (min-width: 720px) { .personas { grid-template-columns: repeat(3, 1fr); } }
+
+  .persona {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    padding: 20px;
+    display: flex; flex-direction: column; gap: 14px;
+    border-top: 3px solid var(--role, var(--accent));
+  }
+  .persona[data-role="admin"]      { --role: #1d4ed8; }
+  .persona[data-role="instructor"] { --role: #9c5238; }
+  .persona[data-role="trainee"]    { --role: #146c43; }
+  :root[data-theme="dark"] .persona[data-role="admin"]      { --role: #8ab0ff; }
+  :root[data-theme="dark"] .persona[data-role="instructor"] { --role: #d99372; }
+  :root[data-theme="dark"] .persona[data-role="trainee"]    { --role: #5ac486; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .persona[data-role="admin"]      { --role: #8ab0ff; }
+    :root:not([data-theme="light"]) .persona[data-role="instructor"] { --role: #d99372; }
+    :root:not([data-theme="light"]) .persona[data-role="trainee"]    { --role: #5ac486; }
+    :root:not([data-theme="light"]) .path > li::before { color: #0d1218; }
+  }
+
+  .persona-name { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .persona-name h3 { color: var(--role); }
+  .persona-name span { font-family: var(--mono); font-size: 0.74rem; color: var(--ink-faint); direction: ltr; }
+  .persona > p { font-size: 0.93rem; color: var(--ink-soft); }
+
+  .can { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
+  .can li { font-size: 0.9rem; padding-right: 18px; position: relative; line-height: 1.6; }
+  .can li::before {
+    content: ""; position: absolute; right: 0; top: 0.62em;
+    width: 7px; height: 7px; background: var(--role); border-radius: 1px;
+    transform: rotate(45deg);
+  }
+  .cannot { border-top: 1px dashed var(--line); padding-top: 12px; }
+  .cannot strong { font-size: 0.78rem; color: var(--ink-faint); font-weight: 600; display: block; margin-bottom: 6px; }
+  .cannot p { font-size: 0.87rem; color: var(--ink-soft); }
+
+  /* ---- callout ----------------------------------------------------- */
+
+  .note {
+    background: var(--clay-soft);
+    border: 1px solid color-mix(in srgb, var(--clay) 25%, transparent);
+    border-radius: var(--r);
+    padding: 18px 20px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .note h3 { color: var(--clay); font-size: 0.95rem; }
+  .note p { font-size: 0.93rem; }
+
+  .note.blue { background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent) 25%, transparent); }
+  .note.blue h3 { color: var(--accent); }
+
+  /* ---- tables ------------------------------------------------------ */
+
+  .scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+  th, td { text-align: right; padding: 11px 16px; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+  thead th {
+    font-family: var(--display); font-size: 0.74rem; font-weight: 600;
+    color: var(--ink-faint); background: var(--surface-alt); letter-spacing: 0.03em;
+    white-space: nowrap;
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  td code, .where dd code { font-family: var(--mono); font-size: 0.85em; direction: ltr; display: inline-block; }
+
+  .badge {
+    display: inline-block; font-size: 0.76rem; font-weight: 600;
+    padding: 2px 10px; border-radius: 999px; white-space: nowrap;
+    font-family: var(--body);
+  }
+  .b-ok   { background: var(--ok-soft);   color: var(--ok); }
+  .b-warn { background: var(--warn-soft); color: var(--warn); }
+  .b-bad  { background: var(--bad-soft);  color: var(--bad); }
+  .b-mute { background: var(--surface-alt); color: var(--ink-soft); }
+
+  /* ---- the test path ----------------------------------------------- */
+
+  .path { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; counter-reset: step; }
+  .path > li {
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--r);
+    padding: 18px 20px 18px 20px;
+    display: flex; flex-direction: column; gap: 10px;
+    position: relative;
+    counter-increment: step;
+  }
+  .path > li::before {
+    content: counter(step);
+    position: absolute; top: -1px; inset-inline-start: -1px;
+    font-family: var(--mono); font-size: 0.75rem; font-weight: 500;
+    color: var(--surface); background: var(--accent);
+    padding: 3px 10px;
+    border-radius: 0 var(--r) 0 var(--r);
+  }
+  :root[data-theme="dark"] .path > li::before { color: #0d1218; }
+  .path h3 { padding-inline-end: 40px; }
+  .path .who { font-family: var(--mono); font-size: 0.74rem; color: var(--ink-faint); direction: ltr; }
+  .path ol { margin: 0; padding-inline-start: 0; padding-inline-end: 20px; display: flex; flex-direction: column; gap: 6px; }
+  .path ol li { font-size: 0.92rem; }
+  .expect {
+    background: var(--ok-soft); border-inline-start: 3px solid var(--ok);
+    border-radius: var(--r-sm); padding: 10px 14px; font-size: 0.9rem;
+  }
+  .expect strong { color: var(--ok); }
+
+  /* ---- misc -------------------------------------------------------- */
+
+  .pair { display: grid; gap: 16px; }
+  @media (min-width: 720px) { .pair { grid-template-columns: 1fr 1fr; } }
+
+  .block {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: var(--r); padding: 18px 20px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .block p, .block li { font-size: 0.92rem; }
+  .block ul { margin: 0; padding-inline-start: 0; padding-inline-end: 20px; display: flex; flex-direction: column; gap: 6px; }
+
+  footer {
+    border-top: 1px solid var(--line);
+    padding-top: 20px; color: var(--ink-faint); font-size: 0.85rem;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+
+  a { color: var(--accent); }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="doc" dir="rtl" lang="ar">
+
+  <header class="masthead">
+    <div>
+      <div class="eyebrow">دليل تجربة</div>
+      <h1>منصّة التوعية بالأمن السيبراني</h1>
+    </div>
+    <p class="lede">
+      منصّة تدريب داخلية للمنشآت الصغيرة والمتوسطة: المسؤول ينشئ الحسابات والوحدات،
+      والمعلّم يكتب المحتوى ويبني الاختبارات، والمتدرّب يقرأ ويختبر. والمنصّة بعد ذلك
+      تتابع من أنجز ومن تأخّر، وتذكّره من تلقاء نفسها.
+    </p>
+
+    <svg class="shurfat" viewBox="0 0 400 16" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M0 15 H400" stroke="currentColor" stroke-width="1.5" fill="none"/>
+      <path d="M4 15V11H10V7H16V3H22V7H28V11H34V15" stroke="currentColor" stroke-width="1.5" fill="none"/>
+      <path d="M44 15V11H50V7H56V3H62V7H68V11H74V15" stroke="currentColor" stroke-width="1.5" fill="none"/>
+      <path d="M84 15V11H90V7H96V3H102V7H108V11H114V15" stroke="currentColor" stroke-width="1.5" fill="none"/>
+      <path d="M124 15V11H130V7H136V3H142V7H148V11H154V15" stroke="currentColor" stroke-width="1.5" fill="none"/>
+      <path d="M164 15V11H170V7H176V3H182V7H188V11H194V15" stroke="currentColor" stroke-width="1.5" fill="none"/>
+      <path d="M204 15V11H210V7H216V3H222V7H228V11H234V15" stroke="currentColor" stroke-width="1.5" fill="none"/>
+      <path d="M244 15V11H250V7H256V3H262V7H268V11H274V15" stroke="currentColor" stroke-width="1.5" fill="none"/>
+      <path d="M284 15V11H290V7H296V3H302V7H308V11H314V15" stroke="currentColor" stroke-width="1.5" fill="none"/>
+      <path d="M324 15V11H330V7H336V3H342V7H348V11H354V15" stroke="currentColor" stroke-width="1.5" fill="none"/>
+      <path d="M364 15V11H370V7H376V3H382V7H388V11H394V15" stroke="currentColor" stroke-width="1.5" fill="none"/>
+    </svg>
+
+    <dl class="where">
+      <div>
+        <dt>العنوان</dt>
+        <dd><a href="https://project.mylocaldomainserver.online">project.mylocaldomainserver.online</a></dd>
+      </div>
+      <div>
+        <dt>داخل الشبكة</dt>
+        <dd>http://192.168.1.100</dd>
+      </div>
+      <div>
+        <dt>الحالة</dt>
+        <dd>نسخة تطوير</dd>
+      </div>
+    </dl>
+  </header>
+
+  <section>
+    <div class="section-head">
+      <div class="eyebrow">الخطوة الأولى</div>
+      <h2>كيف تدخل</h2>
+      <p>الدخول من خطوتين دائماً، لكل الحسابات بلا استثناء. لا يوجد تسجيل ذاتي: الحسابات يُنشئها المسؤول.</p>
+    </div>
+
+    <div class="pair">
+      <div class="block">
+        <h3>الخطوات</h3>
+        <ul>
+          <li>افتح الصفحة، ثم <strong>Log in</strong>.</li>
+          <li>أدخل البريد وكلمة المرور، ثم <strong>Continue</strong>.</li>
+          <li>تصل إلى صفحة تطلب <strong>رمزاً من ستّة أرقام</strong>.</li>
+          <li>أدخل الرمز، ثم <strong>Sign in</strong>.</li>
+        </ul>
+      </div>
+
+      <div class="note">
+        <h3>الرمز معروض على الشاشة</h3>
+        <p>
+          في نسخة التطوير هذه يظهر الرمز داخل صندوق أصفر مكتوب عليه
+          <strong>Development build</strong> في الصفحة نفسها، فلا تحتاج إلى بريد إلكتروني
+          لتجربة النظام.
+        </p>
+        <p>
+          هذا الصندوق مؤقّت بطبيعته، ويُزال قبل التشغيل الحقيقي بتغيير إعداد واحد،
+          فيعود الرمز إلى البريد وحده.
+        </p>
+      </div>
+    </div>
+
+    <div class="note blue">
+      <h3>إن طُلب منك اختيار كلمة مرور</h3>
+      <p>
+        الحساب الذي أنشأه المسؤول يُطالَب باختيار كلمة مروره الخاصة عند أول دخول،
+        ولا يصل إلى أي صفحة قبل ذلك. هذا مقصود: كلمة المرور التي أعطاك إيّاها المسؤول
+        يعرفها هو، وهذه الخطوة هي التي تجعل الحساب لك وحدك.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <div class="eyebrow">من في النظام</div>
+      <h2>الشخصيات الثلاث</h2>
+      <p>
+        لكل حساب دور واحد على مستوى المنصّة، وهو الذي يقرّر ما يراه في القائمة العليا
+        وما يُسمح له به في الإدارة.
+      </p>
+    </div>
+
+    <div class="personas">
+
+      <article class="persona" data-role="admin">
+        <div class="persona-name">
+          <h3>المسؤول</h3>
+          <span>administrator</span>
+        </div>
+        <p>يملك المنصّة. هو وحده من يُدخل الناس إليها ويُخرجهم منها.</p>
+        <ul class="can">
+          <li>ينشئ الحسابات ويعدّلها ويعطّلها</li>
+          <li>يعيد ضبط كلمة مرور أي شخص</li>
+          <li>ينشئ الوحدات وينشرها ويلغي نشرها</li>
+          <li>يعيّن معلّماً على وحدة</li>
+          <li>يسجّل أي شخص على أي وحدة</li>
+          <li>يرى كل الوحدات، منشورة أو لا</li>
+        </ul>
+        <div class="cannot">
+          <strong>لا يستطيع</strong>
+          <p>
+            إدارة حسابه هو. حسابه غائب عن قائمة الحسابات، فلا يعدّله ولا يعطّله ولا يعيد
+            ضبط كلمة مروره. وهذا ما يجعل بقاء مسؤول واحد على الأقل مضموناً بلا حساب ولا عدّ.
+          </p>
+        </div>
+      </article>
+
+      <article class="persona" data-role="instructor">
+        <div class="persona-name">
+          <h3>المعلّم</h3>
+          <span>instructor</span>
+        </div>
+        <p>يبني محتوى الوحدات التي عُيّن عليها، ويتابع من عليها.</p>
+        <ul class="can">
+          <li>يرى وحداته فقط، ومنها غير المنشورة</li>
+          <li>يكتب الصفحات ويرتّبها ويرفع الصور</li>
+          <li>يبني بنك الأسئلة ويؤلّف الاختبارات</li>
+          <li>ينشر الاختبار ويلغي نشره</li>
+          <li>يسجّل متدرّبين على وحدته</li>
+          <li>يرى نتائج الجميع على وحدته</li>
+          <li>يصحّح درجة محاولة يدوياً</li>
+        </ul>
+        <div class="cannot">
+          <strong>لا يستطيع</strong>
+          <p>
+            نشر الوحدة نفسها، ولا تعيين معلّم آخر عليها، ولا رؤية وحدة لم يُعيَّن عليها.
+            هذه كلّها من صلاحيات المسؤول.
+          </p>
+        </div>
+      </article>
+
+      <article class="persona" data-role="trainee">
+        <div class="persona-name">
+          <h3>المتدرّب</h3>
+          <span>trainee</span>
+        </div>
+        <p>يقرأ ويختبر. ولا يختار ما يتدرّب عليه: يُسجَّل عليه.</p>
+        <ul class="can">
+          <li>يرى الوحدات المنشورة المسجَّل عليها</li>
+          <li>يقرأ الصفحات بالترتيب</li>
+          <li>يؤدّي الاختبار ويراجع إجاباته</li>
+          <li>يرى حالته ودرجته وتاريخ محاولاته</li>
+          <li>يستقبل الإشعارات والتذكيرات</li>
+        </ul>
+        <div class="cannot">
+          <strong>لا يستطيع</strong>
+          <p>
+            تسجيل نفسه على وحدة ولا إلغاء تسجيله، ولا رؤية وحدة غير منشورة، ولا رؤية
+            نتائج أي شخص آخر.
+          </p>
+        </div>
+      </article>
+
+    </div>
+
+    <div class="note">
+      <h3>نقطة تستحقّ الانتباه: الصفة على الوحدة</h3>
+      <p>
+        دور المنصّة شيء، والصفة على وحدة بعينها شيء آخر. الشخص نفسه قد يكون
+        <strong>معلّماً على وحدة</strong> و<strong>متدرّباً على أخرى</strong>، والصلاحية تتبع
+        التسجيل لا الدور.
+      </p>
+      <p>
+        ولهذا عند إضافة شخص إلى وحدة يسأل المسؤول أولاً: <strong>بأي صفة؟</strong>
+        والافتراضي متدرّب. اختيار «معلّم» متاح للمسؤول وحده.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <div class="eyebrow">ما تراه المنصّة</div>
+      <h2>الحالات السبع</h2>
+      <p>
+        لكل شخص على كل وحدة حالة واحدة، تُحسب لحظة العرض من التسجيلات والمحاولات،
+        ولا تُخزَّن في أي عمود. ولهذا لا يمكن أن تتناقض مع ما اشتُقّت منه.
+      </p>
+    </div>
+
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>الحالة</th>
+            <th>متى تظهر</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><span class="badge b-mute">No test</span></td><td>الوحدة ليس فيها اختبار منشور. لا شيء مطلوب.</td></tr>
+          <tr><td><span class="badge b-mute">Not started</span></td><td>يوجد اختبار منشور ولم يبدأه بعد.</td></tr>
+          <tr><td><span class="badge b-warn">In progress</span></td><td>محاولة مفتوحة الآن. مهما كانت درجته السابقة.</td></tr>
+          <tr><td><span class="badge b-ok">Passed</span></td><td>آخر محاولة بلغت درجة النجاح.</td></tr>
+          <tr><td><span class="badge b-bad">Failed</span></td><td>آخر محاولة لم تبلغها.</td></tr>
+          <tr><td><span class="badge b-warn">Due</span></td><td>موعد الإعادة اقترب، خلال أربعة عشر يوماً، أو حلّ اليوم.</td></tr>
+          <tr><td><span class="badge b-bad">Overdue</span></td><td>موعد الإعادة مضى ولم يُعَد الاختبار.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note">
+      <h3>آخر محاولة، لا أفضل محاولة</h3>
+      <p>
+        من حصل على ٤٠٪ ثم ٩٠٪ ثم ٧٠٪ فهو <strong>راسب بـ ٧٠٪</strong>، لا ناجح بـ ٩٠٪.
+        القاعدة أن آخر ما فعله هو ما يمثّله، لأن التدريب يقيس ما يعرفه اليوم لا أفضل يوم مرّ عليه.
+      </p>
+      <p>
+        وكل حالة تحمل كلمتها مكتوبة لا لونها وحده، فتبقى مقروءة مطبوعةً أو بالأبيض والأسود.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <div class="eyebrow">ما تفعله المنصّة وحدها</div>
+      <h2>التذكير والمتابعة</h2>
+    </div>
+
+    <div class="pair">
+      <div class="block">
+        <h3>الجدولة</h3>
+        <p>
+          يضبط المعلّم على الاختبار إمّا <strong>تكراراً كل كذا يوم</strong>، وإمّا
+          <strong>مهلة إنجاز</strong> تُحسب من تاريخ تسجيل كل شخص.
+        </p>
+        <ul>
+          <li>الاختبار المتكرّر يتجاهل حدّ المحاولات: يعيد حتى ينجح.</li>
+          <li>من لم ينجح قطّ تُحسب مهلته من تسجيله هو، فالجديد يأخذ دورة كاملة.</li>
+          <li>من نجح ثم أعاد ورسب يصير مستحقّاً من لحظة رسوبه.</li>
+        </ul>
+      </div>
+
+      <div class="block">
+        <h3>المهمّة اليومية</h3>
+        <p>
+          مرّة كل يوم، الساعة السادسة بتوقيت UTC، تمرّ المنصّة على الجميع دون أن يكون
+          أحد مسجَّل الدخول.
+        </p>
+        <ul>
+          <li>تنبّه قبل الاستحقاق بأربعة عشر يوماً.</li>
+          <li>تخبر مرّة واحدة عند التأخّر، ولا تكرّر.</li>
+          <li>من تأخّر على ثلاث وحدات يصله <strong>بريد واحد</strong> وتظهر له <strong>ثلاثة إشعارات</strong>.</li>
+          <li>تشغيلها مرّتين في اليوم نفسه لا يفعل شيئاً في المرّة الثانية.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="note blue">
+      <h3>إشعاران فوريّان لا ينتظران الغد</h3>
+      <p>
+        تسجيل شخص على وحدة، وظهور نتيجة اختباره، كلاهما يُشعَر به في اللحظة نفسها،
+        لأن إشعار تسجيل يصل صباح الغد ليس إشعار تسجيل.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <div class="eyebrow">جرّبها بنفسك</div>
+      <h2>مسار الاختبار</h2>
+      <p>
+        بالترتيب. كل خطوة تبني على ما قبلها، ويُذكر في آخر كل خطوة ما ينبغي أن تراه.
+      </p>
+    </div>
+
+    <ol class="path">
+
+      <li>
+        <h3>أنشئ حساباً ووحدة</h3>
+        <div class="who">as administrator</div>
+        <ol>
+          <li>من <strong>Accounts</strong>، أنشئ حساب معلّم وحسابَي متدرّب.</li>
+          <li>من <strong>Modules</strong>، أنشئ وحدة واختر لها نقشاً ولوناً.</li>
+        </ol>
+        <div class="expect">
+          <strong>المتوقّع:</strong> الوحدة تظهر ببطاقة تحمل النقش الذي اخترته، ومعلّمة
+          <span class="badge b-mute">Unpublished</span>.
+        </div>
+      </li>
+
+      <li>
+        <h3>عيّن المعلّم وسجّل المتدرّبين</h3>
+        <div class="who">as administrator</div>
+        <ol>
+          <li>افتح الوحدة، ثم <strong>Roster</strong>.</li>
+          <li>اختر من «Register them as» الصفة <strong>Instructor</strong>، ثم اختر حساب المعلّم.</li>
+          <li>كرّر للمتدرّبين بصفة <strong>Trainee</strong>.</li>
+        </ol>
+        <div class="expect">
+          <strong>المتوقّع:</strong> الجدول يفرّق بين الصفتين بوسم ملوّن، ويصل كلّ واحد
+          منهم إشعار «أُضفت إلى الوحدة» فوراً.
+        </div>
+      </li>
+
+      <li>
+        <h3>اكتب المحتوى وابنِ الاختبار</h3>
+        <div class="who">as instructor</div>
+        <ol>
+          <li>ادخل بحساب المعلّم. لن ترى إلا هذه الوحدة.</li>
+          <li>من <strong>Pages</strong>، اكتب صفحتين وانشرهما، واترك ثالثة مسوّدة.</li>
+          <li>من <strong>Question bank</strong>، اكتب سؤالين أو ثلاثة.</li>
+          <li>من <strong>Tests</strong>، أنشئ اختباراً، وحدّد درجة النجاح، واختر الأسئلة.</li>
+          <li>انشر الاختبار.</li>
+        </ol>
+        <div class="expect">
+          <strong>المتوقّع:</strong> المتدرّب سيرى الصفحتين المنشورتين فقط، لا الثالثة.
+        </div>
+      </li>
+
+      <li>
+        <h3>انشر الوحدة</h3>
+        <div class="who">as administrator</div>
+        <ol>
+          <li>افتح صفحة الوحدة، واضغط <strong>Publish</strong> بجوار Roster.</li>
+        </ol>
+        <div class="expect">
+          <strong>المتوقّع:</strong> الوسم <span class="badge b-mute">Unpublished</span> يختفي،
+          والمتدرّبون يرونها الآن. حساب المعلّم لا يجد زرّ Publish أصلاً.
+        </div>
+      </li>
+
+      <li>
+        <h3>أدِّ الاختبار</h3>
+        <div class="who">as trainee</div>
+        <ol>
+          <li>ادخل بحساب متدرّب. الصفحة الأولى هي <strong>Your training</strong>.</li>
+          <li>افتح الوحدة، اقرأ الصفحات، ثم ابدأ الاختبار.</li>
+          <li>أجب إجابات <strong>خاطئة عمداً</strong> وسلّم.</li>
+        </ol>
+        <div class="expect">
+          <strong>المتوقّع:</strong> الحالة تصير <span class="badge b-bad">Failed</span>،
+          ويصلك إشعار بالنتيجة فوراً، وتظهر المراجعة موضّحة الصواب.
+        </div>
+        <div class="note" style="margin-top:4px">
+          <h3>إن لم يظهر زرّ Start</h3>
+          <p>
+            مكانه لوحة مكتوب عليها <strong>Cannot start</strong> تقول السبب مباشرةً:
+            أنّك غير مسجَّل على الوحدة، أو أن نافذة الاختبار لم تُفتح بعد أو أُغلقت،
+            أو أنّك استنفدت المحاولات. الزرّ لا يُعرض لمن لا يستطيع استعماله.
+          </p>
+          <p>
+            والأشيع أثناء التجربة: <strong>المسؤول ليس مسجَّلاً على الوحدة</strong>.
+            سجّل نفسك بصفة Trainee من الروستر لتؤدّي الاختبار بنفسك.
+          </p>
+        </div>
+      </li>
+
+      <li>
+        <h3>أعد المحاولة وانجح</h3>
+        <div class="who">as trainee</div>
+        <ol>
+          <li>أعد الاختبار وأجب إجابات صحيحة.</li>
+          <li>افتح <strong>Your training</strong> ثم تاريخ الوحدة.</li>
+        </ol>
+        <div class="expect">
+          <strong>المتوقّع:</strong> الحالة <span class="badge b-ok">Passed</span>،
+          والمحاولتان كلتاهما في التاريخ، والدرجة المعروضة هي درجة <strong>الأخيرة</strong>.
+        </div>
+      </li>
+
+      <li>
+        <h3>انظر إلى الصورة من جهة المعلّم</h3>
+        <div class="who">as instructor</div>
+        <ol>
+          <li>افتح الوحدة، ثم عرض النتائج.</li>
+        </ol>
+        <div class="expect">
+          <strong>المتوقّع:</strong> جدول بكل المسجَّلين، <strong>ومن لم ينجح في الأعلى</strong>،
+          ومن كل صفّ تصل إلى تاريخ ذلك الشخص.
+        </div>
+      </li>
+
+      <li>
+        <h3>جرّب الحدود</h3>
+        <div class="who">اختبارات المنع</div>
+        <ol>
+          <li>بحساب متدرّب، حاول فتح عنوان وحدة غير مسجَّل عليها.</li>
+          <li>بحساب معلّم، حاول فتح وحدة معلّم آخر.</li>
+          <li>بحساب المسؤول، ابحث عن حسابك في قائمة الحسابات.</li>
+        </ol>
+        <div class="expect">
+          <strong>المتوقّع:</strong> الأولان يُقابَلان بـ «غير موجود» لا بـ «ممنوع»،
+          لأن ما لا تملك رؤيته لا يُفترض أن تعرف بوجوده. وحسابك أنت ليس في القائمة.
+        </div>
+        <div class="note" style="margin-top:4px">
+          <h3>وكيف يظهر الرفض</h3>
+          <p>
+            كل رفض في المنصّة صفحة مكتوبة بلغة من وقع فيه: «You do not have access
+            to this»، «Not found»، ومعها زرّ رجوع. ولا يظهر أي رفض على هيئة سطر
+            برمجي.
+          </p>
+          <p>
+            وخطأ داخل نموذج لا ينقلك إلى صفحة أصلاً: يعود النموذج ومعه التنبيه في
+            الأعلى، <strong>وما كتبته باقٍ</strong>، كما تفعل صفحة الدخول عند خطأ
+            كلمة المرور.
+          </p>
+        </div>
+      </li>
+
+    </ol>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <div class="eyebrow">قبل التشغيل الحقيقي</div>
+      <h2>ما هو مؤقّت في هذه النسخة</h2>
+    </div>
+
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr><th>الأمر</th><th>الوضع</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>عرض رمز الدخول على الشاشة</td>
+            <td>مؤقّت للتطوير. يُطفأ بإعداد واحد، ويُحذف نهائياً بحذف ملف واحد وثلاثة أسطر مُعلَّمة.</td>
+          </tr>
+          <tr>
+            <td>إرسال البريد</td>
+            <td>مهيّأ ويعمل، لكن مزوّد البريد الحالي يرفض الإرسال، ولهذا يُعرض الرمز على الشاشة.</td>
+          </tr>
+          <tr>
+            <td>الحسابات الموجودة</td>
+            <td>حسابات تجربة. تُحذف قبل التشغيل وتُنشأ حسابات العاملين الحقيقيين.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>
+    <div>منصّة التوعية بالأمن السيبراني للمنشآت الصغيرة والمتوسطة</div>
+    <div>مشروع التخرّج، جامعة نيوكاسل، COMP6900، المجموعة الخامسة</div>
+  </footer>
+
+</div>
+</body>
+</html>

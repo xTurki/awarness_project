@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}{{ heading }}{% endblock %}
+
+{% block content %}
+{# Anything refused that was not caught by the page that offered it lands here.
+   Before this existed every refusal rendered as raw JSON, which tells somebody
+   using the platform nothing and looks like a crash. #}
+<div class="form-narrow">
+  <div class="page-head text-center">
+    <span class="nothing-mark mb-3">!</span>
+    <h1 class="h3">{{ heading }}</h1>
+  </div>
+
+  <div class="card">
+    <div class="card-body p-4 text-center">
+      <p class="mb-0">{{ detail }}</p>
+    </div>
+  </div>
+
+  <p class="text-center mt-4 mb-0">
+    <a class="btn btn-outline-secondary" href="/">Back to the dashboard</a>
+  </p>
+</div>
+{% endblock %}

@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% block title %}{{ "Edit test" if test else "New test" }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <a class="crumb" href="/modules/{{ module.id }}/tests">{{ module.title }}</a>
+  <h1 class="h3">{{ "Edit test" if test else "New test" }}</h1>
+</div>
+
+{% set frozen = test and test.is_frozen %}
+
+<form method="post" novalidate
+      action="{{ '/modules/' ~ module.id ~ '/tests/' ~ test.id if test
+               else '/modules/' ~ module.id ~ '/tests' }}">
+  <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token }}">
+
+  {# A frozen test renders read-only, and the warning above says why. Publishing
+     and unpublishing stay available: that is how an instructor stops further
+     attempts on a test they can no longer edit (FR-014). #}
+  <fieldset {% if frozen %}disabled{% endif %}>
+    <div class="panel mb-4"><div class="panel-body">
+    <div class="row g-3">
+      <div class="col-12 col-lg-6">
+        <label for="title" class="form-label">Title</label>
+        <input type="text" class="form-control" id="title" name="title"
+               value="{{ title|default('') }}" required>
+      </div>
+
+      <div class="col-12">
+        <label for="instructions" class="form-label">Instructions</label>
+        <textarea class="form-control" id="instructions" name="instructions"
+                  rows="2">{{ test.instructions if test and test.instructions else '' }}</textarea>
+        <div class="form-text">Plain text. The rich-text editor is for module content.</div>
+      </div>
+
+      {# `value` stays UTC so the field still works with no JavaScript, exactly
+         as it did before; the script overwrites it with the local equivalent
+         and converts back on submit. #}
+      <div class="col-6 col-lg-3">
+        <label for="opens_at" class="form-label">Opens</label>
+        <input type="datetime-local" class="form-control" id="opens_at" name="opens_at"
+               value="{{ test.opens_at.strftime("%Y-%m-%dT%H:%M") if test and test.opens_at else '' }}"
+               data-utc="{{ test.opens_at.isoformat() if test and test.opens_at else '' }}">
+      </div>
+
+      <div class="col-6 col-lg-3">
+        <label for="closes_at" class="form-label">Closes</label>
+        <input type="datetime-local" class="form-control" id="closes_at" name="closes_at"
+               value="{{ test.closes_at.strftime("%Y-%m-%dT%H:%M") if test and test.closes_at else '' }}"
+               data-utc="{{ test.closes_at.isoformat() if test and test.closes_at else '' }}">
+      </div>
+
+      <div class="col-12">
+        <div class="form-text">
+          Opens and closes are shown and entered in
+          <strong><span data-timezone>your own time zone</span></strong>.
+          They are stored in UTC, so everybody sees the same moment in theirs.
+        </div>
+      </div>
+
+      <div class="col-6 col-lg-2">
+        <label for="time_limit_minutes" class="form-label">Minutes</label>
+        <input type="number" class="form-control" id="time_limit_minutes"
+               name="time_limit_minutes" min="1"
+               value="{{ test.time_limit_minutes if test and test.time_limit_minutes else '' }}">
+      </div>
+
+      <div class="col-6 col-lg-2">
+        <label for="allowed_attempts" class="form-label">Attempts</label>
+        <input type="number" class="form-control" id="allowed_attempts"
+               name="allowed_attempts" min="1"
+               value="{{ test.allowed_attempts if test else 1 }}">
+      </div>
+
+      <div class="col-6 col-lg-2">
+        <label for="passing_score" class="form-label">Pass mark %</label>
+        <input type="number" class="form-control" id="passing_score" name="passing_score"
+               min="0" max="100"
+               value="{{ test.passing_score if test and test.passing_score is not none else '' }}">
+      </div>
+
+      {# One or the other, never both. Leaving both empty is the normal case:
+         the test is taken once and nobody is ever chased about it (FR-039). #}
+      <div class="col-12">
+        <h2 class="h6 mt-2">How often it must be done</h2>
+        <div class="form-text mb-2">
+          Fill in one of these, or neither. Both need a pass mark, because a
+          cycle that restarts on passing has to know what passing means.
+        </div>
+      </div>
+
+      <div class="col-6 col-lg-3">
+        <label for="retake_interval_days" class="form-label">Repeat every (days)</label>
+        <input type="number" class="form-control" id="retake_interval_days"
+               name="retake_interval_days" min="1"
+               value="{{ test.retake_interval_days if test and test.retake_interval_days else '' }}">
+        <div class="form-text">It recurs. Attempt limits do not apply.</div>
+      </div>
+
+      <div class="col-6 col-lg-3">
+        <label for="completion_deadline_days" class="form-label">Complete within (days)</label>
+        <input type="number" class="form-control" id="completion_deadline_days"
+               name="completion_deadline_days" min="1"
+               value="{{ test.completion_deadline_days if test and test.completion_deadline_days else '' }}">
+        <div class="form-text">One-off, counted from each person's registration.</div>
+      </div>
+
+      <div class="col-12">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" id="shuffle_questions"
+                 name="shuffle_questions" value="true"
+                 {% if test and test.shuffle_questions %}checked{% endif %}>
+          <label class="form-check-label" for="shuffle_questions">
+            Shuffle the questions, so each person sees a different order
+          </label>
+        </div>
+      </div>
+    </div>
+    </div></div>
+
+    <div class="panel mb-4"><div class="panel-body">
+      <h2 class="h6">Questions in this test</h2>
+      <div class="form-text mb-2">
+        Chosen from the module's bank. A question may sit in more than one test.
+      </div>
+
+      {% for question in bank %}
+        <label class="pick">
+          <input class="form-check-input me-2" type="checkbox" name="question_ids"
+                 value="{{ question.id }}"
+                 {% if chosen and question.id in chosen %}checked{% endif %}>
+          {{ question.prompt }}
+          <span class="small text-body-secondary">({{ question.points }}p)</span>
+        </label>
+      {% else %}
+        <p class="text-body-secondary mb-0">
+          The bank is empty.
+          <a href="/modules/{{ module.id }}/questions/new">Write a question first</a>.
+        </p>
+      {% endfor %}
+    </div></div>
+
+    <button type="submit" class="btn btn-primary">Save test</button>
+  </fieldset>
+
+  <a class="btn btn-link mt-3" href="/modules/{{ module.id }}/tests">Cancel</a>
+</form>
+{% endblock %}

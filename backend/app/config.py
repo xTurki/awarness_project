@@ -34,6 +34,29 @@ class Settings(BaseSettings):
     upload_max_mb: int = 5
     upload_dir: str = "/data/uploads"
 
+    # Scheduling. There is deliberately no overdue-reminder interval: an overdue
+    # test is announced once and never repeated. What persists is the state on
+    # the dashboard, not the messaging (FR-014).
+    due_soon_lead_days: int = 14
+    scheduler_hour_utc: int = 6
+
+    # Development only. Shows the sign-in code on the page that asks for it,
+    # so building does not stop when the mail provider refuses to send. Set it
+    # to false for production; see app/development.py for removing it entirely.
+    show_login_code: bool = False
+
+    # The study assistant. Empty key means the feature is simply absent: no
+    # panel is rendered and no route answers, so the platform runs unchanged
+    # without one.
+    gemini_api_key: str = ""
+    gemini_model: str = "gemini-3.1-flash-lite"
+    gemini_timeout_seconds: int = 25
+    #: Characters of page text sent as context. A page longer than this is cut,
+    #: and the trainee is told the answer covers the part they can see.
+    gemini_context_chars: int = 6000
+    #: Questions per person per rate-limit window.
+    ask_rate_limit: int = 20
+
     # Timings and limits
     code_ttl_minutes: int = 10
     session_hours: int = 12

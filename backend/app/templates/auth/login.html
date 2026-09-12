@@ -3,30 +3,45 @@
 
 {% block content %}
 <div class="form-narrow">
-  <h1 class="h4 mb-3">Sign in</h1>
-  <p class="text-body-secondary small">
-    We will email you a six-digit code to finish signing in. Every sign-in needs one.
-  </p>
 
-  <form method="post" action="/login" novalidate>
-    <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token }}">
+  {# The page says whose platform this is before it asks for anything. An
+     unbranded box asking for an email and a password, on a domain with no
+     history, is indistinguishable from one collecting them. #}
+  <div class="text-center mb-4">
+    <a class="app-brand justify-content-center" href="/">
+      <span class="app-mark">SA</span>
+      <span>Security Awareness</span>
+    </a>
+  </div>
 
-    <div class="mb-3">
-      <label for="email" class="form-label">Email address</label>
-      <input type="email" class="form-control" id="email" name="email"
-             value="{{ email|default('') }}" autocomplete="username" required autofocus>
+  <div class="card">
+    <div class="card-body p-4">
+      <h1 class="h4 mb-1">Sign in</h1>
+      <p class="text-body-secondary small">
+        We will email you a six-digit code to finish signing in. Every sign-in needs one.
+      </p>
+
+      <form method="post" action="/login" novalidate>
+        <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token }}">
+
+        <div class="mb-3">
+          <label for="email" class="form-label">Email address</label>
+          <input type="email" class="form-control" id="email" name="email"
+                 value="{{ email|default('') }}" autocomplete="username" required autofocus>
+        </div>
+
+        <div class="mb-4">
+          <label for="password" class="form-label">Password</label>
+          <input type="password" class="form-control" id="password" name="password"
+                 autocomplete="current-password" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100">Continue</button>
+      </form>
     </div>
+  </div>
 
-    <div class="mb-3">
-      <label for="password" class="form-label">Password</label>
-      <input type="password" class="form-control" id="password" name="password"
-             autocomplete="current-password" required>
-    </div>
-
-    <button type="submit" class="btn btn-primary w-100">Continue</button>
-  </form>
-
-  <p class="text-body-secondary small mt-3 mb-0">
+  <p class="text-body-secondary small mt-3 mb-0 text-center">
     Forgotten your password? An administrator can reset it, there is no self-service reset.
   </p>
 </div>

@@ -17,7 +17,7 @@ from app.rendering import render
 from app.schemas.module import ModuleRead, PageWrite
 from app.schemas.user import UserRead
 from app.security import csrf_protect
-from app.services import content_service, module_service
+from app.services import content_service, module_service, results_service
 
 router = APIRouter(tags=["content"])
 
@@ -242,6 +242,9 @@ def read_page(
             "module": ModuleRead.of(module),
             "page": page,
             "pages": pages,
+            # The test closes the module, so it sits at the end of the same
+            # list of pages rather than somewhere else entirely.
+            "final_test": results_service.current_test_row(db, module_id),
         },
     )
 

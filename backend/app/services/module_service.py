@@ -14,6 +14,7 @@ from sqlmodel import Session as DbSession
 from sqlmodel import select
 
 from app.database import utcnow
+from app import art
 from app.models.module import Module
 from app.models.registration import Registration
 from app.models.user import User
@@ -117,7 +118,11 @@ def _require_administrator(actor: User) -> None:
 
 def create(db: DbSession, actor: User, data: ModuleWrite) -> ModuleRead:
     _require_administrator(actor)
-    row = Module(title=data.title.strip(), description=data.description)
+    row = Module(
+        title=data.title.strip(),
+        description=data.description,
+        art=art.format(data.art_pattern, data.art_colour),
+    )
     db.add(row)
     db.commit()
     db.refresh(row)
@@ -129,6 +134,7 @@ def update(db: DbSession, actor: User, module_id: int, data: ModuleWrite) -> Mod
     row = get_for(db, module_id, actor)
     row.title = data.title.strip()
     row.description = data.description
+    row.art = art.format(data.art_pattern, data.art_colour)
     db.add(row)
     db.commit()
     db.refresh(row)

@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}{{ module.title }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <a class="crumb" href="/modules/{{ module.id }}">{{ module.title }}</a>
+  <h1 class="h3">
+    {% if subject.id == account.id %}Your attempts{% else %}{{ subject.full_name }}{% endif %}
+  </h1>
+</div>
+
+{% if rows %}
+  <p class="text-body-secondary small">
+    Every attempt, including at any test this module has since replaced. Only
+    attempts at the current test decide where somebody stands.
+  </p>
+
+  <div class="panel mb-4"><div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead>
+        <tr>
+          <th scope="col">Test</th>
+          <th scope="col">Attempt</th>
+          <th scope="col">Started</th>
+          <th scope="col">Score</th>
+          <th scope="col">Outcome</th>
+          <th scope="col"><span class="visually-hidden">Open</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+          <tr {% if row.at_replaced_test %}class="text-body-secondary"{% endif %}>
+            <td>
+              {{ row.test_title }}
+              {% if row.at_replaced_test %}
+                <span class="badge text-bg-light border">replaced test</span>
+              {% endif %}
+            </td>
+            <td>{{ row.attempt_number }}</td>
+            <td class="text-nowrap">
+              <time data-utc="{{ row.started_at.isoformat() }}"
+                    >{{ row.started_at.strftime("%Y-%m-%d %H:%M") }} UTC</time>
+            </td>
+            <td>
+              {% if row.score_percent is not none %}{{ row.score_percent }}%{% else %}&mdash;{% endif %}
+            </td>
+            <td>
+              {% if not row.is_submitted %}
+                <span class="badge text-bg-warning">In progress</span>
+              {% elif row.passed is none %}
+                <span class="badge text-bg-secondary">No pass mark</span>
+              {% elif row.passed %}
+                <span class="badge text-bg-success">Passed</span>
+              {% else %}
+                <span class="badge text-bg-danger">Failed</span>
+              {% endif %}
+            </td>
+            <td class="text-nowrap">
+              {# In progress leads back into the attempt, not to a review of
+                 something unfinished (FR-011). #}
+              <a class="btn btn-sm btn-outline-secondary" href="{{ row.link }}">
+                {{ "Resume" if not row.is_submitted else "Review" }}
+              </a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div></div>
+{% else %}
+  <p class="text-body-secondary">
+    {% if subject.id == account.id %}
+      Nothing yet.
+      {% if current %}
+        <a href="/modules/{{ module.id }}/tests/{{ current.id }}">Take the test</a>.
+      {% endif %}
+    {% else %}
+      {{ subject.full_name }} has not attempted anything on this module.
+    {% endif %}
+  </p>
+{% endif %}
+{% endblock %}

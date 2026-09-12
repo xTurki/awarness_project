@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}{{ test.title }}{% endblock %}
+
+{% block content %}
+{# One scrolling page. Every question at once, in the attempt's fixed order,
+   with submit at the end. There is no per-question navigation: a trainee checks
+   what they left blank by scrolling (spec Clarifications). #}
+
+<div class="panel mb-4 sticky-top" style="top: 4.25rem">
+  <div class="panel-head">
+    <div>
+      <h1 class="h5 mb-0">{{ test.title }}</h1>
+      <span class="small text-body-secondary fw-normal">Attempt {{ attempt.attempt_number }}</span>
+    </div>
+
+    {# Decoration. The server decides when time is up, and every write checks. #}
+    <div id="countdown" class="badge text-bg-secondary fs-6" data-remaining="{{ remaining }}"></div>
+  </div>
+</div>
+
+{% if test.instructions %}
+  <p class="text-body-secondary">{{ test.instructions }}</p>
+{% endif %}
+
+{% for question in questions %}
+  <div class="card mb-3">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-start gap-2">
+        <h2 class="h6 mb-2">{{ question.position }}. {{ question.prompt }}</h2>
+        <span class="small text-body-secondary text-nowrap">
+          {{ question.points }} point{{ "" if question.points == 1 else "s" }}
+        </span>
+      </div>
+
+      {# One form per question. Any change posts the whole group, so a
+         multi-answer question arrives complete rather than one box at a time. #}
+      <form hx-post="/attempts/{{ attempt.id }}/answer"
+            hx-trigger="change"
+            hx-target="#saved{{ question.id }}"
+            hx-swap="innerHTML">
+        <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token }}">
+        <input type="hidden" name="question_id" value="{{ question.id }}">
+
+        {% set chosen = answers.get(question.id, []) %}
+        {% for option in question.options %}
+          {# The label is the whole row, so the tap target is the row and not
+             the small control beside it (FR-038). #}
+          <label class="pick">
+            <input class="form-check-input me-2"
+                   type="{{ 'checkbox' if question.multiple else 'radio' }}"
+                   name="option_ids"
+                   value="{{ option.id }}"
+                   {% if option.id in chosen %}checked{% endif %}>
+            {{ option.text }}
+          </label>
+        {% endfor %}
+      </form>
+
+      <span id="saved{{ question.id }}" class="small"></span>
+    </div>
+  </div>
+{% else %}
+  <div class="panel"><div class="nothing">
+    <span class="nothing-mark">&#9675;</span>
+    <p>This test has no questions.</p>
+  </div></div>
+{% endfor %}
+
+<form method="post" action="/attempts/{{ attempt.id }}/submit">
+  <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token }}">
+  <button type="submit" class="btn btn-primary btn-lg w-100 mb-4">Submit this attempt</button>
+</form>
+
+<script>
+  (function () {
+    const box = document.getElementById('countdown');
+    let left = parseInt(box.dataset.remaining, 10);
+
+    function paint() {
+      if (left <= 0) { box.textContent = 'Time is up'; return; }
+      const m = Math.floor(left / 60), s = left % 60;
+      box.textContent = m + ':' + String(s).padStart(2, '0') + ' left';
+      left -= 1;
+      setTimeout(paint, 1000);
+    }
+    paint();
+  })();
+</script>
+{% endblock %}

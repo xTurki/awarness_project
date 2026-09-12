@@ -46,7 +46,8 @@ def test_password_then_code_reaches_the_dashboard(client, make_user, csrf, sent)
 
     landed = client.get("/")
     assert landed.status_code == 200
-    assert "Welcome" in landed.text
+    # A trainee lands on their results page, which is their dashboard (Phase 3).
+    assert "Your training" in landed.text
 
 
 def test_a_wrong_code_keeps_you_on_the_page(client, make_user, csrf, sent):

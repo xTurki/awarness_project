@@ -62,6 +62,9 @@ def roster(
 def register_people(
     module_id: int,
     user_ids: list[int] = Form(default=[]),
+    # Absent from the form unless an administrator is looking at it, so the
+    # default is what an instructor's roster always sends (FR-005).
+    role_in_module: str = Form("trainee"),
     db: Db = Depends(get_session),
     account=Depends(require_password_set),
 ):
@@ -72,11 +75,18 @@ def register_people(
     if user_ids:
         try:
             registration_service.register_many(
-                db, account, module_id, RosterAdd(user_ids=user_ids)
+                db,
+                account,
+                module_id,
+                RosterAdd(user_ids=user_ids, role_in_module=role_in_module),
             )
         except ValidationError:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, detail="Unknown role."
+            ) from None
+        except module_service.NotPermitted as exc:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail=str(exc)
             ) from None
 
     return RedirectResponse(

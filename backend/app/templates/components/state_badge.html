@@ -1,0 +1,22 @@
+{# Every state carries both a colour and its own word. The word is never
+   dropped in favour of the colour, and never replaced by an icon: a badge with
+   text needs no legend, no tooltip, and no explanation, and it survives being
+   printed or screenshotted in greyscale (research R5, FR-023).
+
+   Usage: {% with state = row.state %}{% include "components/state_badge.html" %}{% endwith %}
+#}
+{% if state == "passed" %}
+  <span class="badge text-bg-success">Passed</span>
+{% elif state == "failed" %}
+  <span class="badge text-bg-danger">Failed</span>
+{% elif state == "in progress" %}
+  <span class="badge text-bg-warning">In progress</span>
+{% elif state == "not started" %}
+  <span class="badge text-bg-secondary">Not started</span>
+{% elif state == "no test available" %}
+  <span class="badge text-bg-light border">No test</span>
+{% elif state == "due" %}
+  <span class="badge text-bg-warning">Due</span>
+{% elif state == "overdue" %}
+  <span class="badge text-bg-danger">Overdue</span>
+{% endif %}

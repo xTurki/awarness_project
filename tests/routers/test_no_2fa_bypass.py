@@ -36,9 +36,11 @@ def test_a_correct_password_alone_reaches_nothing(client, make_user, csrf, sent)
     )
 
     # A code was issued, but no session cookie was set and no page is reachable.
+    # `/modules` rather than `/`, because `/` is the landing page and answers a
+    # visitor by design. Everything behind it still refuses.
     assert client.cookies.get("session") is None
-    assert client.get("/").status_code == 303
-    assert client.get("/").headers["location"] == "/login"
+    assert client.get("/modules").status_code == 303
+    assert client.get("/modules").headers["location"] == "/login"
 
 
 def test_no_route_issues_a_session_without_the_code(client):

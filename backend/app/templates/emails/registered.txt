@@ -1,0 +1,5 @@
+Hello {full_name},
+
+You have been added to {module_title}.
+
+Sign in to the training platform to see what it involves.

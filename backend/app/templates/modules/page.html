@@ -2,22 +2,51 @@
 {% block title %}{{ page.title }}{% endblock %}
 
 {% block content %}
-<div class="row">
+<div class="row g-4">
   <div class="col-12 col-lg-3">
     {% include "components/module_nav.html" %}
   </div>
 
   <div class="col-12 col-lg-9">
-    <nav class="small mb-2">
-      <a href="/modules/{{ module.id }}" class="text-decoration-none">{{ module.title }}</a>
-    </nav>
+    <div class="page-head">
+      <a class="crumb" href="/modules/{{ module.id }}">{{ module.title }}</a>
+      <h1 class="h3">{{ page.title }}</h1>
+    </div>
 
-    <h1 class="h4 mb-3">{{ page.title }}</h1>
+    <div class="panel"><div class="panel-body">
+      {# The stored column is already sanitised, which is why this is rendered
+         directly and carries no filter of its own. Adding one here would suggest
+         the column might hold something unsafe, and it cannot (research R2). #}
+      <article class="content-body rich-text">{{ page.body|safe }}</article>
+    </div></div>
 
-    {# The stored column is already sanitised, which is why this is rendered
-       directly and carries no filter of its own. Adding one here would suggest
-       the column might hold something unsafe, and it cannot (research R2). #}
-    <article class="content-body">{{ page.body|safe }}</article>
+    {# Reading forward has to arrive somewhere. From any page but the last, that
+       is the next page; from the last, it is the test that closes the module. #}
+    {# By id, not by object: the page being read and the one in the sidebar list
+       are built by different calls, so comparing the models themselves finds no
+       match and every page silently becomes the last one. #}
+    {% set ids = pages | map(attribute="id") | list %}
+    {% set index = ids.index(page.id) if page.id in ids else -1 %}
+    <div class="d-flex flex-wrap gap-2 justify-content-between mt-4">
+      {% if index > 0 %}
+        <a class="btn btn-outline-secondary"
+           href="/modules/{{ module.id }}/pages/{{ pages[index - 1].id }}">Previous</a>
+      {% else %}
+        <span></span>
+      {% endif %}
+
+      {% if index >= 0 and index < pages|length - 1 %}
+        <a class="btn btn-primary"
+           href="/modules/{{ module.id }}/pages/{{ pages[index + 1].id }}">Next</a>
+      {% elif final_test %}
+        <a class="btn btn-primary" href="/modules/{{ module.id }}/tests/{{ final_test.id }}">
+          Finish with the test
+        </a>
+      {% endif %}
+    </div>
+
+    {# Under the material, because the question is about what is above it. #}
+    {% with thread = [] %}{% include "components/ask_panel.html" %}{% endwith %}
   </div>
 </div>
 

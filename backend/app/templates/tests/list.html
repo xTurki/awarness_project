@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Tests: {{ module.title }}{% endblock %}
+
+{% block content %}
+<div class="page-head d-flex flex-wrap gap-3 justify-content-between align-items-center">
+  <div>
+    <a class="crumb" href="/modules/{{ module.id }}">{{ module.title }}</a>
+    <h1 class="h3 m-0">Tests</h1>
+  </div>
+  {% if can_write %}
+    <div class="d-flex gap-2">
+      <a class="btn btn-outline-secondary btn-sm" href="/modules/{{ module.id }}/questions">Question bank</a>
+      <a class="btn btn-primary btn-sm" href="/modules/{{ module.id }}/tests/new">New test</a>
+    </div>
+  {% endif %}
+</div>
+
+<div class="row g-3">
+  {% for test in tests %}
+    <div class="col-12 col-lg-6">
+      <div class="card h-100">
+        <div class="card-body">
+          <h2 class="h6 card-title">
+            <a href="/modules/{{ module.id }}/tests/{{ test.id }}"
+               class="stretched-link text-decoration-none">{{ test.title }}</a>
+          </h2>
+
+          <div class="d-flex flex-wrap gap-2 small">
+            {% if can_write %}
+              {% if test.is_published %}
+                <span class="badge text-bg-success">Published</span>
+              {% else %}
+                <span class="badge text-bg-secondary">Unpublished</span>
+              {% endif %}
+              {% if test.is_frozen %}
+                <span class="badge text-bg-warning">Attempted, frozen</span>
+              {% endif %}
+            {% endif %}
+            <span class="text-body-secondary">{{ test.question_count }} questions</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% else %}
+    <div class="col-12">
+      <p class="text-body-secondary">
+        {% if can_write %}No tests yet.{% else %}Nothing to take here yet.{% endif %}
+      </p>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}
