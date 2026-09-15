@@ -50,10 +50,6 @@ class AttemptNotFound(Exception):
     pass
 
 
-class NotYours(Exception):
-    """The attempt belongs to somebody else."""
-
-
 class OutsideWindow(Exception):
     pass
 
@@ -457,25 +453,6 @@ def history_for(db: DbSession, actor: User, test_id: int) -> list[AttemptRead]:
         .order_by(Attempt.started_at.desc(), Attempt.id.desc())
     ).all()
     return [_read(expire_if_due(db, row)) for row in rows]
-
-
-def most_recent_submitted(db: DbSession, test_id: int, user_id: int) -> Attempt | None:
-    """The attempt that represents a person: the most recent, not the best.
-
-    Phases 3 and 4 both read this rule, so it lives here once (FR-029).
-    """
-    return db.exec(
-        select(Attempt)
-        .where(
-            Attempt.test_id == test_id,
-            Attempt.user_id == user_id,
-            Attempt.is_submitted == True,  # noqa: E712
-        )
-        # submitted_at is a DATETIME, so it has second precision. Without the
-        # id as a tiebreak, two attempts submitted in the same second order
-        # arbitrarily and "most recent" quietly returns the wrong one.
-        .order_by(Attempt.submitted_at.desc(), Attempt.id.desc())
-    ).first()
 
 
 # --------------------------------------------------------- the instructor's view

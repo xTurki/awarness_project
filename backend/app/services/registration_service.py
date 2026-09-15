@@ -126,12 +126,3 @@ def remove(db: DbSession, actor: User, module_id: int, user_id: int) -> None:
         db.delete(row)
         db.commit()
 
-
-def modules_for_trainee(db: DbSession, user: User) -> list[int]:
-    """Module ids this person holds a trainee registration on."""
-    rows = db.exec(
-        select(Registration).where(
-            Registration.user_id == user.id, Registration.role_in_module == "trainee"
-        )
-    ).all()
-    return [row.module_id for row in rows]
