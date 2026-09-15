@@ -23,21 +23,23 @@ class ModuleRead(BaseModel):
     title: str
     description: str | None
     is_published: bool
-    #: Resolved, never raw: a module with nothing chosen still arrives with a
-    #: pattern and a colour, so no template has to decide what to do about null.
-    art_pattern: str = art.PATTERNS[0]
+    #: The colour this module wears: the one picked for it, or one derived
+    #: from its id. Resolved here rather than in a template, so no page has to
+    #: decide what a module with nothing chosen looks like.
     art_colour: str = art.COLOURS[0]
+    #: The stored file name when a picture was uploaded for this module, and
+    #: `None` when it wears its colour alone.
+    art_image: str | None = None
 
     @classmethod
     def of(cls, row) -> "ModuleRead":
-        pattern, colour = art.parse(getattr(row, "art", None), row.id)
         return cls(
             id=row.id,
             title=row.title,
             description=row.description,
             is_published=row.is_published,
-            art_pattern=pattern,
-            art_colour=colour,
+            art_colour=art.parse_colour(getattr(row, "art", None), row.id),
+            art_image=art.uploaded(getattr(row, "art", None)),
         )
 
 
@@ -98,8 +100,11 @@ class ImageRead(BaseModel):
 class ModuleWrite(BaseModel):
     title: str
     description: str | None = None
-    art_pattern: str = art.PATTERNS[0]
-    art_colour: str = art.COLOURS[0]
+    #: Absent rather than defaulted, so a save can leave the cover alone. The
+    #: form puts the colour picker away while a module wears an uploaded
+    #: picture, and without this a title change would then quietly throw that
+    #: picture away and paint a colour over it.
+    art_colour: str | None = None
 
     @field_validator("title")
     @classmethod
@@ -108,17 +113,10 @@ class ModuleWrite(BaseModel):
             raise ValueError("A module needs a title.")
         return value
 
-    @field_validator("art_pattern")
-    @classmethod
-    def _known_pattern(cls, value: str) -> str:
-        if value not in art.PATTERNS:
-            raise ValueError(f"Choose one of: {', '.join(art.PATTERNS)}.")
-        return value
-
     @field_validator("art_colour")
     @classmethod
-    def _known_colour(cls, value: str) -> str:
-        if value not in art.COLOURS:
+    def _known_colour(cls, value: str | None) -> str | None:
+        if value is not None and value not in art.COLOURS:
             raise ValueError(f"Choose one of: {', '.join(art.COLOURS)}.")
         return value
 

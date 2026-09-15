@@ -10,7 +10,11 @@
 
   <div class="card"><div class="card-body p-4">
 
-  <form method="post" action="{{ '/modules/' ~ module.id if module else '/modules' }}" novalidate>
+  {# multipart because the cover picture is a field of this form. The cover is
+     part of the module, so it is saved by the same button as the title: two
+     save buttons on one page is two ways to half-save it. #}
+  <form method="post" action="{{ '/modules/' ~ module.id if module else '/modules' }}"
+        enctype="multipart/form-data" novalidate>
     <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token }}">
 
     <div class="mb-3">
@@ -26,48 +30,72 @@
                 rows="4">{{ description|default('') }}</textarea>
     </div>
 
-    {# The cover. Shown as the patterns themselves rather than as a list of
-       words, because "pentagons" in a dropdown tells you nothing about what
-       the card will look like.
+    {# The colour of the module's cover band. Shown as the colours themselves
+       rather than as a list of words, because "violet" in a dropdown tells you
+       nothing about what the card will look like.
 
-       The choices are built from the same two lists the service validates
-       against (app/art.py), so the form cannot offer something that would then
-       be refused. #}
-    <fieldset class="mb-4">
-      <legend class="form-label">Cover pattern</legend>
-      <div class="d-flex flex-wrap gap-2 mb-3">
-        {% set chosen_pattern = art_pattern|default(art_patterns[0]) %}
-        {% set chosen_colour = art_colour|default(art_colours[0]) %}
-        {% for name in art_patterns %}
-          <label class="art-choice" style="width: 5rem"
-                 title="{{ art_descriptions[name] }}">
-            <input type="radio" name="art_pattern" value="{{ name }}"
-                   {% if name == chosen_pattern %}checked{% endif %}>
-            {% with art_preview = name ~ "." ~ chosen_colour %}
-              {% include "components/module_art.html" %}
-            {% endwith %}
-            <span class="art-name">{{ art_labels[name] }}</span>
-          </label>
-        {% endfor %}
-      </div>
-
+       Put away, fields and all, while a picture is in use: a picture covers
+       the band entirely, so the colour under it would be a choice with no
+       visible effect. The absence of the field is also what tells the service
+       to leave the cover alone, so editing a title cannot paint over the
+       picture. #}
+    <fieldset class="mb-4"{% if art_image %} hidden disabled{% endif %}>
       <legend class="form-label">Cover colour</legend>
+
       <div class="d-flex flex-wrap gap-2">
+        {% set chosen = art_colour|default(art_colours[0]) %}
         {% for name in art_colours %}
-          <label class="art-choice" style="width: 4.5rem">
+          <label class="colour-choice">
             <input type="radio" name="art_colour" value="{{ name }}"
-                   {% if name == chosen_colour %}checked{% endif %}>
-            {% with art_preview = chosen_pattern ~ "." ~ name %}
-              {% include "components/module_art.html" %}
-            {% endwith %}
-            <span class="art-name">{{ name }}</span>
+                   {% if name == chosen %}checked{% endif %}>
+            <span class="colour-swatch module-art-{{ name }}"></span>
+            <span class="colour-name">{{ name }}</span>
           </label>
         {% endfor %}
       </div>
 
       <div class="form-text mt-2">
-        {{ art_descriptions[chosen_pattern] }}. Pick one of each, then save to
-        see them together on the module page.
+        The band across the top of this module's card. Leave it and one is
+        chosen from the module's number.
+      </div>
+    </fieldset>
+
+    {# The cover picture, in this same form and saved by this same button.
+       Available on a new module too: the file is read here and stored once the
+       module exists, so there is nothing to come back and do afterwards. #}
+    <fieldset class="mb-4">
+      <legend class="form-label">Cover picture</legend>
+
+      {% if art_image %}
+        <div class="mb-3" style="max-width: 22rem">
+          {% with art_tall = true %}
+            {% include "components/module_art.html" %}
+          {% endwith %}
+        </div>
+
+        <div class="form-check mb-3">
+          <input class="form-check-input" type="checkbox" value="yes"
+                 id="remove_cover" name="remove_cover">
+          <label class="form-check-label" for="remove_cover">
+            Remove this picture and go back to a plain cover
+          </label>
+        </div>
+
+        <label for="cover" class="form-label">Replace it</label>
+      {% else %}
+        <label for="cover" class="form-label visually-hidden">
+          Choose a picture
+        </label>
+      {% endif %}
+
+      <input type="file" class="form-control" id="cover" name="cover"
+             accept="{{ upload_extensions|join(',') }}">
+
+      <div class="form-text mt-2">
+        Optional. Up to {{ upload_max_mb }}MB, as
+        {{ upload_extensions|join(', ') }}. Without one the module wears a
+        plain colour. A picture is cropped from the centre to fit, so put what
+        matters in the middle.
       </div>
     </fieldset>
 

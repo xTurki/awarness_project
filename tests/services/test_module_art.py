@@ -1,9 +1,13 @@
-"""The cover vocabulary: six patterns, eight colours, one nullable column.
+"""The cover vocabulary: eight colours, and a file name when one was uploaded.
 
-The important property is the fallback. `art` is nullable and nothing was
-backfilled when the column was added to a live database, so every module that
-existed before this feature must still render a cover. If `parse` ever returns
-None, those modules get an empty box.
+Nothing is drawn any more. What is left is a colour derived from the module id
+and, when an administrator uploaded one, the name of a file.
+
+Two properties carry this module. The colour is **total**: every id has one, so
+no module can reach a template without a cover. And `uploaded` is **strict**:
+the column is the only thing standing between a stored value and a path on
+disk, so anything that is not a name this platform generated resolves to no
+file at all.
 """
 
 from __future__ import annotations
@@ -16,24 +20,11 @@ from app import art
 # ------------------------------------------------------------- the vocabulary
 
 
-def test_four_of_the_six_are_najdi():
-    """Hexagons, pentagons, triangles and squares were replaced. Diamonds and
-    circles stayed, because they were not asked to go."""
-    assert art.PATTERNS == (
-        "shurfat", "mushabak", "zigzag", "uqud", "diamonds", "circles",
-    )
-
-    for retired in ("hexagons", "pentagons", "triangles", "squares", "darraj"):
-        assert retired not in art.PATTERNS
-
-
-def test_every_pattern_has_a_name_and_a_line_about_it():
-    """A key alone does not tell somebody what a tile looks like, and a picker
-    built from a key with no label shows raw storage to the person using it."""
-    assert set(art.LABELS) == set(art.PATTERNS)
-    assert set(art.DESCRIPTIONS) == set(art.PATTERNS)
-    assert all(art.LABELS[name].strip() for name in art.PATTERNS)
-    assert all(art.DESCRIPTIONS[name].strip() for name in art.PATTERNS)
+def test_nothing_is_drawn_any_more():
+    """The six Najdi patterns went, then the five cybersecurity covers went
+    with them. A module wears a picture or a colour, and nothing is drawn."""
+    for gone in ("PATTERNS", "TILED", "LABELS", "DESCRIPTIONS", "derive"):
+        assert not hasattr(art, gone), f"art.{gone} should have been removed"
 
 
 def test_there_are_eight_colours():
@@ -41,87 +32,129 @@ def test_there_are_eight_colours():
     assert len(set(art.COLOURS)) == 8
 
 
-def test_that_is_forty_eight_covers():
-    assert len(art.PATTERNS) * len(art.COLOURS) == 48
+# ---------------------------------------------------------------- the colour
 
 
-# ------------------------------------------------------------------ storing
+def test_every_module_has_a_colour():
+    """Total, so no template ever has to decide what an absent cover means."""
+    for module_id in range(0, 50):
+        assert art.colour_for(module_id) in art.COLOURS
 
 
-def test_a_choice_round_trips():
-    stored = art.format("shurfat", "teal")
-
-    assert stored == "shurfat.teal"
-    assert art.parse(stored, module_id=1) == ("shurfat", "teal")
+def test_a_missing_id_still_gives_a_colour():
+    assert art.colour_for(None) in art.COLOURS
+    assert art.colour_for(0) in art.COLOURS
 
 
-@pytest.mark.parametrize("pattern", art.PATTERNS)
-@pytest.mark.parametrize("colour", art.COLOURS)
-def test_every_combination_survives_the_round_trip(pattern, colour):
-    assert art.parse(art.format(pattern, colour), module_id=99) == (pattern, colour)
+def test_the_colour_is_stable_for_a_given_module():
+    """It is derived, not stored, so it must not wander between two reads of
+    the same row."""
+    assert art.colour_for(7) == art.colour_for(7)
 
 
-def test_an_unknown_pattern_is_refused():
-    with pytest.raises(art.InvalidArt):
-        art.format("octagons", "teal")
+def test_neighbouring_modules_differ():
+    """A list of modules that were all one colour would be no better than a
+    list of modules with no colour at all."""
+    assert len({art.colour_for(n) for n in range(1, 9)}) == 8
 
 
-def test_a_retired_pattern_is_refused_like_any_other_unknown(): 
-    """Nothing stored one, because the only module on the platform had chosen
-    nothing, but a value left over from the old vocabulary must not be written
-    back as if it were still valid."""
-    for retired in ("hexagons", "pentagons", "triangles", "squares", "darraj"):
+# ------------------------------------------------------------ a picked colour
+
+
+def test_a_picked_colour_is_the_one_worn():
+    """It beats the id, which is the whole point of picking."""
+    for name in art.COLOURS:
+        assert art.parse_colour(name, module_id=3) == name
+
+
+def test_nothing_picked_falls_back_to_the_id():
+    assert art.parse_colour(None, module_id=3) == art.colour_for(3)
+    assert art.parse_colour("", module_id=3) == art.colour_for(3)
+
+
+def test_a_colour_outside_the_palette_falls_back_rather_than_breaking():
+    """A crafted value reaches this column the same way a real one does."""
+    for bad in ("puce", "#ff0000", "red", "TEAL", "teal.green"):
+        assert art.parse_colour(bad, module_id=3) == art.colour_for(3)
+
+
+def test_an_uploaded_cover_falls_back_for_its_colour():
+    """The colour under a picture is nobody's choice, because the picture
+    covers it. Removing the picture leaves the id's colour behind."""
+    stored = art.format_upload("0123456789abcdef0123456789abcdef.png")
+
+    assert art.parse_colour(stored, module_id=3) == art.colour_for(3)
+
+
+def test_a_colour_round_trips():
+    assert art.parse_colour(art.format_colour("teal"), module_id=9) == "teal"
+
+
+def test_formatting_refuses_a_colour_outside_the_palette():
+    for bad in ("puce", "", "#ff0000"):
         with pytest.raises(art.InvalidArt):
-            art.format(retired, "teal")
+            art.format_colour(bad)
 
 
-def test_a_retired_pattern_already_stored_falls_back_gracefully():
-    """The same path as any unrecognised value: a cover from the id, never an
-    empty box."""
-    pattern, colour = art.parse("hexagons.teal", module_id=2)
-
-    assert pattern in art.PATTERNS
-    assert colour in art.COLOURS
+def test_a_stored_colour_is_not_an_upload():
+    """Both live in one column, so each has to say no about the other."""
+    for name in art.COLOURS:
+        assert art.uploaded(name) is None
 
 
-def test_an_unknown_colour_is_refused():
-    with pytest.raises(art.InvalidArt):
-        art.format("shurfat", "puce")
+# ---------------------------------------------------------- uploaded covers
 
 
-# ----------------------------------------------- the fallback that matters
+def test_no_value_means_no_picture():
+    assert art.uploaded(None) is None
+    assert art.uploaded("") is None
 
 
-def test_a_module_with_nothing_chosen_still_gets_a_cover():
-    """Every module that existed before the column did. Nothing was backfilled,
-    so this is what stops them rendering an empty box."""
-    pattern, colour = art.parse(None, module_id=1)
-
-    assert pattern in art.PATTERNS
-    assert colour in art.COLOURS
-
-
-def test_a_meaningless_stored_value_falls_back_rather_than_breaking():
-    for rubbish in ("", "nonsense", "hexagons", "hexagons.puce", "octagons.teal", "..."):
-        pattern, colour = art.parse(rubbish, module_id=3)
-        assert pattern in art.PATTERNS
-        assert colour in art.COLOURS
+def test_a_value_left_over_from_the_drawn_covers_means_no_picture():
+    """Rows still hold `uqud.green` and `shield.teal` from when covers were
+    drawn. Neither is an upload, so both mean the module wears its colour, and
+    that is why removing the patterns needed no migration."""
+    for stale in ("uqud.green", "shield.teal", "firewall.amber", "diamonds.sky"):
+        assert art.uploaded(stale) is None
 
 
-def test_the_fallback_is_stable_for_a_given_module():
-    assert art.parse(None, module_id=7) == art.parse(None, module_id=7)
+def test_an_upload_value_gives_back_the_file_name():
+    name = "0123456789abcdef0123456789abcdef.png"
+    assert art.uploaded(f"upload.{name}") == name
 
 
-def test_neighbouring_modules_fall_back_to_different_covers():
-    covers = {art.parse(None, module_id=n) for n in range(1, 9)}
+def test_a_name_the_platform_did_not_generate_is_refused():
+    """The column is the only thing between this value and a path on disk."""
+    for bad in (
+        "upload.../../etc/passwd",
+        "upload./etc/passwd",
+        "upload.not-a-uuid.png",
+        "upload.0123456789abcdef0123456789abcdef",          # no extension
+        "upload.0123456789ABCDEF0123456789ABCDEF.png",      # not lower case
+        "upload.",
+        "upload",
+    ):
+        assert art.uploaded(bad) is None, bad
 
-    # Six patterns and eight colours are coprime in neither direction, but the
-    # differing lengths are what stop a pattern always wearing one colour.
-    assert len(covers) == 8
+
+# --------------------------------------------------------------- formatting
 
 
-def test_a_choice_always_beats_the_fallback():
-    derived = art.derive(4)
-    other = ("uqud", "rose") if derived != ("uqud", "rose") else ("circles", "sky")
+def test_a_stored_name_round_trips():
+    name = "0123456789abcdef0123456789abcdef.jpg"
 
-    assert art.parse(art.format(*other), module_id=4) == other
+    assert art.format_upload(name) == f"upload.{name}"
+    assert art.uploaded(art.format_upload(name)) == name
+
+
+def test_formatting_refuses_the_shapes_reading_refuses():
+    for bad in ("../x.png", "x.png", "", "0123456789abcdef0123456789abcdef"):
+        with pytest.raises(art.InvalidArt):
+            art.format_upload(bad)
+
+
+def test_the_stored_value_fits_the_column():
+    """`module.art` is VARCHAR(64), and the longest value this can produce is
+    the word, a separator, 32 hex characters and an extension."""
+    longest = art.format_upload("0123456789abcdef0123456789abcdef.jpeg")
+    assert len(longest) <= 64

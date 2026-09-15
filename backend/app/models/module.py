@@ -31,10 +31,16 @@ class Module(SQLModel, table=True):
 
     is_published: bool = Field(default=False, nullable=False)
 
-    # The cover: a pattern and a colour, as "hexagons.teal". Nullable, and a
-    # null draws one derived from the id, so this column was added to a live
-    # database without backfilling a row (app/art.py).
-    art: str | None = Field(default=None, max_length=32, nullable=True)
+    # The cover: either a pattern and a colour as "shield.teal", or an uploaded
+    # picture as "upload.9f2c....png". Nullable, and a null draws one derived
+    # from the id, so this column was added to a live database without
+    # backfilling a row (app/art.py).
+    #
+    # 64 rather than 32: a stored image name is a 32-character uuid plus its
+    # extension, which does not fit the width a pattern name needed.
+    # `create_all()` never alters an existing column, so widening a database
+    # that already has this table is one statement by hand (see README).
+    art: str | None = Field(default=None, max_length=64, nullable=True)
 
     created_at: datetime = Field(default_factory=utcnow, nullable=False)
 

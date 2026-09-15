@@ -15,6 +15,7 @@ from fastapi import Request
 from fastapi.templating import Jinja2Templates
 
 from app import art
+from app.config import settings
 from app.services import tutor_service
 from app.security import CSRF_FIELD, is_secure_request, issue_csrf_token, set_csrf_cookie
 
@@ -62,12 +63,14 @@ def render(
         # Stamped onto every asset URL, so a stylesheet change is never served
         # stale by a cache in front of the platform.
         "asset_version": ASSET_VERSION,
-        # The cover vocabulary. Constant, so the form builds its choices from
-        # the same lists the service validates against, and neither can drift.
-        "art_patterns": art.PATTERNS,
+        # The colours a module cover may wear. Constant, so the picker
+        # offers exactly what the service validates against.
         "art_colours": art.COLOURS,
-        "art_labels": art.LABELS,
-        "art_descriptions": art.DESCRIPTIONS,
+        # What an upload form may promise. Taken from the one setting nginx
+        # derives its own limit from, so the page cannot name a size the proxy
+        # would refuse.
+        "upload_max_mb": settings.upload_max_mb,
+        "upload_extensions": settings.allowed_image_extensions,
         # With no API key the panel is never rendered and the route never
         # answers, so the platform runs exactly as it did before the assistant
         # existed.

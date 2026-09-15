@@ -6,11 +6,19 @@ removal is a database operation, documented in the README (FR-010).
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Form, HTTPException, Request, status
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    Request,
+    UploadFile,
+    status,
+)
 from fastapi.responses import RedirectResponse
 from pydantic import ValidationError
 
-from app import art
 from app.database import Db, get_session
 from app.dependencies import require_password_set, require_role
 from app.rendering import render
@@ -47,24 +55,37 @@ def new_form(request: Request, account=Depends(require_role("administrator"))):
     return render(request, "modules/form.html", {"account": UserRead.of(account)})
 
 
+async def _picture(file: UploadFile | str | None) -> bytes | None:
+    """The bytes of a chosen file, or `None` when the field was left empty.
+
+    A file input nobody touched still posts a part, and what that part looks
+    like depends on the client. A browser sends it with an empty filename,
+    which arrives here as an `UploadFile` with nothing in it. Other clients
+    leave the filename out altogether, and then the part is not a file at all
+    but an empty string.
+
+    Both mean the same thing, and both have to mean it, or every save that did
+    not attach a picture is refused as malformed.
+    """
+    if file is None or isinstance(file, str):
+        return None
+    if not (file.filename or "").strip():
+        return None
+    content = await file.read()
+    return content or None
+
+
 @router.post("/modules", dependencies=[Depends(csrf_protect)])
-def create(
+async def create(
     request: Request,
     title: str = Form(...),
     description: str = Form(""),
-    art_pattern: str = Form(art.PATTERNS[0]),
-    art_colour: str = Form(art.COLOURS[0]),
+    art_colour: str | None = Form(None),
+    cover: UploadFile | str | None = File(None),
     db: Db = Depends(get_session),
     account=Depends(require_role("administrator")),
 ):
-    try:
-        data = ModuleWrite(
-            title=title,
-            description=description or None,
-            art_pattern=art_pattern,
-            art_colour=art_colour,
-        )
-    except ValidationError:
+    def refused(message: str):
         return render(
             request,
             "modules/form.html",
@@ -73,15 +94,42 @@ def create(
                 "title": title,
                 "description": description,
                 # Carried back, so a missing title does not also discard the
-                # cover they picked.
-                "art_pattern": art_pattern,
+                # colour they picked.
                 "art_colour": art_colour,
-                "message": "A module needs a title.",
+                "message": message,
             },
             status.HTTP_400_BAD_REQUEST,
         )
 
+    try:
+        data = ModuleWrite(
+            title=title,
+            description=description or None,
+            art_colour=art_colour,
+        )
+    except ValidationError:
+        return refused("A module needs a title.")
+
+    # Checked before the module is made, so a refused picture does not leave a
+    # module behind that nobody asked for.
+    picture = await _picture(cover)
+    if picture is not None:
+        try:
+            content_service.validate_upload(picture, cover.filename or "")
+        except content_service.UploadRejected as exc:
+            return refused(str(exc))
+
     created = module_service.create(db, account, data)
+
+    if picture is not None:
+        content_service.set_cover(
+            db,
+            account,
+            created.id,
+            picture,
+            cover.filename or "",
+        )
+
     return RedirectResponse(f"/modules/{created.id}", status_code=status.HTTP_303_SEE_OTHER)
 
 
@@ -134,23 +182,55 @@ def edit_form(
             "module": ModuleRead.of(module),
             "title": module.title,
             "description": module.description,
-            "art_pattern": ModuleRead.of(module).art_pattern,
             "art_colour": ModuleRead.of(module).art_colour,
+            "art_image": ModuleRead.of(module).art_image,
         },
     )
 
 
 @router.post("/modules/{module_id}", dependencies=[Depends(csrf_protect)])
-def update(
+async def update(
     request: Request,
     module_id: int,
     title: str = Form(...),
     description: str = Form(""),
-    art_pattern: str = Form(art.PATTERNS[0]),
-    art_colour: str = Form(art.COLOURS[0]),
+    art_colour: str | None = Form(None),
+    cover: UploadFile | str | None = File(None),
+    remove_cover: str | None = Form(None),
     db: Db = Depends(get_session),
     account=Depends(require_role("administrator")),
 ):
+    """One form and one Save. The picture is part of the module, so it is saved
+    with the rest of it rather than by a button of its own."""
+    try:
+        current = ModuleRead.of(module_service.get_for(db, module_id, account))
+    except module_service.NotFound:
+        raise _not_found() from None
+
+    def refused(message: str):
+        return render(
+            request,
+            "modules/form.html",
+            {
+                "account": UserRead.of(account),
+                "module": current,
+                "title": title,
+                "description": description,
+                # Carried back, so a missing title does not also discard the
+                # cover they picked.
+                "art_image": current.art_image,
+                "message": message,
+            },
+            status.HTTP_400_BAD_REQUEST,
+        )
+
+    picture = await _picture(cover)
+    if picture is not None:
+        try:
+            content_service.validate_upload(picture, cover.filename or "")
+        except content_service.UploadRejected as exc:
+            return refused(str(exc))
+
     try:
         module_service.update(
             db,
@@ -159,28 +239,27 @@ def update(
             ModuleWrite(
                 title=title,
                 description=description or None,
-                art_pattern=art_pattern,
                 art_colour=art_colour,
             ),
         )
     except ValidationError:
-        return render(
-            request,
-            "modules/form.html",
-            {
-                "account": UserRead.of(account),
-                "title": title,
-                "description": description,
-                # Carried back, so a missing title does not also discard the
-                # cover they picked.
-                "art_pattern": art_pattern,
-                "art_colour": art_colour,
-                "message": "A module needs a title.",
-            },
-            status.HTTP_400_BAD_REQUEST,
-        )
+        return refused("A module needs a title.")
     except module_service.NotFound:
         raise _not_found() from None
+
+    # After the rest of the save, so a rejected title does not take the
+    # picture with it. A new file replaces whatever was there; ticking remove
+    # takes the picture off and lets the patterns come back.
+    if picture is not None:
+        content_service.set_cover(
+            db,
+            account,
+            module_id,
+            picture,
+            cover.filename or "",
+        )
+    elif remove_cover:
+        content_service.clear_cover(db, account, module_id)
 
     return RedirectResponse(f"/modules/{module_id}", status_code=status.HTTP_303_SEE_OTHER)
 
