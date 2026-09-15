@@ -22,7 +22,7 @@ ACCOUNTS = [
     # The administrator uses the real sending address, so a fresh installation can
     # be signed into with a code that actually arrives. Everyone else is a placeholder.
     ("computingproject6@gmail.com", "admin", "administrator"),
-    ("ins@e.com", "Iris Instructor", "instructor"),
+    ("ins@e.com", "Instructor", "instructor"),
     ("1@e.com", "Trainee One", "trainee"),
     ("2@e.com", "Trainee Two", "trainee"),
     ("3@e.com", "Trainee Three", "trainee"),

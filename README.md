@@ -6,7 +6,9 @@ organisation, tracking who has completed it, and chasing the people who have not
 All five phases are built: **Phase 0** identity, access and the application
 shell, **Phase 1** modules, content and registration, **Phase 2** tests,
 **Phase 3** results and progress, **Phase 4** scheduling and notifications. The
-specifications for all of them live under [`specs/`](specs/).
+platform was specified before it was built, phase by phase; that history is not
+part of this checkout but is in git and can be brought back with
+`git restore specs/ .claude/ .specify/` if it is ever wanted again.
 
 ## What runs
 
@@ -47,8 +49,7 @@ That leaves about 3 MB. Of it, this is what the platform actually needs:
 | `nginx/` | **required**, the proxy config and its Dockerfile |
 | `.env` | **required**, every password and token |
 | `tests/`, `pytest.ini` | only to run the test suite on the server |
-| `specs/`, `docs/`, `README.md`, `lms-project-spec.md` | documentation |
-| `.claude/`, `.specify/` | nothing at runtime |
+| `docs/`, `README.md`, `lms-project-spec.md` | documentation |
 
 **Do not forget `.env`.** It is git-ignored on purpose because it holds the
 database passwords, the mail App Password, the Cloudflare tunnel token and the
@@ -391,8 +392,10 @@ a forgotten password there is no route back, so keep two.
 - **No application logging** beyond whatever the server prints.
 - **English, left to right, only.**
 
-Each of these is a recorded decision, not an oversight. The reasoning is in
-[`specs/001-platform-foundation/spec.md`](specs/001-platform-foundation/spec.md).
+Each of these is a recorded decision, not an oversight. The reasoning was
+written down phase by phase during the spec-driven build; that record is not in
+this checkout, but git still has it under `specs/` and it comes back with
+`git restore specs/`.
 
 # Layout
 
@@ -407,6 +410,5 @@ backend/app/
 ├── templates/         Jinja2, with Bootstrap and HTMX vendored under static/
 └── development.py     the sign-in code display; meant to be deleted
 tests/                 pytest, against MySQL
-specs/                 the specification, plan and tasks for all five phases
 docs/                  the design system, the analysis report, the testing guide
 ```
