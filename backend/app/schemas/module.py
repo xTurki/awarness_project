@@ -133,12 +133,6 @@ class PageWrite(BaseModel):
         return value
 
 
-class PageReorder(BaseModel):
-    """The page ids in their new order."""
-
-    order: list[int]
-
-
 class RosterAdd(BaseModel):
     """Several people registered in one action (FR-025)."""
 

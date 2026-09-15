@@ -190,11 +190,6 @@ class TestWrite(BaseModel):
         return value
 
 
-class AnswerSubmit(BaseModel):
-    question_id: int
-    option_ids: list[int] = []
-
-
 class ScoreOverride(BaseModel):
     score_percent: int
 

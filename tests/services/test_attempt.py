@@ -369,8 +369,12 @@ def test_the_review_shows_the_answer_given_and_the_correct_one(db, trainee, live
     assert any(o.is_correct for o in question.options), "the right answer travels with it"
 
 
-def test_the_most_recent_submitted_attempt_represents_a_person(db, trainee, live_test, bank):
-    """40, then 90, then 70 means 70, not 90 (FR-029)."""
+def test_three_attempts_each_score_on_their_own_answers(db, trainee, live_test, bank):
+    """Nothing carries over between attempts: an empty one scores nothing even
+    after a perfect one.
+
+    Which of the three then represents the person is decided by `state` and
+    `due`, on the list rather than by a query, and is tested there."""
     scores = []
     for selection in ([], [q for q in bank], [bank[0], bank[1]]):
         row = attempt_service.start(db, trainee, live_test.id)
@@ -385,9 +389,6 @@ def test_the_most_recent_submitted_attempt_represents_a_person(db, trainee, live
         db.commit()
 
     assert scores == [0, 100, 50]
-
-    representative = attempt_service.most_recent_submitted(db, live_test.id, trainee.id)
-    assert representative.score_percent == 50, "the most recent, not the best"
 
 
 def test_another_trainee_cannot_reach_your_attempt(db, make_user, trainee, live_test):
