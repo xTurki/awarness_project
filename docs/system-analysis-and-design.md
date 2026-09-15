@@ -217,7 +217,7 @@ in order to understand why the system is built as it is.
 | Response time | Server-rendered pages in tens of milliseconds | No client framework, no build step |
 | Accessibility | WCAG AA contrast | Measured, not asserted. Lowest measured pair 5.51:1 against a 4.5:1 requirement |
 | Responsiveness | Usable at phone, tablet and desktop widths | One layout rule outranks the rest: nothing may push the page sideways |
-| Correctness | Every user-facing behaviour covered | 655 automated tests against a real MySQL instance |
+| Correctness | Every user-facing behaviour covered | 635 automated tests against a real MySQL instance |
 | Data integrity | Guarantees in the database, not in application code | Unique constraints on email, registration, answer and notification |
 
 ---
@@ -495,19 +495,24 @@ erDiagram
         text body
         int position
         boolean is_published
+        datetime created_at
+        datetime updated_at
     }
     TEST {
         int id PK
         int module_id FK
         string title
+        text instructions
         boolean is_published
         datetime opens_at
         datetime closes_at
         int time_limit_minutes
         int allowed_attempts
+        boolean shuffle_questions
         int passing_score
         int retake_interval_days
         int completion_deadline_days
+        datetime created_at
     }
     ATTEMPT {
         int id PK
@@ -519,6 +524,8 @@ erDiagram
         datetime submitted_at
         boolean is_submitted
         json question_order
+        int points_earned
+        int points_possible
         int score_percent
         boolean passed
         boolean score_overridden
@@ -530,8 +537,50 @@ erDiagram
         string kind
         date due_date
         string title
+        text body
+        datetime created_at
         datetime read_at
         datetime emailed_at
+    }
+    SESSION {
+        string id PK
+        int user_id FK
+        datetime created_at
+        datetime expires_at
+    }
+    CONTENT_IMAGE {
+        int id PK
+        int module_id FK
+        string stored_name
+        string original_name
+    }
+    QUESTION {
+        int id PK
+        int module_id FK
+        text prompt
+        int points
+        int position
+        datetime created_at
+    }
+    ANSWER_OPTION {
+        int id PK
+        int question_id FK
+        string text
+        boolean is_correct
+        int position
+    }
+    TEST_QUESTION {
+        int test_id PK, FK
+        int question_id PK, FK
+        int position
+    }
+    ATTEMPT_ANSWER {
+        int id PK
+        int attempt_id FK
+        int question_id FK
+        json selected_option_ids
+        boolean is_correct
+        int points_awarded
     }
 ```
 
@@ -1007,7 +1056,7 @@ Two save buttons on one page are two ways to half-save it.
 
 ### 7.1 Test strategy
 
-**655 tests across 51 files**, run against a real MySQL 8 instance in a
+**635 tests across 52 files**, run against a real MySQL 8 instance in a
 disposable schema, never SQLite. The project depends on unique indexes, foreign
 keys and `utf8mb4`, and SQLite enforces none of them the same way; a suite that
 passed on SQLite would prove less than it appeared to.
@@ -1156,6 +1205,6 @@ revision of this table did not.
 
 ---
 
-*This document describes the system as built and verified on 12 September 2026:
-655 tests passing against MySQL 8, deployed on arm64 macOS behind nginx and a
+*This document describes the system as built and verified on 16 September 2026:
+635 tests passing against MySQL 8, deployed on arm64 macOS behind nginx and a
 Cloudflare tunnel.*
