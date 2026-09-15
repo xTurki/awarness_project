@@ -7,8 +7,8 @@
 | Course | COMP6900 Major Project, University of Newcastle |
 | Group | 5 |
 | Document | System analysis and design |
-| Date | 12 September 2026 |
-| System under description | 13 tables, 65 routes, 177 functional requirements, 655 automated tests |
+| Date | 15 September 2026 |
+| System under description | 13 tables, 65 routes, 177 functional requirements, 635 automated tests |
 
 ---
 
@@ -285,6 +285,20 @@ The tunnel is a fourth container and is deliberately not part of the platform:
 the three tiers run identically without it, which is how the system runs on a
 local network.
 
+**The tunnel is outbound only.** cloudflared opens a connection to Cloudflare
+and serves through it, so the host needs no public address, no forwarded port
+and no certificate of its own. The hop from the connector to nginx is plain HTTP
+inside the Docker network and never leaves the machine.
+
+**One constraint governs that arrangement, and breaking it is invisible.** Every
+connector registered on a tunnel must be able to reach every origin that tunnel
+serves, because Cloudflare distributes requests across all of them and does not
+fail over. A second connector that cannot reach nginx answers 502 for whatever
+share of requests reaches it, and those requests leave no trace in this
+platform's logs because they never arrive. The failure then appears to follow
+the client's network rather than the server, which is what made it hard to place
+(§7.3).
+
 **The scheduler runs in-process.** The constitution permits scheduled work inside
 the backend and forbids a broker, a worker container or a separate cron
 container. APScheduler starts in the application lifespan and stops with it. This
@@ -402,7 +416,7 @@ against a table of cases.
 | `scoring` | **yes** | Points earned, percentage, pass or fail |
 | `state` | **yes** | Which of seven states a person is in on a module |
 | `due` | **yes** | When somebody's training next falls due |
-| `art` | **yes** | Which cover pattern and colour a module carries |
+| `art` | **yes** | Which colour a module's cover carries, and whether a picture was uploaded for it |
 | `auth_service` | | Password, code issue and verification, sessions |
 | `admin_service` | | Accounts. Nobody administers their own |
 | `module_service` | | Modules, and the `get_for` / `get_for_write` chokepoint |
@@ -530,17 +544,17 @@ application code that somebody could forget to call.
 | Table | Columns | Unique constraint | What the constraint guarantees |
 |---|---|---|---|
 | `user` | 10 | `email` | One account per address |
-| `session` | 6 | | |
+| `session` | 4 | | |
 | `module` | 7 | | |
 | `registration` | 5 | `(user_id, module_id)` | Nobody is on a module twice |
 | `page` | 8 | `(module_id, position)` | Page order is unambiguous |
-| `content_image` | 8 | | |
+| `content_image` | 4 | | |
 | `question` | 6 | | |
 | `answer_option` | 5 | | |
 | `test` | 14 | | |
 | `test_question` | 3 | composite PK | A question appears once per test |
 | `attempt` | 14 | | |
-| `attempt_answer` | 7 | `(attempt_id, question_id)` | One answer per question, however many times they change their mind |
+| `attempt_answer` | 6 | `(attempt_id, question_id)` | One answer per question, however many times they change their mind |
 | `notification` | 10 | `(user_id, kind, module_id, due_date)` | **The daily job is safe to run twice** |
 
 ### 4.3 What is deliberately not stored
@@ -568,11 +582,61 @@ is the single schema authority. `create_all` creates a missing table but never
 alters an existing one, so a new table appears on restart while a new **column**
 requires the database to be recreated.
 
-This is a time-limited principle, recorded as such in the constitution, and it
-was breached exactly once and documented: adding `module.art` to a live
-deployment carrying real data was applied with a single `ALTER TABLE` rather than
-by discarding the data. The model carries the column so every fresh database has
-it; the running instance was brought level by hand.
+This is a time-limited principle, recorded as such in the constitution. It has
+been departed from three times on the live deployment, each time by hand and
+each time recorded, rather than by discarding real data:
+
+| Change | Statement | Why it could not wait |
+|---|---|---|
+| `module.art` added | `ALTER TABLE module ADD COLUMN art VARCHAR(32) NULL` | The cover feature, on a database already carrying modules |
+| `module.art` widened to 64 | `ALTER TABLE module MODIFY art VARCHAR(64) NULL` | A stored image name is a 32-character uuid plus an extension, which does not fit the width a colour name needed |
+| Seven columns dropped | `ALTER TABLE ... DROP COLUMN` on `content_image`, `session` and `attempt_answer` | They were written on every operation and read by nothing (§4.5) |
+
+In every case the model carries the change, so a database created fresh is
+already correct, and the running instance was brought level by hand. The pattern
+is the same each time: the model is the specification, and a live database is
+reconciled to it deliberately rather than automatically.
+
+### 4.5 Columns removed after audit
+
+Schemas accumulate columns that were plausible when written and are read by
+nothing once the system exists. An audit compared every column against the code
+that reads it, distinguishing a column that is *written* from one that is
+*read*: a value assigned on every operation and never consulted looks like
+recorded data and is not.
+
+Seven were removed, with the code that wrote them:
+
+| Table | Column | Written | Read |
+|---|---|---|---|
+| `content_image` | `content_type` | Every upload | Nowhere |
+| `content_image` | `size_bytes` | Every upload | Nowhere |
+| `content_image` | `uploaded_by` | Every upload | Nowhere |
+| `content_image` | `uploaded_at` | Every upload | Nowhere |
+| `session` | `ip` | Every sign-in | Nowhere |
+| `session` | `user_agent` | Every sign-in | Nowhere |
+| `attempt_answer` | `answered_at` | Every answer change | Nowhere |
+
+`content_image` fell from eight columns to four. `uploaded_by` was the only
+foreign key in the schema that no query ever traversed, so its constraint was
+dropped with it.
+
+**Three were kept although unread**, because the distinction is between a column
+nobody reads and a column nobody reads *yet*. `attempt.points_earned`,
+`attempt.points_possible` and `attempt_answer.points_awarded` are the raw
+numbers behind a percentage. Without them a score of 75% is a number that cannot
+be explained or recomputed, and the information cannot be recovered later
+because it was never kept. The `created_at` timestamps were kept on the same
+reasoning.
+
+The audit also found five definitions in the code that nothing referenced: two
+service functions, an exception never raised, and two request models never
+constructed. One of them, `most_recent_submitted`, carried a docstring claiming
+two phases read it; in fact the rule it named had been rewritten three times
+elsewhere, against a list rather than a query, once the services began loading
+attempts in bulk. The function was removed. **The duplication it left behind is
+recorded as outstanding in §8.2**, because that is a design question rather than
+dead code.
 
 ---
 
@@ -902,7 +966,7 @@ the first paint is already correct.
 | Requirement | Status |
 |---|---|
 | 4.5:1 contrast for normal text | **Measured** with WCAG relative luminance. Lowest pair 5.51:1 |
-| 3:1 for graphical objects | **Measured**. Lowest of sixteen pattern pairs 4.84:1 |
+| 3:1 for graphical objects | Not claimed. The drawn covers this measured were removed; a cover is now a plain colour or an uploaded picture, and carries no information |
 | Visible focus | One global `:focus-visible` rule, so no component can be missed |
 | Touch targets | 44px minimum on buttons, inputs, navigation links and choice rows |
 | Colour never alone | Every state badge carries its word: Passed, Failed, Due, Overdue, Not started, In progress, No test |
@@ -914,7 +978,7 @@ requirements were removed from this project at the owner's direction, so the
 platform makes no claim to that part of WCAG AA. Focus styling is present because
 it costs nothing, but it is styling rather than a claim.
 
-### 6.4 Two interface decisions worth recording
+### 6.4 Three interface decisions worth recording
 
 **A control nobody may use is not a control.** The Start button appears only for
 somebody who can actually start; where they cannot, a panel names the reason. The
@@ -926,6 +990,16 @@ the enforcement.
 **Empty is a statement, not a blank frame.** Every list has an empty branch that
 says what the situation is, because somebody with nothing to do should be told
 that rather than left wondering whether the page failed to load.
+
+**One form, one Save.** The cover picture was first built as its own form with
+its own upload button, sitting below the form that saves the module. It was
+reported as broken twice in one message: there was no Save after uploading, and
+a module being created could not be given a picture at all, because the file
+needs a module to belong to and the record did not exist yet. Both followed from
+the same mistake. A field that belongs to a record is saved with that record:
+the picture moved into the module form, the separate routes were deleted, and
+the file is now read before the module is created and stored once it exists.
+Two save buttons on one page are two ways to half-save it.
 
 ---
 
@@ -974,6 +1048,8 @@ count.
 | The scheduled sweep died every night | Watching a real scheduled run | `main.py` had shadowed the session type with the session table. Every test called the job with a session already in hand |
 | Page navigation never rendered | A test asserting the links | Comparing model objects rather than ids matched nothing, so every page silently became the last one |
 | nginx would not start on macOS | Deploying to a second platform | Docker Desktop on Windows reported 755 for build-context files and hid a 644 script |
+| Intermittent 502 from the public address | Comparing the two network paths a client can take | A second connector on the same tunnel could not reach nginx. Cloudflare spreads requests across every connector, so roughly half failed, and the failures left no trace in this platform's logs because those requests never arrived |
+| Every save without a file attached was refused | A test that posted the form the way a browser does | An untouched file input still posts a part. Two clients shape it differently, and the route accepted only one of the two shapes |
 
 ---
 
@@ -996,10 +1072,11 @@ replicas would run two schedulers. The unique constraint makes that wasted work
 rather than duplicate email, but the platform is single-instance by intent and
 does not horizontally scale.
 
-**No migration path.** A column change requires recreating the database. This is
-acceptable while the system is being built and is not acceptable once it holds an
-organisation's training record. It is recorded in the constitution as
-time-limited, and the one live column addition was applied by hand.
+**No migration path.** `create_all` never alters an existing table, so every
+column change on a live database is a hand-written statement, applied in the
+right order relative to the deploy or the two disagree. Three such changes have
+now been made (§4.4). This is acceptable while the system is being built and is
+not acceptable once it holds an organisation's training record.
 
 **Derived state has a cost that will eventually be visible.** The dashboard runs
 whole-set queries. At tens of people across tens of modules this is invisible.
@@ -1015,33 +1092,51 @@ removable by one setting.
 feature. An organisation with a policy against that should leave the API key
 empty, at which point the feature does not exist.
 
+**One rule is written in three places.** Which attempt represents a person, the
+most recent rather than the best, with the row id breaking a tie because
+`submitted_at` has only second precision, appears twice in `state` and once in
+`due`. It was extracted into a single function once, but the services then
+changed to load attempts in bulk and pass lists rather than query one at a time,
+and the extraction was left behind unused instead of being rewritten to match.
+Removing the unused function (§4.5) did not resolve the duplication. Changing
+the rule today means finding three places, and the compiler will not help.
+
+**A cover is decoration only.** It was once a drawn pattern chosen per module,
+then a set of emblems, and is now a plain colour or an uploaded picture. Nothing
+about a module's state, progress or urgency is expressed by it, and nothing
+should be: the state badges carry that, in words.
+
 ### 8.3 Further work
 
 1. A migration tool, before the platform holds a real training record.
 2. A mail provider that will accept the traffic.
-3. Per-question analytics for instructors: which question the cohort fails most.
-4. An export of the training record, for an auditor who wants it outside the
+3. Extract the deciding-attempt rule into one place that `state` and `due` both
+   call, on the list rather than on a query.
+4. Per-question analytics for instructors: which question the cohort fails most.
+5. An export of the training record, for an auditor who wants it outside the
    platform.
 
 ---
 
 ## Appendix A: Route inventory
 
-65 routes. Thirteen routers, each owning one area.
+65 routes across twelve routers, each owning one area. The counts below are
+taken from the routers themselves and sum to the total, which an earlier
+revision of this table did not.
 
-| Area | Routes | Notable |
-|---|---|---|
-| Identity | 6 | Two-step sign-in, sign out, forced password change |
-| Administration | 8 | Accounts. None of them acts on the caller's own |
-| Modules | 9 | Create, publish, soft delete and restore |
-| Content | 10 | Pages, ordering, images |
-| Registration | 3 | Roster, add, remove |
-| Questions | 6 | The module's bank |
-| Tests | 6 | Build, publish, and the confirmation before a replacement |
-| Attempts | 5 | Start, answer, submit, review, correct |
-| Results | 4 | Including `GET /`, registered exactly once |
-| Notifications | 2 | List and mark seen |
-| Assistant | 1 | Ask about the page being read |
+| Area | Router | Routes | Notable |
+|---|---|---|---|
+| Identity | `auth`, `password` | 7 | Two-step sign-in, sign out, forced password change |
+| Administration | `admin` | 7 | Accounts. None of them acts on the caller's own |
+| Modules | `modules` | 11 | Create, publish, soft delete and restore, cover picture |
+| Content | `content` | 10 | Pages, ordering, images |
+| Registration | `registrations` | 3 | Roster, add, remove |
+| Questions | `questions` | 6 | The module's bank |
+| Tests | `tests` | 7 | Build, publish, and the confirmation before a replacement |
+| Attempts | `attempts` | 7 | Start, answer, submit, review, correct |
+| Results | `results` | 4 | Including `GET /`, registered exactly once |
+| Notifications | `notifications` | 2 | List and mark seen |
+| Assistant | `tutor` | 1 | Ask about the page being read |
 
 ## Appendix B: Technology
 
