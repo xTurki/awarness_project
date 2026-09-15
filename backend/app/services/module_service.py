@@ -111,17 +111,19 @@ def list_for(db: DbSession, actor: User) -> list[ModuleRead]:
 # ---------------------------------------------------- administrator-only writes
 
 
-def _require_administrator(actor: User) -> None:
+def require_administrator(actor: User) -> None:
     if actor.role != "administrator":
         raise NotPermitted()
 
 
 def create(db: DbSession, actor: User, data: ModuleWrite) -> ModuleRead:
-    _require_administrator(actor)
+    require_administrator(actor)
+    # Null when no colour was picked, and then the id decides. Storing a
+    # derived colour would let the column and the id disagree later.
     row = Module(
         title=data.title.strip(),
         description=data.description,
-        art=art.format(data.art_pattern, data.art_colour),
+        art=art.format_colour(data.art_colour) if data.art_colour else None,
     )
     db.add(row)
     db.commit()
@@ -130,11 +132,33 @@ def create(db: DbSession, actor: User, data: ModuleWrite) -> ModuleRead:
 
 
 def update(db: DbSession, actor: User, module_id: int, data: ModuleWrite) -> ModuleRead:
-    _require_administrator(actor)
+    require_administrator(actor)
     row = get_for(db, module_id, actor)
     row.title = data.title.strip()
     row.description = data.description
-    row.art = art.format(data.art_pattern, data.art_colour)
+
+    # Only when the form offered the picker. A module wearing an uploaded
+    # picture submits no colour, and its picture survives the save.
+    if data.art_colour:
+        row.art = art.format_colour(data.art_colour)
+
+    db.add(row)
+    db.commit()
+    db.refresh(row)
+    return ModuleRead.of(row)
+
+
+def set_art(db: DbSession, actor: User, module_id: int, value: str | None) -> ModuleRead:
+    """Write the cover column, whatever kind of cover it names.
+
+    Here rather than in `content_service` because the permission belongs with
+    the module record: only an administrator edits a module, and the cover is
+    part of that record. `content_service` owns the file and calls this for the
+    column, which keeps the import going one way.
+    """
+    require_administrator(actor)
+    row = get_for(db, module_id, actor)
+    row.art = value
     db.add(row)
     db.commit()
     db.refresh(row)
@@ -142,7 +166,7 @@ def update(db: DbSession, actor: User, module_id: int, data: ModuleWrite) -> Mod
 
 
 def set_published(db: DbSession, actor: User, module_id: int, published: bool) -> ModuleRead:
-    _require_administrator(actor)
+    require_administrator(actor)
     row = get_for(db, module_id, actor)
     row.is_published = published
     db.add(row)
@@ -154,7 +178,7 @@ def set_published(db: DbSession, actor: User, module_id: int, published: bool) -
 def soft_delete(db: DbSession, actor: User, module_id: int) -> None:
     """Reversible. Pages, images, and registrations are untouched, so restoring
     returns everything (FR-010, SC-012)."""
-    _require_administrator(actor)
+    require_administrator(actor)
     row = get_for(db, module_id, actor)
     row.deleted_at = utcnow()
     db.add(row)
@@ -162,7 +186,7 @@ def soft_delete(db: DbSession, actor: User, module_id: int) -> None:
 
 
 def restore(db: DbSession, actor: User, module_id: int) -> ModuleRead:
-    _require_administrator(actor)
+    require_administrator(actor)
     row = db.get(Module, module_id)
     if row is None:
         raise NotFound()
@@ -179,7 +203,7 @@ def restore(db: DbSession, actor: User, module_id: int) -> ModuleRead:
 def assign_instructor(db: DbSession, actor: User, module_id: int, user_id: int) -> None:
     """A module with no instructor is permitted; an administrator can assign a
     replacement at any time (FR-004)."""
-    _require_administrator(actor)
+    require_administrator(actor)
     get_for(db, module_id, actor)
 
     existing = _registration(db, module_id, user_id)
@@ -196,7 +220,7 @@ def assign_instructor(db: DbSession, actor: User, module_id: int, user_id: int) 
 def remove_instructor(db: DbSession, actor: User, module_id: int, user_id: int) -> None:
     """They lose access immediately, including to pages they wrote. The pages
     remain with the module (spec, Edge Cases)."""
-    _require_administrator(actor)
+    require_administrator(actor)
     get_for(db, module_id, actor)
 
     existing = _registration(db, module_id, user_id)

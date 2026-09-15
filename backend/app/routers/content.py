@@ -267,7 +267,7 @@ async def upload_image(
     content = await file.read()
     try:
         image = content_service.save_image(
-            db, account, module_id, content, file.filename or "", file.content_type or ""
+            db, account, module_id, content, file.filename or ""
         )
     except content_service.UploadRejected as exc:
         return JSONResponse(

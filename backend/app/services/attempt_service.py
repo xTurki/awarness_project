@@ -333,7 +333,6 @@ def save_answer(
         )
     else:
         existing.selected_option_ids = list(option_ids)
-        existing.answered_at = utcnow()
         db.add(existing)
 
     db.commit()

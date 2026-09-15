@@ -69,4 +69,3 @@ class AttemptAnswer(SQLModel, table=True):
     is_correct: bool | None = Field(default=None, nullable=True)
     points_awarded: int | None = Field(default=None, nullable=True)
 
-    answered_at: datetime = Field(default_factory=utcnow, nullable=False)

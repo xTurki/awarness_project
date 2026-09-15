@@ -2,6 +2,9 @@
 
 Held here rather than in the browser, which is the whole reason access can be
 withdrawn at any moment: deleting this row ends the session immediately.
+
+An `ip` and a `user_agent` used to be recorded on every sign-in. Nothing ever
+read either one, so they are gone.
 """
 
 from __future__ import annotations
@@ -23,6 +26,3 @@ class Session(SQLModel, table=True):
 
     created_at: datetime = Field(default_factory=utcnow, nullable=False)
     expires_at: datetime = Field(nullable=False)
-
-    ip: str | None = Field(default=None, max_length=45, nullable=True)  # IPv6-sized
-    user_agent: str | None = Field(default=None, max_length=255, nullable=True)

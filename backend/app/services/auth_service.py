@@ -86,13 +86,7 @@ async def start_login(db: DbSession, email: str, password: str) -> None:
     await email_service.send_email(user.email, "Your sign-in code", body)
 
 
-def verify_code(
-    db: DbSession,
-    email: str,
-    code: str,
-    ip: str | None = None,
-    user_agent: str | None = None,
-) -> SessionRow:
+def verify_code(db: DbSession, email: str, code: str) -> SessionRow:
     """Step two. Clears both code columns and creates the session row."""
     user = find_by_email(db, email)
     if user is None or user.login_code_hash is None or user.login_code_expires_at is None:
@@ -116,8 +110,6 @@ def verify_code(
         user_id=user.id,
         created_at=now,
         expires_at=now + timedelta(hours=settings.session_hours),
-        ip=(ip or None),
-        user_agent=(user_agent or None) and user_agent[:255],
     )
     db.add(row)
     db.commit()

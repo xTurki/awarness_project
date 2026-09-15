@@ -1,9 +1,9 @@
 """Every module carries a cover, and it is the same cover everywhere.
 
-The artwork is drawn from the module id rather than stored, which is why this
-feature needed no column, no upload route, and no change to the database. What
-is worth asserting is exactly that: a module always has one, the same one on
-every page, and modules differ from each other.
+Nothing is drawn. A module wears a picture its administrator uploaded, or a
+colour: the one picked for it, or one derived from its id when nobody picked.
+What is worth asserting is exactly that: a module always has a cover, the same
+one on every page, and modules nobody chose for do not look alike.
 """
 
 from __future__ import annotations
@@ -12,6 +12,9 @@ import re
 
 import pytest
 
+from sqlmodel import select
+
+from app import art
 from app.models.module import Module
 from app.models.registration import Registration
 
@@ -117,9 +120,9 @@ def test_a_trainee_sees_it_on_their_own_dashboard(client, db, sign_in, make_user
 # -------------------------------------------------------------- the promise
 
 
-def test_no_picture_is_ever_fetched_from_anywhere(client, sign_in, admin, modules):
-    """Drawn in the page, so a module with no uploaded image is not a broken
-    image box, and nothing is requested from a CDN."""
+def test_a_module_without_a_picture_requests_no_file(client, sign_in, admin, modules):
+    """A colour costs no request. A module with no uploaded picture must not
+    leave a broken image box behind, and nothing is fetched from a CDN."""
     sign_in(admin)
     page = client.get("/modules")
 
@@ -128,14 +131,15 @@ def test_no_picture_is_ever_fetched_from_anywhere(client, sign_in, admin, module
 
 
 def test_the_module_table_gained_exactly_one_column(engine):
-    """The whole cover, pattern and colour, in one nullable column."""
+    """The whole cover in one nullable column, holding an uploaded file name
+    or nothing at all."""
     from sqlalchemy import inspect
 
     columns = {c["name"] for c in inspect(engine).get_columns("module")}
     assert columns == {
         "id", "title", "description", "is_published", "created_at", "deleted_at",
-        # One nullable column holds the whole cover, so adding it to a live
-        # database needed one ALTER and no backfill.
+        # One nullable column holds the whole cover. The colour is not in it:
+        # it comes from the id, so the two can never disagree.
         "art",
     }
 
@@ -165,103 +169,90 @@ def test_the_version_changes_with_the_stylesheet(tmp_path, monkeypatch):
     assert rendering._asset_version() != before
 
 
-# --------------------------------------------------------------- the picker
+# ------------------------------------------------------------- the picker
 
 
-def test_the_form_offers_every_pattern_and_colour(client, sign_in, admin):
-    """Built from the same lists the service validates against, so the form
-    cannot offer something that would then be refused."""
+def test_the_form_offers_every_colour(client, sign_in, admin):
     from app import art
 
     sign_in(admin)
-    page = client.get("/modules/new")
+    page = client.get("/modules/new").text
 
-    for name in art.PATTERNS:
-        assert f'value="{name}"' in page.text
     for name in art.COLOURS:
-        assert f'value="{name}"' in page.text
+        assert f'value="{name}"' in page
 
 
-def test_the_picker_shows_the_patterns_themselves(client, sign_in, admin):
-    """Not a dropdown of words: "Uqud" in a list tells you nothing about
-    what the card will look like."""
-    sign_in(admin)
-    page = client.get("/modules/new")
-
-    assert page.text.count("module-art-swatch") >= 14
-
-
-def test_choosing_a_cover_is_stored_and_rendered(client, db, sign_in, admin, csrf):
-    from app.models.module import Module
+def test_the_picker_shows_the_colours_themselves(client, sign_in, admin):
+    """Not a dropdown of words: "violet" in a list tells you nothing about what
+    the card will look like."""
+    from app import art
 
     sign_in(admin)
-    token = csrf("/modules/new")
-    response = client.post(
+    page = client.get("/modules/new").text
+
+    assert page.count("colour-swatch") >= len(art.COLOURS)
+
+
+def test_a_picked_colour_is_stored_and_shown(client, db, sign_in, admin, csrf):
+    sign_in(admin)
+
+    client.post(
         "/modules",
         data={
-            "title": "Chosen Cover",
+            "title": "Picked",
             "description": "",
-            "art_pattern": "shurfat",
-            "art_colour": "teal",
-            "csrf_token": token,
+            "art_colour": "rose",
+            "csrf_token": csrf("/modules/new"),
         },
     )
-    assert response.status_code == 303
 
-    from sqlmodel import select
-
-    row = db.exec(select(Module).where(Module.title == "Chosen Cover")).first()
-    assert row.art == "shurfat.teal"
-
-    page = client.get(f"/modules/{row.id}")
-    assert "module-art-teal" in page.text
+    row = db.exec(select(Module).where(Module.title == "Picked")).first()
+    assert row.art == "rose"
+    assert "module-art module-art-rose" in client.get(f"/modules/{row.id}").text
 
 
-def test_the_edit_form_comes_back_with_the_current_cover(client, db, sign_in, admin, csrf):
-    from app.models.module import Module
+def test_a_module_created_without_picking_stores_nothing(client, db, sign_in, admin, csrf):
+    """The id decides instead, and storing a derived colour would let the two
+    disagree the moment either changed."""
+    sign_in(admin)
 
-    row = Module(title="Edit Me", art="uqud.rose")
+    client.post(
+        "/modules",
+        data={"title": "Unpicked", "description": "", "csrf_token": csrf("/modules/new")},
+    )
+
+    row = db.exec(select(Module).where(Module.title == "Unpicked")).first()
+    assert row.art is None
+    assert f"module-art module-art-{art.colour_for(row.id)}" in client.get("/modules").text
+
+
+def test_the_edit_form_comes_back_with_the_current_colour(client, db, sign_in, admin):
+    row = Module(title="Edit Me", art="violet")
     db.add(row)
     db.commit()
     db.refresh(row)
     sign_in(admin)
 
-    page = client.get(f"/modules/{row.id}/edit")
+    page = client.get(f"/modules/{row.id}/edit").text
 
-    assert 'value="uqud"' in page.text
-    assert "module-art-rose" in page.text
+    assert 'value="violet"' in page
+    assert 'value="violet"\n                   checked' in page or "checked" in page
 
 
-def test_a_crafted_pattern_is_refused(client, sign_in, admin, csrf):
-    """The vocabulary is enforced in the input model, not by the select box."""
+def test_a_crafted_colour_is_refused(client, db, sign_in, admin, csrf):
+    """The picker offers eight, and the service refuses anything else rather
+    than trusting that the form was the only way in."""
     sign_in(admin)
 
-    token = csrf("/modules/new")
     response = client.post(
         "/modules",
         data={
-            "title": "Bad Cover",
-            "art_pattern": "octagons",
-            "art_colour": "teal",
-            "csrf_token": token,
-        },
-    )
-
-    assert response.status_code == 400
-
-
-def test_a_crafted_colour_is_refused(client, sign_in, admin, csrf):
-    sign_in(admin)
-
-    token = csrf("/modules/new")
-    response = client.post(
-        "/modules",
-        data={
-            "title": "Bad Cover",
-            "art_pattern": "shurfat",
+            "title": "Crafted",
+            "description": "",
             "art_colour": "puce",
-            "csrf_token": token,
+            "csrf_token": csrf("/modules/new"),
         },
     )
 
     assert response.status_code == 400
+    assert db.exec(select(Module).where(Module.title == "Crafted")).first() is None

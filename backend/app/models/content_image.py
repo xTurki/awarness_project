@@ -3,15 +3,16 @@
 The file itself lives on a volume under `stored_name`; this row is what the
 platform knows about it. `original_name` is kept for display and is **never**
 used to build a path, which is what stops a filename deciding where a file lands.
+
+Deliberately thin. There was a `content_type`, a `size_bytes`, an `uploaded_by`
+and an `uploaded_at` here, all written on every upload and read by nothing: no
+page showed them and no query asked for them. A row that records what nobody
+reads makes the table look like it tracks something it does not.
 """
 
 from __future__ import annotations
 
-from datetime import datetime
-
 from sqlmodel import Field, SQLModel
-
-from app.database import utcnow
 
 
 class ContentImage(SQLModel, table=True):
@@ -24,13 +25,6 @@ class ContentImage(SQLModel, table=True):
     # what arrived (research R3).
     stored_name: str = Field(max_length=64, nullable=False)
 
-    # For display only.
+    # For display only: returned to the editor after an upload so it can name
+    # the file somebody just chose.
     original_name: str = Field(max_length=255, nullable=False)
-
-    # Recorded as declared, not trusted.
-    content_type: str = Field(max_length=100, nullable=False)
-
-    size_bytes: int = Field(nullable=False)
-
-    uploaded_by: int = Field(foreign_key="user.id", nullable=False)
-    uploaded_at: datetime = Field(default_factory=utcnow, nullable=False)

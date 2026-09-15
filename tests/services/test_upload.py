@@ -48,7 +48,7 @@ def temporary_upload_dir(tmp_path, monkeypatch):
 
 def test_an_image_is_stored_and_returns_a_url(db, instructor, module, temporary_upload_dir):
     image = content_service.save_image(
-        db, instructor, module.id, PNG, "diagram.png", "image/png"
+        db, instructor, module.id, PNG, "diagram.png"
     )
 
     assert image.url.startswith("/uploads/")
@@ -60,7 +60,7 @@ def test_the_stored_name_is_generated_not_the_uploaded_one(
     db, instructor, module, temporary_upload_dir
 ):
     image = content_service.save_image(
-        db, instructor, module.id, PNG, "diagram.png", "image/png"
+        db, instructor, module.id, PNG, "diagram.png"
     )
     stored = image.url.rsplit("/", 1)[-1]
 
@@ -72,7 +72,7 @@ def test_a_traversing_filename_cannot_decide_where_the_file_lands(
     db, instructor, module, temporary_upload_dir
 ):
     image = content_service.save_image(
-        db, instructor, module.id, PNG, "../../app/main.png", "image/png"
+        db, instructor, module.id, PNG, "../../app/main.png"
     )
     stored = image.url.rsplit("/", 1)[-1]
 
@@ -85,7 +85,7 @@ def test_a_renamed_executable_is_accepted(db, instructor, module):
     """The recorded decision, not a defect: checking is by extension only, and
     the file lands in a directory nginx serves as static content."""
     image = content_service.save_image(
-        db, instructor, module.id, b"MZ\x90\x00" * 32, "payload.png", "image/png"
+        db, instructor, module.id, b"MZ\x90\x00" * 32, "payload.png"
     )
     assert image.url.endswith(".png")
 
@@ -96,7 +96,7 @@ def test_a_renamed_executable_is_accepted(db, instructor, module):
 @pytest.mark.parametrize("name", ["notes.pdf", "sheet.xlsx", "script.js", "noextension"])
 def test_a_non_image_extension_is_refused(db, instructor, module, name):
     with pytest.raises(content_service.UploadRejected) as caught:
-        content_service.save_image(db, instructor, module.id, PNG, name, "application/pdf")
+        content_service.save_image(db, instructor, module.id, PNG, name)
     assert "image" in str(caught.value).lower()
 
 
@@ -104,7 +104,7 @@ def test_an_oversized_file_is_refused_and_the_message_names_the_limit(db, instru
     too_big = b"0" * (settings.upload_max_bytes + 1)
 
     with pytest.raises(content_service.UploadRejected) as caught:
-        content_service.save_image(db, instructor, module.id, too_big, "big.png", "image/png")
+        content_service.save_image(db, instructor, module.id, too_big, "big.png")
 
     assert str(settings.upload_max_mb) in str(caught.value)
 
@@ -112,7 +112,7 @@ def test_an_oversized_file_is_refused_and_the_message_names_the_limit(db, instru
 def test_a_file_at_exactly_the_limit_is_accepted(db, instructor, module):
     at_limit = b"0" * settings.upload_max_bytes
     image = content_service.save_image(
-        db, instructor, module.id, at_limit, "edge.png", "image/png"
+        db, instructor, module.id, at_limit, "edge.png"
     )
     assert image.url.endswith(".png")
 
@@ -129,7 +129,7 @@ def test_a_trainee_cannot_upload_anything(db, make_user, module):
     db.commit()
 
     with pytest.raises(module_service.NotPermitted):
-        content_service.save_image(db, trainee, module.id, PNG, "x.png", "image/png")
+        content_service.save_image(db, trainee, module.id, PNG, "x.png")
 
 
 def test_an_instructor_on_another_module_cannot_upload(db, make_user, module):
@@ -138,4 +138,4 @@ def test_an_instructor_on_another_module_cannot_upload(db, make_user, module):
     outsider = make_user(email="other@example.com", role="instructor")
 
     with pytest.raises(module_service.NotFound):
-        content_service.save_image(db, outsider, module.id, PNG, "x.png", "image/png")
+        content_service.save_image(db, outsider, module.id, PNG, "x.png")

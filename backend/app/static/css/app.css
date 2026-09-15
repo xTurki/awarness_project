@@ -271,19 +271,6 @@ hr { border-color: var(--line); opacity: 1; }
 .app-header .nav-link:hover { color: var(--ink); background: var(--canvas); }
 .app-header .nav-link:active { background: var(--line); }
 
-.app-whoami { line-height: var(--leading-tight); min-width: 0; }
-.app-whoami strong {
-  display: block;
-  font-weight: var(--weight-semi);
-  font-size: var(--text-sm);
-  color: var(--ink);
-}
-.app-whoami span {
-  color: var(--ink-soft);
-  font-size: var(--text-xs);
-  text-transform: capitalize;
-}
-
 .offcanvas { background-color: var(--surface); color: var(--ink); }
 
 /* ==========================================================================
@@ -683,18 +670,8 @@ select[multiple].form-select { min-height: auto; }
   border: 1px solid var(--line);
 }
 
-/* In the picker it is a small square, big enough to tell the patterns apart. */
-.module-art-swatch {
-  aspect-ratio: 1 / 1;
-  height: auto;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--line);
-}
-
-.module-art svg { display: block; width: 100%; height: 100%; }
-
-/* A faint diagonal, so the tile has some depth rather than reading as
-   wallpaper somebody forgot to finish. */
+/* A faint diagonal, so a plain colour has some depth rather than reading as
+   a block of flat paint. */
 .module-art::after {
   content: "";
   position: absolute;
@@ -706,46 +683,93 @@ select[multiple].form-select { min-height: auto; }
   background: linear-gradient(115deg, rgb(255 255 255 / 0.05), transparent 70%);
 }
 
-/* The eight colours. Background is the wash, `color` is the pattern stroke. */
-.module-art-indigo { background: #eef2fe; color: #3b53b8; }
-.module-art-sky    { background: #eaf4fd; color: #1f6fa8; }
-.module-art-teal   { background: #e8f6f4; color: #11746a; }
-.module-art-green  { background: #ecf6ee; color: #2c6b3c; }
-.module-art-amber  { background: #fdf3e2; color: #8a5a06; }
-.module-art-rose   { background: #fdeef0; color: #9e3247; }
-.module-art-violet { background: #f3eefc; color: #5b3fa8; }
-.module-art-slate  { background: #eff2f5; color: #48566a; }
+/* An uploaded picture, in place of the plain colour.
 
-[data-bs-theme="dark"] .module-art-indigo { background: #171f33; color: #7f9cf5; }
-[data-bs-theme="dark"] .module-art-sky    { background: #12212e; color: #5eb0e0; }
-[data-bs-theme="dark"] .module-art-teal   { background: #102825; color: #4fc4b5; }
-[data-bs-theme="dark"] .module-art-green  { background: #13261a; color: #5fc07a; }
-[data-bs-theme="dark"] .module-art-amber  { background: #271e10; color: #e0a93c; }
-[data-bs-theme="dark"] .module-art-rose   { background: #2a1519; color: #e8798c; }
-[data-bs-theme="dark"] .module-art-violet { background: #1f1830; color: #a78bfa; }
-[data-bs-theme="dark"] .module-art-slate  { background: #1a1f26; color: #9aa7b6; }
+   Cropped from the centre rather than fitted whole: the same file is shown at
+   two proportions (a 16/7 card cover and a 6.5rem page band), and a picture
+   fitted whole would sit in a band of empty colour at one of them. Cropping
+   loses the edges of a photograph; letterboxing loses the cover.
+
+   The diagonal wash above is turned off over a photograph, where it reads as
+   a faded print rather than as depth. Written as an override so a browser
+   without `:has` keeps the wash instead of losing it everywhere. */
+.module-art-photo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.module-art:has(.module-art-photo)::after { display: none; }
+
+/* The eight colours.
+
+   Deeper than they were. They began as a wash for a pattern to be drawn on
+   top of, and a wash is nearly white by design. With nothing drawn on it the
+   band is the whole cover, so each one is now a colour rather than a hint of
+   one. `color` is gone with the strokes it used to paint. */
+.module-art-indigo { background: #c5cff5; }
+.module-art-sky    { background: #bbdcf2; }
+.module-art-teal   { background: #a9dcd4; }
+.module-art-green  { background: #b9dcc1; }
+.module-art-amber  { background: #f2d9a6; }
+.module-art-rose   { background: #f4c5cc; }
+.module-art-violet { background: #d3c6f3; }
+.module-art-slate  { background: #c8d1db; }
+
+/* In the dark theme they carry more colour rather than less light: going
+   darker here would take them to black and lose the distinction the band
+   exists to make. */
+[data-bs-theme="dark"] .module-art-indigo { background: #232f57; }
+[data-bs-theme="dark"] .module-art-sky    { background: #17324a; }
+[data-bs-theme="dark"] .module-art-teal   { background: #143b36; }
+[data-bs-theme="dark"] .module-art-green  { background: #1b3a26; }
+[data-bs-theme="dark"] .module-art-amber  { background: #3a2c14; }
+[data-bs-theme="dark"] .module-art-rose   { background: #3d1f26; }
+[data-bs-theme="dark"] .module-art-violet { background: #2c2148; }
+[data-bs-theme="dark"] .module-art-slate  { background: #262d37; }
 
 /* The card wraps it, so the artwork keeps the card corners. */
 .card:has(.module-art) { overflow: hidden; }
 .card:has(.module-art) .card-body { padding-top: var(--space-4); }
 
-/* ---- the picker ---- */
+/* ---- the colour picker ----
 
-.art-choice { display: block; cursor: pointer; margin-bottom: 0; }
-.art-choice input { position: absolute; opacity: 0; pointer-events: none; }
-.art-choice .module-art-swatch {
+   The radio itself is taken out of the flow rather than hidden, so it keeps
+   its place in the tab order and still answers the keyboard. The swatch beside
+   it is what is seen, and `:checked +` is what marks it. */
+
+.colour-choice { display: block; cursor: pointer; margin-bottom: 0; width: 4rem; }
+
+.colour-choice input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.colour-swatch {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
   transition: border-color var(--t-fast), box-shadow var(--t-fast);
 }
-.art-choice:hover .module-art-swatch { border-color: var(--ink-faint); }
-.art-choice input:checked + .module-art-swatch {
+
+.colour-choice:hover .colour-swatch { border-color: var(--ink-faint); }
+
+.colour-choice input:checked + .colour-swatch {
   border-color: var(--accent);
   box-shadow: 0 0 0 2px var(--accent);
 }
-.art-choice input:focus-visible + .module-art-swatch {
+
+.colour-choice input:focus-visible + .colour-swatch {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
-.art-choice .art-name {
+
+.colour-name {
   display: block;
   font-size: var(--text-xs);
   color: var(--ink-soft);

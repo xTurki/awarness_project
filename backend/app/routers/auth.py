@@ -103,13 +103,7 @@ def verify_submit(
         return render(request, "auth/verify.html", {"message": TOO_MANY, "email": email}, 429)
 
     try:
-        row = auth_service.verify_code(
-            db,
-            email,
-            code,
-            ip=client_key(request),
-            user_agent=request.headers.get("user-agent"),
-        )
+        row = auth_service.verify_code(db, email, code)
     except auth_service.CodeExpired:
         return render(
             request,
