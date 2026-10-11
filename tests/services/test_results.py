@@ -401,7 +401,7 @@ def test_this_phase_adds_no_table(engine):
     assertion is written as "the twelve, and nothing but the one Phase 4 named"
     so that a summary or cache table appearing later still fails here.
     """
-    from sqlalchemy import inspect
+    from sqlmodel import inspect
 
     tables = set(inspect(engine).get_table_names())
     through_phase_three = {

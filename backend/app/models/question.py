@@ -9,8 +9,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import Column, Text
-from sqlmodel import Field, SQLModel
+from sqlmodel import Column, Field, SQLModel, Text
 
 from app.database import utcnow
 

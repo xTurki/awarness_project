@@ -9,9 +9,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import Column, UniqueConstraint
-from sqlalchemy.dialects.mysql import MEDIUMTEXT
-from sqlmodel import Field, SQLModel
+from sqlmodel import Column, Field, SQLModel, Text, UniqueConstraint
 
 from app.database import utcnow
 
@@ -27,7 +25,9 @@ class Page(SQLModel, table=True):
 
     # MEDIUMTEXT, not TEXT: MySQL cuts a TEXT column at 64KB silently, and
     # formatted HTML reaches that sooner than prose does (research R6, FR-017).
-    body: str = Field(sa_column=Column(MEDIUMTEXT, nullable=False))
+    # The length is in characters, up to 4 bytes each in utf8mb4: this is the
+    # largest that MySQL still stores as MEDIUMTEXT rather than LONGTEXT.
+    body: str = Field(sa_column=Column(Text(length=4_194_303), nullable=False))
 
     # Unique within the module. New pages go last; reordering rewrites the
     # affected rows in one transaction (research R5).
