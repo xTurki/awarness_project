@@ -12,21 +12,17 @@ part of this checkout but is in git and can be brought back with
 
 ## What runs
 
-Four containers. Three are the platform; the fourth publishes it.
+Three containers.
 
 | Container | Image | What it does | Published port |
 |-----------|-------|--------------|----------------|
 | `db` | `mysql:8.0` | the database | none |
 | `backend` | built from `backend/` | FastAPI, uvicorn, and the daily sweep | none |
 | `nginx` | built from `nginx/` | reverse proxy, and the only thing serving `/static/` and `/uploads/` | **80** |
-| `tunnel` | `cloudflare/cloudflared` | publishes the site at its public name | none |
 
 Only nginx publishes a port. The database and the application are reachable
 only from inside the Docker network, which is why neither needs a password
 policy at the network level: nothing outside can open a connection to them.
-
-The tunnel is not part of the platform. The three tiers above run identically
-with it absent, and the test suite never sees it.
 
 ---
 
@@ -44,7 +40,7 @@ That leaves about 3 MB. Of it, this is what the platform actually needs:
 
 | Path | Needed for |
 |------|-----------|
-| `docker-compose.yml` | **required**, defines all four containers |
+| `docker-compose.yml` | **required**, defines all three containers |
 | `backend/` | **required**, the application and its Dockerfile |
 | `nginx/` | **required**, the proxy config and its Dockerfile |
 | `.env` | **required**, every password and token |
@@ -52,8 +48,7 @@ That leaves about 3 MB. Of it, this is what the platform actually needs:
 | `docs/`, `README.md`, `lms-project-spec.md` | documentation |
 
 **Do not forget `.env`.** It is git-ignored on purpose because it holds the
-database passwords, the mail App Password, the Cloudflare tunnel token and the
-Gemini key. A `git clone` will not contain it. Either copy it across yourself,
+database passwords, the mail App Password and the Gemini key. A `git clone` will not contain it. Either copy it across yourself,
 or build a fresh one from `.env.example`, which lists every key with a comment
 explaining it.
 
@@ -66,16 +61,14 @@ A fresh install starts empty. To carry the data across, see
 
 - **Docker and Docker Compose.** The current server runs Docker 29.2.1 and
   Compose v5.1.0. Anything recent enough to understand `docker compose` works.
-- **Internet access during the build.** Four images are pulled:
-  `python:3.12-slim`, `nginx:1.27-alpine`, `mysql:8.0`, and
-  `cloudflare/cloudflared:2026.9.1`. See
+- **Internet access during the build.** Three images are pulled:
+  `python:3.12-slim`, `nginx:1.27-alpine` and `mysql:8.0`. See
   [Installing without internet](#installing-without-internet) if the server has
   none.
 - **Outbound access to `smtp.gmail.com:587`. Verify this first.** Every sign-in
   needs an emailed code and there is no bypass. If mail is blocked, nobody signs
   in until it is unblocked.
-- **No inbound port.** Do not forward anything on the router and do not open 443.
-  The tunnel makes an outbound connection and serves through it.
+- **Port 80 reachable** from the machines that will use the platform.
 - **A correct clock.** Every time is stored in UTC and converted in the browser.
   A server clock that is wrong shifts every due date and every test window.
 - A machine that does not sleep. The daily sweep runs at a fixed hour and a
@@ -92,7 +85,7 @@ cd ~/canvas-project
 cp .env.example .env
 ```
 
-Then fill in `.env`. Every key is required; the file explains each one. The four
+Then fill in `.env`. Every key is required; the file explains each one. The three
 that decide whether the platform works at all:
 
 | Key | What it is |
@@ -100,7 +93,6 @@ that decide whether the platform works at all:
 | `MYSQL_ROOT_PASSWORD`, `MYSQL_PASSWORD` | any two long strings you choose |
 | `SESSION_SECRET` | any long random string; changing it signs everyone out |
 | `SMTP_USER`, `SMTP_APP_PASSWORD`, `SMTP_FROM` | a Google **App Password**, not an account password |
-| `CLOUDFLARE_TUNNEL_TOKEN` | the connector token, from the Cloudflare dashboard |
 
 Two more matter at production time:
 
@@ -120,15 +112,8 @@ explains how to delete the feature for good.
 docker compose up -d --build
 ```
 
-The first run takes a few minutes: it pulls four images, installs the Python
+The first run takes a few minutes: it pulls three images, installs the Python
 dependencies, and initialises MySQL. Afterwards a restart takes seconds.
-
-To run the platform **without** publishing it, name the three services and the
-tunnel is never created:
-
-```bash
-docker compose up -d --build db backend nginx
-```
 
 ## 5. Create the accounts
 
@@ -146,13 +131,12 @@ Change that administrator's password before anyone else uses the machine.
 ## 6. Check it worked
 
 ```bash
-docker compose ps                    # four containers, db healthy
+docker compose ps                    # three containers, db healthy
 
 curl -s -o /dev/null -w '%{http_code}\n' http://localhost      # 200
 curl -s http://localhost | grep -o '<title>[^<]*</title>'       # the landing page
 
 docker compose logs --tail 20 backend
-docker compose logs --tail 20 tunnel # "Registered tunnel connection" x4
 ```
 
 Use `GET`, not `curl -I`. The landing route answers `HEAD` with 405, which
@@ -162,45 +146,10 @@ Then open it in a browser:
 
 - on the server itself, <http://localhost>
 - from another machine on the same network, `http://<the server's IP>`
-- from anywhere, the public address the tunnel serves
 
 If a browser shows **"The platform is restarting"**, nginx is up and the
 application is not. That page refreshes itself every ten seconds, so a slow
 start resolves on its own. If it persists, read `docker compose logs backend`.
-
----
-
-# Publishing it at a public address
-
-The tunnel container connects outward to Cloudflare and serves the site through
-that connection. Nothing dials in, so the server needs no public address, no
-forwarded port and no TLS certificate of its own. Cloudflare holds the
-certificate; the hop from the connector to nginx is plain HTTP inside the
-Docker network and never leaves the machine.
-
-The origin is named `http://nginx:80` in the Cloudflare dashboard, and
-`docker-compose.yml` gives the connector a hosts entry for that name so it
-resolves without a name server.
-
-**One rule, and it is the only one that has ever broken this site:**
-
-> Every connector running on a tunnel must be able to reach every origin that
-> tunnel serves.
-
-Cloudflare spreads requests across all registered connectors. A second connector
-that cannot reach nginx does not fail over, it answers **502 Bad Gateway** for
-whatever share of requests lands on it, and it leaves no trace in this stack's
-logs because those requests never arrive here. That produced days of
-intermittent failures that looked like a network problem. If you run more than
-one stack behind Cloudflare, give each stack its own tunnel, or put one
-connector on every network.
-
-To check what is registered:
-
-```bash
-docker ps --format '{{.Names}}\t{{.Image}}' | grep cloudflare
-docker compose logs tunnel | grep -c 'Unable to reach'   # must be 0
-```
 
 ---
 
@@ -261,11 +210,11 @@ If the volume is lost and there is no dump, the data is gone.
 
 # Installing without internet
 
-The build pulls four images. On a machine that has internet, save them:
+The build pulls three images. On a machine that has internet, save them:
 
 ```bash
-docker pull python:3.12-slim nginx:1.27-alpine mysql:8.0 cloudflare/cloudflared:2026.9.1
-docker save python:3.12-slim nginx:1.27-alpine mysql:8.0 cloudflare/cloudflared:2026.9.1 \
+docker pull python:3.12-slim nginx:1.27-alpine mysql:8.0
+docker save python:3.12-slim nginx:1.27-alpine mysql:8.0 \
   | gzip > images.tgz
 ```
 
@@ -286,15 +235,13 @@ machine that has internet and save it the same way.
 
 ## Watching who is using it
 
-nginx logs every request. The first address in each line is always the tunnel
-container, because the tunnel is what connects to nginx. The real visitor
-address is the **last quoted field**, forwarded by Cloudflare:
+nginx logs every request. The first address in each line is the visitor's:
 
 ```bash
 docker compose logs -f nginx                       # live
 
 docker compose logs --no-log-prefix nginx \
-  | awk -F'"' '{print $8}' | sort | uniq -c | sort -rn    # visitors by volume
+  | awk '{print $1}' | sort | uniq -c | sort -rn    # visitors by volume
 ```
 
 The log lives inside the container and is lost on `docker compose down`.
