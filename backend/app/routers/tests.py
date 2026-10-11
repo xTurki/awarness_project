@@ -49,6 +49,11 @@ def _optional_int(value: str) -> int | None:
     return int(value) if value not in ("", None) else None
 
 
+def _question_count(value: str) -> int:
+    """Blank or non-numeric becomes 0, which the service refuses with the range."""
+    return int(value) if value.strip().isdigit() else 0
+
+
 def _message_of(exc: Exception) -> str:
     """The sentence to show above the form.
 
@@ -120,7 +125,7 @@ def create(
     passing_score: str = Form(""),
     retake_interval_days: str = Form(""),
     completion_deadline_days: str = Form(""),
-    question_ids: list[int] = Form(default=[]),
+    question_count: str = Form(""),
     db: Db = Depends(get_session),
     account=Depends(require_password_set),
 ):
@@ -137,13 +142,14 @@ def create(
             passing_score=_optional_int(passing_score),
             retake_interval_days=_optional_int(retake_interval_days),
             completion_deadline_days=_optional_int(completion_deadline_days),
-            question_ids=question_ids,
+            question_count=_question_count(question_count),
         )
         created = test_service.create(db, account, module_id, data)
     except (
         ValidationError,
         test_service.CannotPublish,
         test_service.InvalidSchedule,
+        test_service.InvalidQuestionCount,
     ) as exc:
         message = _message_of(exc)
         return render(
@@ -154,6 +160,7 @@ def create(
                 "module": ModuleRead.of(module),
                 "bank": question_service.list_bank(db, account, module_id),
                 "title": title,
+                "question_count": question_count,
                 "message": message,
             },
             status.HTTP_400_BAD_REQUEST,
@@ -179,6 +186,7 @@ def edit_form(
         raise HTTPException(status_code=404, detail="No such test.") from None
 
     # A frozen test renders read-only, and says why (FR-014).
+    drawn = test_service.questions_of(db, test_id)
     return render(
         request,
         "tests/form.html",
@@ -188,7 +196,8 @@ def edit_form(
             "test": row,
             "bank": question_service.list_bank(db, account, module_id),
             "title": row.title,
-            "chosen": [q.id for q in test_service.questions_of(db, test_id)],
+            "question_count": len(drawn),
+            "drawn": drawn,
             "message": test_service.FROZEN_MESSAGE if row.is_frozen else None,
             "message_kind": "warning" if row.is_frozen else None,
         },
@@ -210,7 +219,7 @@ def update(
     passing_score: str = Form(""),
     retake_interval_days: str = Form(""),
     completion_deadline_days: str = Form(""),
-    question_ids: list[int] = Form(default=[]),
+    question_count: str = Form(""),
     db: Db = Depends(get_session),
     account=Depends(require_password_set),
 ):
@@ -231,7 +240,7 @@ def update(
                 passing_score=_optional_int(passing_score),
                 retake_interval_days=_optional_int(retake_interval_days),
                 completion_deadline_days=_optional_int(completion_deadline_days),
-                question_ids=question_ids,
+                question_count=_question_count(question_count),
             ),
         )
     except test_service.TestNotFound:
@@ -242,6 +251,7 @@ def update(
         ValidationError,
         test_service.CannotPublish,
         test_service.InvalidSchedule,
+        test_service.InvalidQuestionCount,
     ) as exc:
         # Back to the form with the reason above it, the way the sign-in page
         # reports a wrong password. Somebody who has just filled in eight fields
@@ -255,7 +265,8 @@ def update(
                 "test": test_service.get_test(db, account, test_id),
                 "bank": question_service.list_bank(db, account, module_id),
                 "title": title,
-                "chosen": question_ids,
+                "question_count": question_count,
+                "drawn": test_service.questions_of(db, test_id),
                 "message": _message_of(exc),
             },
             status.HTTP_400_BAD_REQUEST,

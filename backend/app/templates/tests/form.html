@@ -120,24 +120,35 @@
 
     <div class="panel mb-4"><div class="panel-body">
       <h2 class="h6">Questions in this test</h2>
-      <div class="form-text mb-2">
-        Chosen from the module's bank. A question may sit in more than one test.
-      </div>
+      {% if bank %}
+        <div class="row g-3 align-items-end">
+          <div class="col-6 col-lg-2">
+            <label for="question_count" class="form-label">Number of questions</label>
+            <input type="number" class="form-control" id="question_count"
+                   name="question_count" min="1" max="{{ bank|length }}" required
+                   value="{{ question_count if question_count else [10, bank|length]|min }}">
+          </div>
+          <div class="col-12 col-lg-10">
+            <div class="form-text">
+              Drawn at random from the module's bank of {{ bank|length }}.
+              {% if test %}Keep the same number to keep these questions; change it to draw again.{% endif %}
+            </div>
+          </div>
+        </div>
 
-      {% for question in bank %}
-        <label class="pick">
-          <input class="form-check-input me-2" type="checkbox" name="question_ids"
-                 value="{{ question.id }}"
-                 {% if chosen and question.id in chosen %}checked{% endif %}>
-          {{ question.prompt }}
-          <span class="small text-body-secondary">({{ question.points }}p)</span>
-        </label>
+        {% if drawn %}
+          <ol class="mt-3 mb-0 small">
+            {% for question in drawn %}
+              <li>{{ question.prompt }} <span class="text-body-secondary">({{ question.points }}p)</span></li>
+            {% endfor %}
+          </ol>
+        {% endif %}
       {% else %}
         <p class="text-body-secondary mb-0">
           The bank is empty.
           <a href="/modules/{{ module.id }}/questions/new">Write a question first</a>.
         </p>
-      {% endfor %}
+      {% endif %}
     </div></div>
 
     <button type="submit" class="btn btn-primary">Save test</button>
