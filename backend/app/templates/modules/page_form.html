@@ -30,13 +30,12 @@
       Headings, emphasis, lists, links, and images. Scripts and event handlers
       are removed before anything is stored, so paste freely.
     </div>
+    <div id="uploadMessage" class="alert alert-danger mt-2 mb-0 d-none" role="alert"></div>
   </div>
 
   <button type="submit" class="btn btn-primary">Save</button>
   <a class="btn btn-link" href="/modules/{{ module.id }}/pages">Cancel</a>
 </form>
-
-<div id="uploadMessage" class="alert alert-danger mt-3 d-none" role="alert"></div>
 
 <script src="/static/vendor/quill/quill.js"></script>
 <script>
@@ -64,15 +63,38 @@
     document.getElementById('body').value = quill.root.innerHTML;
   });
 
+  const maxBytes = {{ upload_max_mb }} * 1024 * 1024;
+  const allowed = {{ upload_extensions|list|tojson }};
+  const box = document.getElementById('uploadMessage');
+
+  function showUploadError(message) {
+    box.textContent = message + ' Choose another picture from the image button.';
+    box.classList.remove('d-none');
+  }
+
   function pickImage() {
     const input = document.createElement('input');
     input.setAttribute('type', 'file');
-    input.setAttribute('accept', 'image/*');
+    input.setAttribute('accept', allowed.join(','));
     input.click();
 
     input.onchange = async function () {
       const file = input.files[0];
       if (!file) return;
+
+      // Checked here first: an oversized file would otherwise be stopped by
+      // nginx with an HTML page this script cannot read.
+      const dot = file.name.lastIndexOf('.');
+      const extension = dot >= 0 ? file.name.slice(dot).toLowerCase() : '';
+      if (!allowed.includes(extension)) {
+        showUploadError('Only image files are accepted: ' + allowed.join(', ') + '.');
+        return;
+      }
+      if (file.size > maxBytes) {
+        showUploadError('That file is ' + (file.size / (1024 * 1024)).toFixed(1) +
+          'MB. The limit is {{ upload_max_mb }}MB.');
+        return;
+      }
 
       const form = new FormData();
       form.append('file', file);
@@ -82,13 +104,10 @@
         method: 'POST',
         body: form
       });
-      const payload = await response.json();
+      const payload = await response.json().catch(function () { return {}; });
 
-      const box = document.getElementById('uploadMessage');
       if (!response.ok) {
-        // Say what was wrong and name the limit, rather than failing blankly.
-        box.textContent = payload.error || 'That file could not be uploaded.';
-        box.classList.remove('d-none');
+        showUploadError(payload.error || 'That file could not be uploaded.');
         return;
       }
 
