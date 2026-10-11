@@ -65,6 +65,7 @@ def _save(client, csrf, module_id, test_id, **overrides):
         "passing_score": "80",
         "retake_interval_days": "",
         "completion_deadline_days": "",
+        "question_count": "1",
         "csrf_token": csrf(f"/modules/{module_id}/tests/{test_id}/edit"),
     }
     data.update(overrides)

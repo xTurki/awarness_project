@@ -160,6 +160,9 @@ class TestWrite(BaseModel):
     retake_interval_days: int | None = None
     completion_deadline_days: int | None = None
     question_ids: list[int] = []
+    # When set, the service draws this many at random from the module's bank
+    # and `question_ids` is ignored.
+    question_count: int | None = None
 
     @field_validator("retake_interval_days", "completion_deadline_days")
     @classmethod
