@@ -15,9 +15,7 @@ import os
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine as sa_create_engine
-from sqlalchemy import text
-from sqlmodel import Session, SQLModel
+from sqlmodel import Session, SQLModel, create_engine, text
 
 from app.config import settings
 from app.database import get_session
@@ -50,7 +48,7 @@ def _schema_url() -> str:
 
 @pytest.fixture(scope="session")
 def engine():
-    server = sa_create_engine(_server_url(), isolation_level="AUTOCOMMIT")
+    server = create_engine(_server_url(), isolation_level="AUTOCOMMIT")
     with server.connect() as connection:
         connection.execute(text(f"DROP DATABASE IF EXISTS {TEST_SCHEMA}"))
         connection.execute(
@@ -61,13 +59,13 @@ def engine():
         )
     server.dispose()
 
-    test_engine = sa_create_engine(_schema_url(), pool_pre_ping=True)
+    test_engine = create_engine(_schema_url(), pool_pre_ping=True)
     SQLModel.metadata.create_all(test_engine)
 
     yield test_engine
 
     test_engine.dispose()
-    server = sa_create_engine(_server_url(), isolation_level="AUTOCOMMIT")
+    server = create_engine(_server_url(), isolation_level="AUTOCOMMIT")
     with server.connect() as connection:
         connection.execute(text(f"DROP DATABASE IF EXISTS {TEST_SCHEMA}"))
     server.dispose()

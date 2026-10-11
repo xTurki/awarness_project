@@ -10,9 +10,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import Column, Index, UniqueConstraint
-from sqlalchemy.dialects.mysql import JSON
-from sqlmodel import Field, SQLModel
+from sqlmodel import JSON, Column, Field, Index, SQLModel, UniqueConstraint
 
 from app.database import utcnow
 

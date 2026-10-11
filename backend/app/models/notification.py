@@ -13,8 +13,7 @@ from __future__ import annotations
 
 from datetime import date, datetime
 
-from sqlalchemy import Column, Text, UniqueConstraint
-from sqlmodel import Field, SQLModel
+from sqlmodel import Column, Field, SQLModel, Text, UniqueConstraint
 
 from app.database import utcnow
 

@@ -12,8 +12,7 @@ import time
 from collections.abc import Iterator
 from datetime import datetime, timezone
 
-from sqlalchemy import text
-from sqlmodel import Session, create_engine
+from sqlmodel import Session, create_engine, text
 
 from app.config import settings
 

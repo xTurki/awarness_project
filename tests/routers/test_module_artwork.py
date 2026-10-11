@@ -133,7 +133,7 @@ def test_a_module_without_a_picture_requests_no_file(client, sign_in, admin, mod
 def test_the_module_table_gained_exactly_one_column(engine):
     """The whole cover in one nullable column, holding an uploaded file name
     or nothing at all."""
-    from sqlalchemy import inspect
+    from sqlmodel import inspect
 
     columns = {c["name"] for c in inspect(engine).get_columns("module")}
     assert columns == {

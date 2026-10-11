@@ -7,8 +7,7 @@ appears to (Constitution VI).
 from __future__ import annotations
 
 import pytest
-from sqlalchemy import inspect, text
-from sqlmodel import Session
+from sqlmodel import Session, inspect, text
 
 from app.models.user import User
 
