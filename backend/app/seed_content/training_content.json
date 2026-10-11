@@ -1,0 +1,1820 @@
+{
+  "modules": [
+    {
+      "title": "Social Engineering and Phishing Awareness",
+      "description": "How attackers get staff to hand over money, passwords or access by asking for it, and what to do when a message does not feel right.",
+      "pages": [
+        {
+          "title": "Why this matters",
+          "body": "<p>Most attacks on a small business do not begin with somebody breaking through a firewall. They begin with somebody being asked, politely, to do something.</p>\n<p>That is social engineering: persuading a person to hand over information, money or access that they would never give away if they knew who was really asking. Phishing is the most common form of it, and it usually arrives as an email, a text message or a phone call that looks like it came from someone you trust.</p>\n<p>You do not need a technical background to stop this. The people who catch these messages are rarely the ones who know most about computers. They are the ones who slow down when a message feels urgent, and check before they act.</p>\n<p>This module takes about twelve minutes. By the end you will know what these messages look like in an ordinary working day, what to do when one arrives, and who to tell.</p>"
+        },
+        {
+          "title": "How it works",
+          "body": "<p>The social engineering attack is virtually always the same shape.</p>\n<p>The first step is to pretend that the sender is not a person that you would ask questions about. Your manager. A supplier you will be working with on a monthly basis. The bank. The ATO. A delivery company.</p>\n<p>Second, they provide you with an excuse to take action. The invoice is past due. The account will be closed shortly. The parcel will be delivered back. Urgency is not a by-product, it is a way of doing things: A hurried individual checks less.</p>\n<h3>Third, they request one particular thing. It is nearly always one of these:</h3>\n<ul>\n<li>Click on any link and log in. The page is identical to the one you use daily, except that it's owned by the attacker. You have given it to them when you type your password!</li>\n<li>Open an attachment. When opened, it will install software that gives them access to your computer.</li>\n<li>Just do the task. Make the payment to the new account number. Purchase these gift cards. Send through the staff payroll file.</li>\n</ul>\n<p>The third type is interesting, as there is no technical aspect to be seen. No virus, no bad link, but only a request that seems reasonable but isn't. It can not be filtered out, so it reaches you.</p>\n<p>None of this requires the attacker to be skilled. It requires you to be busy.</p>"
+        },
+        {
+          "title": "What it looks like at work",
+          "body": "<h3>The supplier who changed their bank details</h3>\n<p>An email arrives from a company you buy from every month. Same logo, same contact name in the signature. Their bank has changed, it says, so please update the account before the next payment. The sending address is slightly wrong - accounts@supp1ies.com.au instead of supplies.com.au - but almost nobody reads an address they think they recognise.</p>\n<h3>The mailbox warning</h3>\n<p>\"Your mailbox is full. New messages are being held. Sign in to release them.\" The link opens a page matching your email provider down to the logo. The address bar does not. You sign in, nothing appears to happen, you shrug and get on with your day. The attacker now reads your email, including every password reset you ever request.</p>\n<h3>The text from the boss</h3>\n<p>\"Stuck in a meeting and can't take a call. Can you grab some gift cards for a client? I'll reimburse you this afternoon.\" It comes from a number you do not recognise and is signed with your manager's first name. The pressure is social rather than technical: most people do not want to say no to their boss.</p>\n<h3>The helpful call from IT</h3>\n<p>Someone rings, says they support your computers, and asks you to install a remote access tool to clear a problem flagged on your machine. There was no problem until you installed it.</p>\n<p>What all of these share: a sender you believe you know, a reason to hurry, and one action that only you can take.</p>"
+        },
+        {
+          "title": "Your turn: a decision to make",
+          "body": "<p>It is twenty to five on a Friday. You are the office administrator at a twenty-person building supplies business, and an email arrives showing your general manager's name:</p>\n<blockquote><p>Are you at your desk? I need an urgent payment released before close of business - deposit for the Kembla job, $8,400. I'm heading into a site meeting so I can't take a call. Account details are attached. Let me know once it's gone through.</p></blockquote>\n<p>It reads like her, and the job is real - you saw it on the whiteboard this morning. The display name is hers, though the address underneath ends in @gmail.com, which you have never had reason to look at before. The bank details are in an attached PDF.</p>\n<h3>What do you do?</h3>\n<ol>\n<li>Pay it. It is the general manager, the job is real, and she said it is urgent.</li>\n<li>Reply to the email and ask her to confirm the account details.</li>\n<li>Do not pay. Ring her on the number you already have and check the request with her directly.</li>\n<li>Forward it to a colleague and ask what they think.</li>\n</ol>"
+        },
+        {
+          "title": "What to do, and why",
+          "body": "<p>The right answer is 3. Ring her, on the number already in your phone or on the staff contact list. Not a number from the email. Not a reply to the email.</p>\n<p>Everything that made the message convincing is available to an attacker. Your general manager's name is on the company website. The Kembla job may have been mentioned in an email they already read, or on a sign at the site. Sounding right is not evidence.</p>\n<h3>Why the others fail</h3>\n<p>1 is what the message was built to produce: authority, urgency, and a deadline you cannot check.</p>\n<p>2 is the common mistake, and worse than it looks. In the event that an attacker sends you the message, your reply is sent to him and he will happily confirm his bank information.</p>\n<p>4 does not check anything and makes the decision. Your colleague knows nothing that you don't know.</p>\n<h3>The rule underneath</h3>\n<p>Confirm any transfer of funds or payment arrangements by a means you selected, not the means you received them. Call to known number takes less than a minute. A payment sent to a criminal can take months to chase, and often is not recovered.</p>\n<p>If your manager is not available, the payment waits. A sincere request prevails over one hour. A bogus one typically doesn't, hence the message that it couldn't wait.</p>"
+        },
+        {
+          "title": "Key takeaways",
+          "body": "<ul>\n<li>When it comes to urges, take them seriously. The most sure-fire indicator in the entire message is the pressure to act now.</li>\n<li>Read the actual address, not the display name. The name is typed by the sender and can say anything.</li>\n<li>Never confirm a payment or a change of bank details by replying. Ring a number you already had.</li>\n<li>Do not sign in through a link. Type the address yourself or use your own bookmark.</li>\n<li>Attachments you were not expecting can wait until you have checked with the sender.</li>\n</ul>\n<h3>If you think you have already clicked</h3>\n<p>Change that account's password straight away, then tell whoever looks after IT. If you used the same password elsewhere, change it there too.</p>\n<p>Report it quickly even if you are not certain. Speed limits the damage, and nobody should be in trouble for reporting a mistake. A workplace where people hide these is one where small incidents grow into large ones.</p>\n<p>In Australia, scams and cybercrime can be reported to ReportCyber (cyber.gov.au/report) and Scamwatch (scamwatch.gov.au).</p>\n<h3>Sources</h3>\n<ul><li>Australian Cyber Security Centre. (n.d.). Phishing. <a href=\"https://www.cyber.gov.au/threats/types-threats/phishing\">https://www.cyber.gov.au/threats/types-threats/phishing</a></li><li>Australian Cyber Security Centre. (n.d.). Social engineering. <a href=\"https://www.cyber.gov.au/threats/types-threats/social-engineering\">https://www.cyber.gov.au/threats/types-threats/social-engineering</a></li><li>Australian Cyber Security Centre. (n.d.). Small business cyber security guide. <a href=\"https://www.cyber.gov.au/business-government/small-business-cyber-security/small-business-hub/small-business-cyber-security-guide\">https://www.cyber.gov.au/business-government/small-business-cyber-security/small-business-hub/small-business-cyber-security-guide</a></li><li>International Organization for Standardization. (2022). Information security, cybersecurity and privacy protection - Information security controls (ISO/IEC 27002:2022), Control 6.3.</li><li>National Institute of Standards and Technology. (2024). Building a cybersecurity and privacy learning program (NIST SP 800-50 Rev. 1). <a href=\"https://csrc.nist.gov/pubs/sp/800/50/r1/final\">https://csrc.nist.gov/pubs/sp/800/50/r1/final</a></li><li>National Institute of Standards and Technology. (2024). The NIST Cybersecurity Framework 2.0, Function PROTECT, Category PR.AT (Awareness and Training).</li><li>MODULE 2</li></ul>"
+        }
+      ],
+      "quiz": [
+        {
+          "prompt": "What is social engineering?",
+          "options": [
+            {
+              "text": "A type of firewall used by small businesses",
+              "correct": false
+            },
+            {
+              "text": "A method of encrypting company email",
+              "correct": false
+            },
+            {
+              "text": "A fault in software that lets an attacker in",
+              "correct": false
+            },
+            {
+              "text": "Persuading a person to give away information, money or access",
+              "correct": true
+            }
+          ]
+        },
+        {
+          "prompt": "An email creates a strong sense of urgency and asks you to act before the end of the day. What should that urgency tell you?",
+          "options": [
+            {
+              "text": "To slow down and check the request through another channel",
+              "correct": true
+            },
+            {
+              "text": "That the message must be genuine, since only real work is urgent",
+              "correct": false
+            },
+            {
+              "text": "To act quickly so the deadline is not missed",
+              "correct": false
+            },
+            {
+              "text": "To forward it to a colleague so they can deal with it",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "A supplier emails to say their bank account has changed and asks you to pay the next invoice to the new account. What is the safest response?",
+          "options": [
+            {
+              "text": "Pay a small amount first to test whether the account works",
+              "correct": false
+            },
+            {
+              "text": "Reply to the email and ask them to confirm the change",
+              "correct": false
+            },
+            {
+              "text": "Ring the supplier on the number you already have on file and confirm",
+              "correct": true
+            },
+            {
+              "text": "Pay it, because the email came from the usual contact name",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "Which part of an email address is typed by the sender and can be set to anything?",
+          "options": [
+            {
+              "text": "The display name shown at the top of the message",
+              "correct": true
+            },
+            {
+              "text": "The domain after the @ symbol",
+              "correct": false
+            },
+            {
+              "text": "The message's delivery timestamp",
+              "correct": false
+            },
+            {
+              "text": "The size of the attachment",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "You click a link in an email, reach a page that looks like your normal sign-in page, and enter your password. Nothing appears to happen. What has most likely occurred?",
+          "options": [
+            {
+              "text": "The website is temporarily down and no harm is done",
+              "correct": false
+            },
+            {
+              "text": "The page is simply slow and will load shortly",
+              "correct": false
+            },
+            {
+              "text": "Your password has been captured by whoever built the fake page",
+              "correct": true
+            },
+            {
+              "text": "Your password was automatically changed for your protection",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "You receive a text from an unknown number, signed with your manager's first name, asking you to buy gift cards and promising reimbursement. What should you do?",
+          "options": [
+            {
+              "text": "Contact your manager on a number you already have before doing anything",
+              "correct": true
+            },
+            {
+              "text": "Buy the cards, since the reimbursement was promised",
+              "correct": false
+            },
+            {
+              "text": "Ignore it completely and tell nobody",
+              "correct": false
+            },
+            {
+              "text": "Reply to the text asking which cards are needed",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "A fraudulent payment request is more difficult to detect by email filters than a message containing a virus.",
+          "options": [
+            {
+              "text": "It's coming from a government e-mail address.",
+              "correct": false
+            },
+            {
+              "text": "It is written in a foreign language",
+              "correct": false
+            },
+            {
+              "text": "It is always sent outside the normal working hours",
+              "correct": false
+            },
+            {
+              "text": "It doesn't have an attachment or link to detect, just a regular request",
+              "correct": true
+            }
+          ]
+        },
+        {
+          "prompt": "You realize you logged in to a questionable site an hour ago with your work password. What is the first step?",
+          "options": [
+            {
+              "text": "Change that password and let anyone who is responsible for IT know.",
+              "correct": true
+            },
+            {
+              "text": "Wait and see if something unusual occurs",
+              "correct": false
+            },
+            {
+              "text": "Delete the email so that no one will know.",
+              "correct": false
+            },
+            {
+              "text": "Don't say anything, in case you get into trouble",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "Someone rings claiming to be from your IT support company and asks you to install remote access software so they can fix a flagged problem. What should you do?",
+          "options": [
+            {
+              "text": "Install it but watch the screen while they work",
+              "correct": false
+            },
+            {
+              "text": "Decline, hang up, and contact IT support on a number you already have",
+              "correct": true
+            },
+            {
+              "text": "Ask them for a password to prove who they are, then install it",
+              "correct": false
+            },
+            {
+              "text": "Install it, since IT support needs access to do their job",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "Which of the following is the strongest reason to report a phishing email even after you have deleted it?",
+          "options": [
+            {
+              "text": "Colleagues have probably received the same message and can be warned",
+              "correct": true
+            },
+            {
+              "text": "It is only worth reporting if money was lost",
+              "correct": false
+            },
+            {
+              "text": "Reporting removes the message from the internet",
+              "correct": false
+            },
+            {
+              "text": "Reporting guarantees the sender will be prosecuted",
+              "correct": false
+            }
+          ]
+        }
+      ],
+      "bank": [
+        {
+          "prompt": "What does the phishing most accurately describe?",
+          "options": [
+            {
+              "text": "Listening to network traffic on public Wi-Fi",
+              "correct": false
+            },
+            {
+              "text": "A message impersonating a trusted sender to obtain information, money or access",
+              "correct": true
+            },
+            {
+              "text": "An attacker guessing passwords repeatedly until one works",
+              "correct": false
+            },
+            {
+              "text": "Software that encrypts files and demands payment",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "An email you were not expecting contains an attachment named 'Invoice_overdue.pdf'. What is the safest first step?",
+          "options": [
+            {
+              "text": "Forward it to the accounts inbox for them to open",
+              "correct": false
+            },
+            {
+              "text": "Open it on your phone instead of your computer",
+              "correct": false
+            },
+            {
+              "text": "Open it to see whether the invoice is genuine",
+              "correct": false
+            },
+            {
+              "text": "Leave it unopened and confirm with the sender through a known contact",
+              "correct": true
+            }
+          ]
+        },
+        {
+          "prompt": "Attackers often research a target before making contact. What does this mean for you?",
+          "options": [
+            {
+              "text": "Correct details always mean the sender is genuine",
+              "correct": false
+            },
+            {
+              "text": "Only very large companies are ever researched",
+              "correct": false
+            },
+            {
+              "text": "Research makes an attack impossible to stop",
+              "correct": false
+            },
+            {
+              "text": "A message containing accurate details about your work is not proof it is genuine",
+              "correct": true
+            }
+          ]
+        },
+        {
+          "prompt": "Which situation should make you most suspicious of a request to change payroll bank details?",
+          "options": [
+            {
+              "text": "The employee has worked there for several years",
+              "correct": false
+            },
+            {
+              "text": "The request came by email only and asks for it to be done before payday",
+              "correct": true
+            },
+            {
+              "text": "The request was made in person by the employee",
+              "correct": false
+            },
+            {
+              "text": "The request came through the normal HR process",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "You hover over a link in an email and the address shown does not match the company it claims to be from. What is the appropriate conclusion?",
+          "options": [
+            {
+              "text": "Click it, because the mismatch may be a redirect service",
+              "correct": false
+            },
+            {
+              "text": "Click it only if the email has a company logo",
+              "correct": false
+            },
+            {
+              "text": "Do not click it, and report the message",
+              "correct": true
+            },
+            {
+              "text": "Copy the address and open it in a different browser",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "What is the main problem with replying to a suspicious email to ask whether it is genuine?",
+          "options": [
+            {
+              "text": "The reply reaches whoever sent it, including an attacker",
+              "correct": true
+            },
+            {
+              "text": "It alerts the sender that you are a real person, which is the only risk",
+              "correct": false
+            },
+            {
+              "text": "Replies are always blocked by email filters",
+              "correct": false
+            },
+            {
+              "text": "It puts the message back in your inbox",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "A colleague tells you they clicked a link and entered their password, but says it is probably nothing. What is the best thing to do?",
+          "options": [
+            {
+              "text": "Agree it is probably nothing and say no more about it",
+              "correct": false
+            },
+            {
+              "text": "Wait a week to see whether anything happens",
+              "correct": false
+            },
+            {
+              "text": "Encourage them to change the password and report it straight away",
+              "correct": true
+            },
+            {
+              "text": "Let other staff know of the error and learn from it",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "Which of these is the clearest sign that a 'delivery failed' text message is a scam?",
+          "options": [
+            {
+              "text": "It contains a tracking number",
+              "correct": false
+            },
+            {
+              "text": "It references a courier company that you are familiar with",
+              "correct": false
+            },
+            {
+              "text": "Requests for card information for a small redelivery fee",
+              "correct": true
+            },
+            {
+              "text": "It arrives on a weekday",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "In Australia, where can cybercrime and scams be reported?",
+          "options": [
+            {
+              "text": "Only to your internet provider",
+              "correct": false
+            },
+            {
+              "text": "ReportCyber and Scamwatch",
+              "correct": true
+            },
+            {
+              "text": "There is no reporting channel for small businesses",
+              "correct": false
+            },
+            {
+              "text": "Only to the bank involved",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "What is the single most useful habit for reducing the risk of social engineering at work?",
+          "options": [
+            {
+              "text": "Deleting every email from outside the organisation",
+              "correct": false
+            },
+            {
+              "text": "Changing your password every week",
+              "correct": false
+            },
+            {
+              "text": "Installing more security software on your computer",
+              "correct": false
+            },
+            {
+              "text": "Verifying unusual requests through a separate, known channel before acting",
+              "correct": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Password and Account Security",
+      "description": "Why reused passwords are the problem rather than short ones, how multi-factor authentication actually protects you, and what to do when a code arrives that you did not ask for.",
+      "pages": [
+        {
+          "title": "Why this matters",
+          "body": "<p>Your work accounts hold more than most people realise. Email alone carries customer details, quotes, invoices, and the ability to reset the password on nearly every other account you own.</p>\n<p>That makes an account worth stealing, and stealing one is easier than attacking the systems behind it. There is no need to break a lock somebody will open for you.</p>\n<p>Most password advice is out of date. Swapping an a for an @ and adding an exclamation mark does very little. What matters is that your password is long, and that you have not used it anywhere else.</p>\n<p>This module takes about twelve minutes. By the end you will know how accounts are actually broken into, what a good passphrase looks like, and why a six-digit code deserves as much protection as the password itself.</p>"
+        },
+        {
+          "title": "How accounts are really broken into",
+          "body": "<p>Films show someone typing furiously until a password is cracked. Real attacks are duller than that, and there are three of them worth knowing.</p>\n<h3>1. Reuse after somebody else's breach</h3>\n<p>A shopping site, a forum, or an app you signed up to years ago gets breached, and the email addresses and passwords end up in a list that circulates among criminals. Attackers then take that list and try the same combinations on other services: email, banking, your supplier portals.</p>\n<p>If you have the same password in two locations, a compromise of the password you don't care about is a compromise of the password you do care about. This is the most common reason for an ordinary person to lose an account, and you didn't have any part in it.</p>\n<h3>2. Guessing what is predictable</h3>\n<p>Short passwords, dictionary words, business name plus the year on the end and the season plus an exclamation mark are all automatically tried, in large numbers. The best defense is length. A long passphrase made up of several unrelated words is much harder to guess than a short password made up of symbols, and easier to remember.</p>\n<h3>3. Being handed it</h3>\n<p>This is the territory of Module 1: A fake sign-in page, or a convincing phone call. The password was not cracked; it was handed out.</p>\n<p>All three are less likely to work with multi factor authentication. It requires a code from an app, a prompt on your phone, or a security key, instead of a password. It's no surprise that the Australian Signals Directorate includes it among the Essential Eight: a stolen password, on its own, is typically not enough to secure access. While it's not 100% infallible, some attacks attempt to deceive you into approving or surrendering the second factor, it blocks the vast majority of account takeovers.</p>"
+        },
+        {
+          "title": "What it looks like at work",
+          "body": "<h3>The password that is used everywhere</h3>\n<p>The same password opens your work email, the supplier portal, the accounting package and a personal shopping account. It's a decent password. It's also one step away from being able to open all four.</p>\n<h3>The shared login</h3>\n<p>There is one computer in the reception that is set and everyone knows the password. No one knows who did what, the password hasn't changed in the past three staff and one still knows it.</p>\n<h3>The note under the keyboard</h3>\n<p>Recorded as written due to the fact that the password was changed monthly and no one could remember it. Changing passwords often generally leads to weaker passwords, as people tend to follow a pattern: Spring2025, Summer2025, Autumn2025.</p>\n<h3>The code read out over the phone</h3>\n<p>Someone rings claiming to be from your bank or IT provider, says a verification code has just been sent, and asks you to read it back to confirm your identity. That code is the second factor on your own account, reading it out gives the one thing the attacker was missing.</p>\n<h3>The prompt at three in the morning</h3>\n<p>You receive a sign-in approval on your phone that you didn't ask for. It happens again. And again. The attacker already knows your password and hopes that you will press `approve' to end the program.</p>"
+        },
+        {
+          "title": "Your turn: a decision to make",
+          "body": "<p>You work in customer service at a small accounting practice.</p>\n<p>Late on a Tuesday afternoon your phone shows a text with a six-digit code for your work email. You did not try to sign in.</p>\n<p>A minute later your desk phone rings. The caller says he is from the practice's IT support company. They are migrating mailboxes tonight, he explains, the system has just sent you a verification code, and he needs you to read it back so he can finish the migration on your account. He is friendly, and he knows both the practice name and your manager's name.</p>\n<h3>What do you do?</h3>\n<ol>\n<li>Read him the code. He already knows enough about the practice to be genuine, and the migration sounds routine.</li>\n<li>Refuse to read the code, end the call, change your password, and report it.</li>\n<li>Ask him to email you from the IT company's address first, then read him the code if the email arrives.</li>\n<li>Ignore the code and the call, and do nothing further.</li>\n</ol>"
+        },
+        {
+          "title": "What to do, and why",
+          "body": "<h3>The right answer is 2.</h3>\n<p>Work backwards from the code. A code was sent, which usually means somebody has entered your username and password into a sign-in page and got that far. Treat the password as compromised. The main thing between that person and your mailbox is the six digits on your phone, and the call exists to get them.</p>\n<p>So there are three jobs, in order: do not give up the code, change the password that has clearly leaked, and report it - if one account has been attacked this way, others are likely next.</p>\n<h3>Why the others fail</h3>\n<p>1 hands over the account. Knowing the practice name and your manager's name proves nothing. Both are usually on the website.</p>\n<p>3 sounds careful and is not. An email address can be forged, and if the attacker is already in a colleague's mailbox the email will be genuine. More importantly, it accepts the premise that reading out a code could ever be reasonable. It cannot.</p>\n<p>4 protects your account and leaves everyone else exposed. Refusing is right; staying silent is not. Nobody learns an attack is under way, and your password stays compromised.</p>\n<h3>The rule underneath</h3>\n<p>A verification code is for you to type into a screen you opened yourself. A legitimate organisation will not ask you to read one out, forward it, or type it into a page somebody sent you. A code you did not ask for is rarely just an inconvenience - treat it as a sign that somebody may already have your password.</p>"
+        },
+        {
+          "title": "Key takeaways",
+          "body": "<ul>\n<li>Never reuse a password across accounts. Your work email deserves a password that exists nowhere else.</li>\n<li>Use a passphrase. Several unrelated words together, long rather than clever. The ACSC recommends passphrases as the practical way for people to have passwords that are both long and memorable.</li>\n<li>Use a password manager if your workplace offers one. It is the only realistic way to have a different strong password for every account.</li>\n<li>Turn on multi-factor authentication, starting with email. Email is the account that can reset all the others.</li>\n<li>Never share a code, password or approval prompt with anybody, including someone claiming to be IT or your bank.</li>\n<li>A code or prompt you did not request usually means somebody already has your password. Change it and report it.</li>\n<li>Ask for your own login rather than a shared one, so what happens on an account can be traced to a person.</li>\n</ul>\n<p>An app-based code or security key beats a code sent by text, because phone numbers can be taken over. Any multi-factor authentication is a large improvement on none.</p>\n<h3>Sources</h3>\n<ul><li>Australian Signals Directorate. (n.d.). Essential Eight. <a href=\"https://www.cyber.gov.au/business-government/asds-cyber-security-frameworks/essential-eight\">https://www.cyber.gov.au/business-government/asds-cyber-security-frameworks/essential-eight</a></li><li>Australian Cyber Security Centre. (n.d.). Small business cyber security guide. <a href=\"https://www.cyber.gov.au/business-government/small-business-cyber-security/small-business-hub/small-business-cyber-security-guide\">https://www.cyber.gov.au/business-government/small-business-cyber-security/small-business-hub/small-business-cyber-security-guide</a></li><li>Australian Cyber Security Centre. (n.d.). Passphrases. <a href=\"https://www.cyber.gov.au/protect-yourself/securing-your-accounts/passphrases\">https://www.cyber.gov.au/protect-yourself/securing-your-accounts/passphrases</a> ; and Multi-factor authentication. <a href=\"https://www.cyber.gov.au/protect-yourself/securing-your-accounts/multi-factor-authentication\">https://www.cyber.gov.au/protect-yourself/securing-your-accounts/multi-factor-authentication</a></li><li>International Organization for Standardization. (2022). Information security, cybersecurity and privacy protection - Information security controls (ISO/IEC 27002:2022), Controls 5.17 (Authentication information) and 8.5 (Secure authentication).</li><li>National Institute of Standards and Technology. (2024). The NIST Cybersecurity Framework 2.0, Function PROTECT, Category PR.AA (Identity Management, Authentication and Access Control).</li><li>MODULE 3</li></ul>"
+        }
+      ],
+      "quiz": [
+        {
+          "prompt": "Why is reusing a password across several accounts risky, even if the password is long and complicated?",
+          "options": [
+            {
+              "text": "Reuse makes the password easier to guess - security warning.",
+              "correct": false
+            },
+            {
+              "text": "Long passwords are more likely to become stale if they are used again.",
+              "correct": false
+            },
+            {
+              "text": "If you have one of those services compromised, you've got them all compromised",
+              "correct": true
+            },
+            {
+              "text": "Websites can detect the reuse and lock the account.",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "What makes a password hardest to guess?",
+          "options": [
+            {
+              "text": "Substituting similar-looking symbols for letters.Use of similar symbols for letters.",
+              "correct": false
+            },
+            {
+              "text": "Adding a number to the end",
+              "correct": false
+            },
+            {
+              "text": "Changing it every month",
+              "correct": false
+            },
+            {
+              "text": "Its length",
+              "correct": true
+            }
+          ]
+        },
+        {
+          "prompt": "You receive a multi-factor authentication code by text that you did not request. What is this most likely a reference to?",
+          "options": [
+            {
+              "text": "A co-worker logged into a shared account",
+              "correct": false
+            },
+            {
+              "text": "Your password has expired and must be renewed.",
+              "correct": false
+            },
+            {
+              "text": "The system is trying to call your mobile again.",
+              "correct": false
+            },
+            {
+              "text": "Somebody has your password and is trying to sign in",
+              "correct": true
+            }
+          ]
+        },
+        {
+          "prompt": "A caller says they are from your IT support company and asks you to read back a verification code. What should you do?",
+          "options": [
+            {
+              "text": "Read it back if they can name your manager",
+              "correct": false
+            },
+            {
+              "text": "Ignore it and take no further action",
+              "correct": false
+            },
+            {
+              "text": "Refuse, end the call, change your password and report it",
+              "correct": true
+            },
+            {
+              "text": "Read it back if they first email you from the right address",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "What is a passphrase?",
+          "options": [
+            {
+              "text": "Several unrelated words used together as one long password",
+              "correct": true
+            },
+            {
+              "text": "A password that must be changed every thirty days",
+              "correct": false
+            },
+            {
+              "text": "A password shared between members of a team",
+              "correct": false
+            },
+            {
+              "text": "A short password with symbols substituted for letters",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "Which account should you protect with multi-factor authentication first?",
+          "options": [
+            {
+              "text": "Your email account",
+              "correct": true
+            },
+            {
+              "text": "The shared reception computer",
+              "correct": false
+            },
+            {
+              "text": "A supplier ordering portal",
+              "correct": false
+            },
+            {
+              "text": "Your social media account",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "What is the main problem with a shared login used by several staff?",
+          "options": [
+            {
+              "text": "Shared logins cannot have strong passwords",
+              "correct": false
+            },
+            {
+              "text": "Nobody can tell who did what, and the password outlives the people who knew it",
+              "correct": true
+            },
+            {
+              "text": "Consumes more server space",
+              "correct": false
+            },
+            {
+              "text": "Shared logins will always log in slower",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "Your phone repeatedly asks you to sign in when you weren't expecting it, at night. What should be done?",
+          "options": [
+            {
+              "text": "Ignore them - denying is sufficient",
+              "correct": false
+            },
+            {
+              "text": "Switch off the phone and deal with it next week",
+              "correct": false
+            },
+            {
+              "text": "Approve one so the prompts stop",
+              "correct": false
+            },
+            {
+              "text": "Refuse them, change your password right away, and inform them.",
+              "correct": true
+            }
+          ]
+        },
+        {
+          "prompt": "Why is it that having to change one's password on a monthly basis can make security worse?",
+          "options": [
+            {
+              "text": "Systems can't keep that many old passwords.",
+              "correct": false
+            },
+            {
+              "text": "People select patterns that are easy to predict or write down the password",
+              "correct": true
+            },
+            {
+              "text": "It generates passwords that are too long to enter.",
+              "correct": false
+            },
+            {
+              "text": "If multi-factor authentication is not used, the account can be accessed easily with frequent changes.",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "What does multi-factor authentication add to a password?",
+          "options": [
+            {
+              "text": "Type in password, and it is encrypted as you type.",
+              "correct": false
+            },
+            {
+              "text": "A second, separate check such as a code or a security key",
+              "correct": true
+            },
+            {
+              "text": "A longer version of the same password.",
+              "correct": false
+            },
+            {
+              "text": "Automatic monthly password changes are enabled.",
+              "correct": false
+            }
+          ]
+        }
+      ],
+      "bank": [
+        {
+          "prompt": "Which of the following is the strongest choice for a work password?",
+          "options": [
+            {
+              "text": "The business name followed by the current year",
+              "correct": false
+            },
+            {
+              "text": "A short password that is changed every week",
+              "correct": false
+            },
+            {
+              "text": "A long passphrase of several unrelated words, used nowhere else",
+              "correct": true
+            },
+            {
+              "text": "P@ssw0rd!2025",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "A password manager is best described as:",
+          "options": [
+            {
+              "text": "A tool that stores a different strong password for every account",
+              "correct": true
+            },
+            {
+              "text": "A service that changes all your passwords every month",
+              "correct": false
+            },
+            {
+              "text": "A way of sharing one password with the whole team",
+              "correct": false
+            },
+            {
+              "text": "A list of approved passwords supplied by your employer",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "Which form of multi-factor authentication is generally the weakest?",
+          "options": [
+            {
+              "text": "A code from an authenticator app",
+              "correct": false
+            },
+            {
+              "text": "A code sent by text message",
+              "correct": true
+            },
+            {
+              "text": "A prompt approved in an authenticator app",
+              "correct": false
+            },
+            {
+              "text": "A physical security key",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "A staff member leaves the business. What should happen to their accounts?",
+          "options": [
+            {
+              "text": "Only the email account needs closing",
+              "correct": false
+            },
+            {
+              "text": "The accounts should stay open in case they return",
+              "correct": false
+            },
+            {
+              "text": "Every account they held should be disabled, not only their email",
+              "correct": true
+            },
+            {
+              "text": "The password should be shared with their replacement",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "Why is your work email account particularly valuable to an attacker?",
+          "options": [
+            {
+              "text": "It stores the company's antivirus settings",
+              "correct": false
+            },
+            {
+              "text": "It can be used to reset the passwords of your other accounts",
+              "correct": true
+            },
+            {
+              "text": "It cannot be protected by multi-factor authentication",
+              "correct": false
+            },
+            {
+              "text": "It is usually the only account with a password",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "You discover a colleague has written their password on a note under their keyboard. What is the most useful response?",
+          "options": [
+            {
+              "text": "Memorise it in case you need access later",
+              "correct": false
+            },
+            {
+              "text": "Talk to them about a password manager or a memorable passphrase",
+              "correct": true
+            },
+            {
+              "text": "Say nothing, as it is their own account",
+              "correct": false
+            },
+            {
+              "text": "Report them for a disciplinary breach",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "A website you used years ago announces it has been breached. You have used that password at work. What should you do?",
+          "options": [
+            {
+              "text": "Change it at the next scheduled password change",
+              "correct": false
+            },
+            {
+              "text": "Change the work password immediately, and anywhere else it was used",
+              "correct": true
+            },
+            {
+              "text": "Nothing, because the breach was at the other website",
+              "correct": false
+            },
+            {
+              "text": "Only change it if money is taken",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "Multi-factor authentication appears in which recognised set of mitigation strategies?",
+          "options": [
+            {
+              "text": "The Fair Work Act",
+              "correct": false
+            },
+            {
+              "text": "The ASD Essential Eight",
+              "correct": true
+            },
+            {
+              "text": "The Australian Consumer Law",
+              "correct": false
+            },
+            {
+              "text": "The Notifiable Data Breaches scheme",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "Which statement about sharing your password with a manager is correct?",
+          "options": [
+            {
+              "text": "It is acceptable as long as it is changed afterwards",
+              "correct": false
+            },
+            {
+              "text": "It is required whenever you take leave",
+              "correct": false
+            },
+            {
+              "text": "You should not share it; access should be granted through your manager's own account",
+              "correct": true
+            },
+            {
+              "text": "It is acceptable if the manager is senior enough",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "What should you do before typing your password into a sign-in page you reached from a link?",
+          "options": [
+            {
+              "text": "Check the page has a company logo",
+              "correct": false
+            },
+            {
+              "text": "Nothing, as long as the link was in an email",
+              "correct": false
+            },
+            {
+              "text": "Check the page loaded quickly",
+              "correct": false
+            },
+            {
+              "text": "Stop, and open the site yourself from a bookmark or by typing the address",
+              "correct": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Data Security and Privacy",
+      "description": "The information you handle belongs to somebody else. How it gets out by accident, how to share only what is needed, and what to do the moment you think something has gone astray.",
+      "pages": [
+        {
+          "title": "Why this matters",
+          "body": "<p>Every working day you handle information about other people. Customer names and addresses. Bank details on an invoice. A colleague's tax file number. Somebody's medical certificate attached to a leave request.</p>\n<p>None of it is yours. You hold it because your job requires it, and the person it describes cannot check what you do with it. That is the basis of privacy at work: they are trusting a business they cannot see inside.</p>\n<p>Most people expect the danger to be hackers, and criminal attacks are in fact the largest single source of reported data breaches in Australia. But everyday accidents run them close, and they are the part most staff are able to prevent: a wrong name picked from an address book, a spreadsheet with more columns than anyone meant to send, a sharing link left open to anyone who has it.</p>\n<p>This module takes about twelve minutes. By the end you will know the habits that prevent most of these incidents, and what to do when one happens anyway.</p>"
+        },
+        {
+          "title": "How information gets out",
+          "body": "<p>There are four routes, and only the last one involves an attacker.</p>\n<h3>Sending it to the wrong person</h3>\n<p>Two customers named Sarah. An email client that completes the address after three letters. Reply-all on a message meant for one person. This is the most common privacy incident in offices of every size, and it takes a second.</p>\n<h3>Sending more than was asked for</h3>\n<p>Somebody needs your customers' postcodes for a delivery quote, so you send the whole customer spreadsheet - names, phone numbers, order history and all - because that is the file you had. The request was for one column.</p>\n<p>This feels helpful rather than careless, which is why it is worth naming. The rule is data minimisation - share as little as it takes to do the job. Nothing that was not sent can be leaked by who ever it was you sent it to.</p>\n<h3>Putting it somewhere it should not be</h3>\n<p>A client list on a USB stick to work from home. Report sent to personal email due to slow work laptop. Business can't see, back up or close files when you leave in a personal cloud account.</p>\n<h3>Having it taken</h3>\n<p>A ransomware, a hacked mailbox, a stolen laptop. Real, and the one that everyone can think of. It's also the place where the other 3 routes make a decision on the harm: If someone is in your mailbox, they will get what you put there.</p>\n<p>Australian privacy law imposes a number of requirements on organisations that hold personal information, including requirements to inform individuals of some privacy breaches.</p>\n<p>How they apply depends on the business, so your workplace should check its position against current guidance from the Office of the Australian Information Commissioner. The expectations remain unchanged: treat the information with care, and make sure to speak up as soon as it gets lost.</p>"
+        },
+        {
+          "title": "What it looks like at work",
+          "body": "<h3>The other Sarah</h3>\n<p>You type \"Sar\" into the To field and accept the first suggestion. The quote is sent to another client with a similar name who has the pricing and contact information. They might not say anything and just take it.</p>\n<h3>The attached document is not checked.</h3>\n<p>A staff roster is shared with the entire staff. The other tab of the spreadsheet is not visible but contains pay rates. It's now available for everyone.</p>\n<h3>The link everyone can click on</h3>\n<p>You have a folder with a contractor and select the option \"anyone with the link\", as it was faster than entering their address. That link is then placed in an email thread which is forwarded twice, and will never expire.</p>\n<h3>The laptop in the boot</h3>\n<p>Taken from the vehicle during the night. If the disk is encrypted and the screen is locked, it is a serious breach; if it is not encrypted and the screen is not locked, it is an inconvenience.They never have been, and they can still be stolen.</p>\n<p>Only the last needs an attacker. The rest are ordinary days.</p>"
+        },
+        {
+          "title": "Your turn: a decision to make",
+          "body": "<p>You work at a small online homewares retailer with six staff. The business has hired a marketing contractor to email past customers about a seasonal sale, and the contractor writes to you:</p>\n<blockquote><p>Hi, to set the campaign up I'll need your customer list - first name and email address is all I need for the mailout. Could you send it today so we can start Monday? Easiest is probably just to share the customer spreadsheet.</p></blockquote>\n<p>The contractor is genuine; your manager engaged them last week and copied you in. The customer spreadsheet holds names, email addresses, phone numbers, full postal addresses, order history, and a notes column that sometimes records a complaint or a payment dispute.</p>\n<h3>What do you do?</h3>\n<ol>\n<li>Share the whole spreadsheet. The contractor is legitimate and asked for it themselves.</li>\n<li>Share the whole spreadsheet but ask them to delete the columns they do not need.</li>\n<li>Send only first names and email addresses, in a new file, after checking with your manager how it should be sent.</li>\n<li>Refuse. Customer information should never leave the business.</li>\n</ol>"
+        },
+        {
+          "title": "What to do, and why",
+          "body": "<h3>The right answer is 3.</h3>\n<p>They asked for two fields. Send two fields. Build a new file of first names and email addresses, and send it by whatever method your workplace has agreed for sharing information with contractors.</p>\n<p>The extra columns matter most. Order history, postal addresses and notes about complaints or disputes are personal information about identifiable people, and handing them to a marketing contractor is not something the customers ever agreed to.</p>\n<h3>Why the others fail</h3>\n<p>1 hands personal details to somebody with no reason to hold them. A legitimate contractor is not thereby entitled to everything. Once it is in their inbox, their security is your clients' security.</p>\n<p>2 sounds responsible but does nothing. You have already sent it. Asking for columns to be deleted depends on them remembering, doing it properly, and the copy in their email not existing. You cannot unsend a file.</p>\n<p>4 is over-correction that stops legitimate work. Rules that block the job get worked around, usually invisibly.</p>\n<h3>The rule underneath</h3>\n<p>Ask two questions before sending anything about a person: who actually needs this, and what is the least I can send that does the job? Then check the recipient before pressing send. If you are unsure whether something should be shared, ask first - the delay costs an hour, and the alternative cannot be undone.</p>"
+        },
+        {
+          "title": "Key takeaways",
+          "body": "<ul>\n<li>Send the least that does the job. Build a new file with the needed columns rather than forwarding the whole one.</li>\n<li>Check the recipient before you send, especially when the address was auto-completed and the message has an attachment.</li>\n<li>Look inside the file you are attaching, including extra tabs and hidden columns.</li>\n<li>Share with named people, not \"anyone who has the link\".</li>\n<li>Keep work information in work systems, not personal email, cloud storage or USB sticks the business cannot protect or retrieve.</li>\n<li>Lock your screen when you leave your desk, and watch who can see it in public.</li>\n<li>Clear the printer tray, and shred paper holding personal details.</li>\n<li>Do not keep what you no longer need. Deleted information cannot be breached.</li>\n</ul>\n<h3>If something goes out by mistake</h3>\n<p>Report it right away, even if it appears to be small, even if it was your mistake. Some of these breaches have to be evaluated within a short timeframe and may need to be communicated to the affected individuals, and that time begins as soon as someone knows. Recalling an email rarely works; telling someone always helps.</p>\n<h3>Sources</h3>\n<ul><li>Australian Cyber Security Centre. (n.d.). Small business cyber security guide. <a href=\"https://www.cyber.gov.au/business-government/small-business-cyber-security/small-business-hub/small-business-cyber-security-guide\">https://www.cyber.gov.au/business-government/small-business-cyber-security/small-business-hub/small-business-cyber-security-guide</a></li><li>Office of the Australian Information Commissioner. (n.d.). Australian Privacy Principles. <a href=\"https://www.oaic.gov.au/privacy/australian-privacy-principles\">https://www.oaic.gov.au/privacy/australian-privacy-principles</a> ; and About the Notifiable Data Breaches scheme. <a href=\"https://www.oaic.gov.au/privacy/notifiable-data-breaches/about-the-notifiable-data-breaches-scheme\">https://www.oaic.gov.au/privacy/notifiable-data-breaches/about-the-notifiable-data-breaches-scheme</a></li><li>International Organization for Standardization. (2022). Information security, cybersecurity and privacy protection - Information security controls (ISO/IEC 27002:2022), Controls 5.10 (Acceptable use), 5.12 (Classification of information), 5.14 (Information transfer) and 5.34 (Privacy and protection of PII).</li><li>National Institute of Standards and Technology. (2024). The NIST Cybersecurity Framework 2.0, Function PROTECT, Category PR.DS (Data Security).</li><li>National Institute of Standards and Technology. (2024). Building a cybersecurity and privacy learning program (NIST SP 800-50 Rev. 1). <a href=\"https://csrc.nist.gov/pubs/sp/800/50/r1/final\">https://csrc.nist.gov/pubs/sp/800/50/r1/final</a></li><li>MODULE 4</li></ul>"
+        }
+      ],
+      "quiz": [
+        {
+          "prompt": "Which of these is a common (and preventable) way that personal information can leak from a small business?",
+          "options": [
+            {
+              "text": "Everyday mistakes such as sending an email to the wrong recipient",
+              "correct": true
+            },
+            {
+              "text": "Faults in the operating system",
+              "correct": false
+            },
+            {
+              "text": "Customers sharing their own details publicly",
+              "correct": false
+            },
+            {
+              "text": "Attackers breaking into the company's servers",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "A contractor asks for client first names and email addresses. What should you send?",
+          "options": [
+            {
+              "text": "The full spreadsheet, asking them to delete the extra columns",
+              "correct": false
+            },
+            {
+              "text": "The full client spreadsheet, so they have what they need",
+              "correct": false
+            },
+            {
+              "text": "Nothing, as client details must never leave the business",
+              "correct": false
+            },
+            {
+              "text": "A new file containing only first names and email addresses",
+              "correct": true
+            }
+          ]
+        },
+        {
+          "prompt": "What does 'data minimisation' mean in everyday practice?",
+          "options": [
+            {
+              "text": "Compressing files before emailing them",
+              "correct": false
+            },
+            {
+              "text": "Storing information on the smallest available drive",
+              "correct": false
+            },
+            {
+              "text": "Sharing and keeping only the information actually needed",
+              "correct": true
+            },
+            {
+              "text": "Reducing the number of people who use the computer",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "Why is 'anyone with the link' a risky way to share a folder?",
+          "options": [
+            {
+              "text": "It only works for people inside the business",
+              "correct": false
+            },
+            {
+              "text": "It compresses the files and can corrupt them",
+              "correct": false
+            },
+            {
+              "text": "The link can be forwarded and keeps working for whoever receives it",
+              "correct": true
+            },
+            {
+              "text": "It is slower than sharing with named people",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "You have emailed a customer's quote to the wrong customer. What should you do first?",
+          "options": [
+            {
+              "text": "Try to recall the message and say nothing if the recall succeeds",
+              "correct": false
+            },
+            {
+              "text": "Delete it from your sent items",
+              "correct": false
+            },
+            {
+              "text": "Report it to whoever is responsible at your workplace straight away",
+              "correct": true
+            },
+            {
+              "text": "Wait to see whether the recipient mentions it",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "Why should work information be kept in work systems rather than personal accounts or USB sticks?",
+          "options": [
+            {
+              "text": "It is only a problem if the information is financial",
+              "correct": false
+            },
+            {
+              "text": "The business cannot protect, back up or recover what it cannot see",
+              "correct": true
+            },
+            {
+              "text": "Personal accounts have less storage space",
+              "correct": false
+            },
+            {
+              "text": "Personal devices are always slower",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "Before attaching a spreadsheet to an email, what should you check?",
+          "options": [
+            {
+              "text": "Whether it contains extra tabs, hidden columns or more data than intended",
+              "correct": true
+            },
+            {
+              "text": "Whether the file was created this week",
+              "correct": false
+            },
+            {
+              "text": "Whether the file name is short enough",
+              "correct": false
+            },
+            {
+              "text": "Whether the file opens on a phone",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "Why is keeping old customer records 'just in case' a risk?",
+          "options": [
+            {
+              "text": "Information still held can still be breached",
+              "correct": true
+            },
+            {
+              "text": "It is illegal to keep any record for more than a year",
+              "correct": false
+            },
+            {
+              "text": "Old records slow the computer down",
+              "correct": false
+            },
+            {
+              "text": "Old records cannot be encrypted",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "Which of these would usually be treated as especially sensitive information?",
+          "options": [
+            {
+              "text": "A business's public phone number",
+              "correct": false
+            },
+            {
+              "text": "A supplier's published street address",
+              "correct": false
+            },
+            {
+              "text": "A note describing a client's injury or medical condition",
+              "correct": true
+            },
+            {
+              "text": "The name of your workplace",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "What is the best habit when leaving your desk?",
+          "options": [
+            {
+              "text": "Nothing, if you will only be a few minutes",
+              "correct": false
+            },
+            {
+              "text": "Minimise the windows",
+              "correct": false
+            },
+            {
+              "text": "Lock the screen",
+              "correct": true
+            },
+            {
+              "text": "Turn the monitor off",
+              "correct": false
+            }
+          ]
+        }
+      ],
+      "bank": [
+        {
+          "prompt": "The address will appear in the Auto-complete list after three letters are typed. Why does this become a prevalent privacy incident?",
+          "options": [
+            {
+              "text": "Removes attachments from a message",
+              "correct": false
+            },
+            {
+              "text": "It always chooses external addresses first",
+              "correct": false
+            },
+            {
+              "text": "It is easy to accept a similar name belonging to a different person",
+              "correct": true
+            },
+            {
+              "text": "It sends the message before you finish writing",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "A colleague asks you to send them the full payroll file so they can look up one person's start date. What is the better response?",
+          "options": [
+            {
+              "text": "Send the full file, since they are a colleague",
+              "correct": false
+            },
+            {
+              "text": "Refuse and tell them to ask the manager",
+              "correct": false
+            },
+            {
+              "text": "Send the file with the pay column hidden",
+              "correct": false
+            },
+            {
+              "text": "Send only the start date they asked for",
+              "correct": true
+            }
+          ]
+        },
+        {
+          "prompt": "Why does a stolen laptop matter less if the disk is encrypted and the screen was locked?",
+          "options": [
+            {
+              "text": "The information on it cannot be read without the credentials",
+              "correct": true
+            },
+            {
+              "text": "A locked screen prevents the laptop from being switched on",
+              "correct": false
+            },
+            {
+              "text": "When the laptop is moved, the disk is erased using encryption.",
+              "correct": false
+            },
+            {
+              "text": "Police can automatically track encrypted laptops",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "Paper records with personal information should be destroyed by:",
+          "options": [
+            {
+              "text": "Leaving them in the printer tray for collection",
+              "correct": false
+            },
+            {
+              "text": "Shredding or secure destruction",
+              "correct": true
+            },
+            {
+              "text": "Placing them in the general waste bin",
+              "correct": false
+            },
+            {
+              "text": "Putting them in the recycling",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "Which statement best describes your responsibility for customer information?",
+          "options": [
+            {
+              "text": "It belongs to whoever stores it on their computer",
+              "correct": false
+            },
+            {
+              "text": "It stops being the customer's once the sale is complete",
+              "correct": false
+            },
+            {
+              "text": "It belongs to you once the customer has provided it",
+              "correct": false
+            },
+            {
+              "text": "You hold it on the customer's behalf because your job requires it",
+              "correct": true
+            }
+          ]
+        },
+        {
+          "prompt": "You are working on a train with a customer database open on your laptop. What is the concern?",
+          "options": [
+            {
+              "text": "There is no concern if the laptop is encrypted",
+              "correct": false
+            },
+            {
+              "text": "People nearby can read the screen",
+              "correct": true
+            },
+            {
+              "text": "Laptops are not permitted on public transport",
+              "correct": false
+            },
+            {
+              "text": "Train Wi-Fi deletes local files",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "Why is it better to ask before sharing information you are unsure about?",
+          "options": [
+            {
+              "text": "It is faster than sending the file",
+              "correct": false
+            },
+            {
+              "text": "Most information is never actually needed",
+              "correct": false
+            },
+            {
+              "text": "Asking transfers the responsibility to somebody else",
+              "correct": false
+            },
+            {
+              "text": "A delay can be fixed; a disclosure cannot be taken back",
+              "correct": true
+            }
+          ]
+        },
+        {
+          "prompt": "Which of these should be reported at work, even if it seems minor?",
+          "options": [
+            {
+              "text": "An email containing personal details sent to the wrong address",
+              "correct": true
+            },
+            {
+              "text": "An email that bounced back undelivered",
+              "correct": false
+            },
+            {
+              "text": "A file saved in the wrong folder on your own computer",
+              "correct": false
+            },
+            {
+              "text": "A meeting invitation declined by a client",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "Which Australian body publishes guidance on privacy obligations and data breaches?",
+          "options": [
+            {
+              "text": "The Reserve Bank of Australia",
+              "correct": false
+            },
+            {
+              "text": "The Fair Work Commission",
+              "correct": false
+            },
+            {
+              "text": "The Office of the Australian Information Commissioner",
+              "correct": true
+            },
+            {
+              "text": "The Australian Taxation Office",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "What two questions should you ask before sending information about a person?",
+          "options": [
+            {
+              "text": "Is the file small enough, and will it open?",
+              "correct": false
+            },
+            {
+              "text": "Is it urgent, and who asked for it?",
+              "correct": false
+            },
+            {
+              "text": "Who actually needs this, and what is the least I can send?",
+              "correct": true
+            },
+            {
+              "text": "Has it been sent before, and to whom?",
+              "correct": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Safe Network and Device Use",
+      "description": "Updates, backups, public Wi-Fi, unknown USB sticks and lost phones. The everyday habits that keep a laptop from becoming the way in.",
+      "pages": [
+        {
+          "title": "Why this matters",
+          "body": "<p>For most people in a small business, the office is a laptop and a phone. They travel home, to sites, to cafes and to airports, carrying the same access to email, files and customer records wherever they go.</p>\n<p>That makes the device worth protecting, and it puts decisions in your hands that used to belong to somebody in a server room: whether to install the update, which network to join, whether to plug in the USB stick you were handed.</p>\n<p>None of these is technical. Each is a small habit, and the useful ones are dull: keep things updated, keep backups, be careful what you plug in, and speak up quickly when a device goes missing.</p>\n<p>This module takes about twelve minutes, and separates the habits that reduce risk from the advice that only sounds like it does.</p>"
+        },
+        {
+          "title": "Where the risk actually is",
+          "body": "<h3>Software that has not been updated</h3>\n<p>Updates are not only new features. Most close weaknesses that are already known and already being used against people who have not installed them. An attacker need discover nothing; they need you to still be running last month's version. This is why the Australian Signals Directorate puts patching applications and patching operating systems among the Essential Eight, alongside multi-factor authentication and regular backups.</p>\n<h3>No backup, or one that was never tested</h3>\n<p>Ransomware encrypts your files and demands payment. A failed hard drive does much the same, minus the demand. A recent backup that has actually been restored once turns either into a bad afternoon rather than a closed business. One left plugged in permanently is encrypted along with everything else.</p>\n<h3>Using an administrator account for everyday work</h3>\n<p>An administrator account can install software and change anything on the machine - and so can anything that runs while you are signed into it. Restricting administrative privileges is another of the Essential Eight.</p>\n<h3>Networks you do not control</h3>\n<p>Public Wi-Fi is worth understanding properly, because the usual advice overstates one risk and misses another. Traffic to modern websites is encrypted, so someone on the same cafe network generally cannot read what you send. The actual issues are a network with a legitimate name and pages that ask you to install something or sign in unexpectedly.</p>\n<h3>Things you plug in and things you lose</h3>\n<p>A USB stick from a conference or a car park may carry malware. If a phone or laptop is left in a taxi, it's a much smaller issue if it has a screen lock and is encrypted, hence the slight annoyance of a screen lock.</p>"
+        },
+        {
+          "title": "What it looks like at work",
+          "body": "<h3>\"Remind me tomorrow\"</h3>\n<p>Update prompt has been ignored every day for a month there's never a good time. The weakness it addresses was public the day the update was released, the same day that attackers started to search for those who hadn't applied it.</p>\n<h3>The extra hard drive in the laptop bag</h3>\n<p>Plugged in always to keep the backup up to date. It encrypts the backup as well, since to the computer it's just another drive.</p>\n<h3>The conference USB stick</h3>\n<p>Easy to use, convenient and convenient to carry. No one knows what's in it, where it was manufactured or who handled it from the factory to the tote bag.</p>\n<h3>The airport network</h3>\n<p>There are three networks listed: Airport_WiFi, Airport WiFi Free and _Airport_Free_WiFi. The airport's is one. You have a quote to send and 10 minutes before you are to board.</p>\n<h3>The phone that was left in the taxi</h3>\n<p>It has a work e-mail on it. This is a costly annoyance if it locks with a PIN or fingerprint and the data is encrypted.If not, somebody now has the mailbox.</p>\n<h3>The router nobody has touched</h3>\n<p>It still has the default administrator password printed on its underside, and its firmware was last updated when it was installed four years ago.</p>"
+        },
+        {
+          "title": "Your turn: a decision to make",
+          "body": "<p>You are a sales representative for a small equipment hire company.</p>\n<p>You are at the airport with fifteen minutes before boarding. A customer wants a revised quote today, and it needs to go from your work email with a PDF attached. Your laptop is with you, and your phone has plenty of mobile data left.</p>\n<p>Several networks are listed, including Free_Airport_WiFi_Fast, which needs no password. When you connect, a page opens asking you to sign in with your email address to get online, and offers a \"connection helper\" download to improve speed.</p>\n<h3>What do you do?</h3>\n<ol>\n<li>Sign in with your work email address and send the quote. It is only to get online.</li>\n<li>Download the connection helper so the network works properly, then send the quote.</li>\n<li>Disconnect from that network and use your phone's mobile hotspot to send the quote.</li>\n<li>Wait until you land and send it from the hotel Wi-Fi instead.</li>\n</ol>"
+        },
+        {
+          "title": "What to do, and why",
+          "body": "<p>The right answer is 3. Use your own phone as a hotspot.</p>\n<p>You control it, it needs no sign-in page, and it takes thirty seconds to set up. Mobile data answers nearly every public Wi-Fi question, and the quote goes out on time.</p>\n<p>Two things should have stopped you, though they are not equal. The bigger one is the offer to download a \"connection helper\": no legitimate network needs you to install software, and a download like that is a common way a laptop gets compromised. The request for an email address matters less on its own, because plenty of genuine public networks ask for one at the sign-in page, so treat it as a prompt to be careful rather than proof the network is fake, and never enter your work password into a page a network opens.</p>\n<h3>Why the others fail</h3>\n<p>1 risks handing your work email address, and possibly your password, to whoever set up the network. Giving an email to a sign-in page is common and often harmless; entering your work password there is the real danger, and the name on the network proves nothing.</p>\n<p>2 is the worst option. Installing software offered by an unknown network is how a laptop gets compromised. No legitimate network needs a download to work.</p>\n<p>4 is safe, unnecessary, and misses the deadline. Security advice that stops the job gets ignored next time, and hotel Wi-Fi is a public network with the same questions attached.</p>\n<h3>The rule underneath</h3>\n<p>Prefer a network you control. When you must use one you do not, install nothing it offers, enter no work credentials into a page it opens, and use your workplace's VPN if it has one. If the network behaves oddly, that is information, not an obstacle to get past.</p>"
+        },
+        {
+          "title": "Key takeaways",
+          "body": "<ul>\n<li>Install updates promptly on your computer, phone and applications, and restart when asked - many do not take effect until you do.</li>\n<li>Make sure backups exist and a restore has been tested. Keep a copy that is not permanently connected to the computer it protects.</li>\n<li>Use a standard account for everyday work, not an administrator account.</li>\n<li>Do not plug in USB devices of unknown origin.</li>\n<li>Prefer your mobile hotspot to public Wi-Fi. On a public network, install nothing and sign in to nothing unexpected.</li>\n<li>Lock your screen, and use a PIN, password or biometric on your phone. That is what usually keeps a lost device from also becoming a data breach.</li>\n<li>Report a lost or stolen device immediately, so access can be cut off and the device wiped remotely.</li>\n<li>Change default passwords on office equipment, including the router, and keep its firmware up to date.</li>\n</ul>\n<p>Four of the ASD Essential Eight strategies are ones ordinary staff directly affect: patching applications, patching operating systems, regular backups, and restricting administrative privileges. No technical skills are needed for any of them. They require somebody not to put them off.</p>\n<h3>Sources</h3>\n<ul><li>Australian Signals Directorate. (n.d.). Essential Eight and Essential Eight Maturity Model. <a href=\"https://www.cyber.gov.au/business-government/asds-cyber-security-frameworks/essential-eight\">https://www.cyber.gov.au/business-government/asds-cyber-security-frameworks/essential-eight</a></li><li>Australian Cyber Security Centre. (n.d.). Small business cyber security guide. <a href=\"https://www.cyber.gov.au/business-government/small-business-cyber-security/small-business-hub/small-business-cyber-security-guide\">https://www.cyber.gov.au/business-government/small-business-cyber-security/small-business-hub/small-business-cyber-security-guide</a></li><li>International Organization for Standardization. (2022). Information security, cybersecurity and privacy protection - Information security controls (ISO/IEC 27002:2022), Controls 8.1 (User endpoint devices), 8.7 (Protection against malware), 8.8 (Management of technical vulnerabilities) and 8.13 (Information backup).</li><li>National Institute of Standards and Technology. (2024). The NIST Cybersecurity Framework 2.0, Function PROTECT, Category PR.PS (Platform Security), and Function RECOVER.</li><li>National Institute of Standards and Technology. (2024). Building a cybersecurity and privacy learning program (NIST SP 800-50 Rev. 1). <a href=\"https://csrc.nist.gov/pubs/sp/800/50/r1/final\">https://csrc.nist.gov/pubs/sp/800/50/r1/final</a></li></ul>"
+        }
+      ],
+      "quiz": [
+        {
+          "prompt": "Why is installing updates promptly important?",
+          "options": [
+            {
+              "text": "They close known weaknesses that attackers are already using",
+              "correct": true
+            },
+            {
+              "text": "They are required before a backup can run",
+              "correct": false
+            },
+            {
+              "text": "They change your password automatically",
+              "correct": false
+            },
+            {
+              "text": "They make the computer run faster",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "What is wrong with a backup drive that stays plugged into the computer at all times?",
+          "options": [
+            {
+              "text": "The drive wears out faster",
+              "correct": false
+            },
+            {
+              "text": "Backups cannot run while the drive is connected",
+              "correct": false
+            },
+            {
+              "text": "Ransomware can encrypt the backup along with the computer",
+              "correct": true
+            },
+            {
+              "text": "The backup will be too large to restore",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "A public Wi-Fi sign-in page offers a download to 'improve your connection speed'. What should you do?",
+          "options": [
+            {
+              "text": "Install it, since the network requires it",
+              "correct": false
+            },
+            {
+              "text": "Install it only if the network is named after the venue",
+              "correct": false
+            },
+            {
+              "text": "Install it but remove it afterwards",
+              "correct": false
+            },
+            {
+              "text": "Do not install it, and use your mobile hotspot instead",
+              "correct": true
+            }
+          ]
+        },
+        {
+          "prompt": "Which is the safest way to send a work email while travelling?",
+          "options": [
+            {
+              "text": "Any network that does not require a password",
+              "correct": false
+            },
+            {
+              "text": "The network with the strongest signal",
+              "correct": false
+            },
+            {
+              "text": "Your own phone's mobile hotspot",
+              "correct": true
+            },
+            {
+              "text": "An open network with the venue's name",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "Why should everyday work be done from a standard account rather than an administrator account?",
+          "options": [
+            {
+              "text": "Anything that runs while you are signed in has the same powers you do",
+              "correct": true
+            },
+            {
+              "text": "Administrator accounts cannot receive email",
+              "correct": false
+            },
+            {
+              "text": "Standard accounts have faster internet access",
+              "correct": false
+            },
+            {
+              "text": "Standard accounts do not need passwords",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "Somebody gives you a branded USB stick at a trade show. What is the safest thing to do?",
+          "options": [
+            {
+              "text": "Plug it into a colleague's computer to test it",
+              "correct": false
+            },
+            {
+              "text": "Plug it in and scan it with antivirus first",
+              "correct": false
+            },
+            {
+              "text": "Plug it in but do not open any files",
+              "correct": false
+            },
+            {
+              "text": "Never connect it to a work machine",
+              "correct": true
+            }
+          ]
+        },
+        {
+          "prompt": "You've lost your work phone. What matters most in limiting the damage?",
+          "options": [
+            {
+              "text": "That it was secured by a PIN or biometric and that the data was encrypted.",
+              "correct": true
+            },
+            {
+              "text": "That it was switched off at the time",
+              "correct": false
+            },
+            {
+              "text": "That it is a new model",
+              "correct": false
+            },
+            {
+              "text": "That it was insured",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "When should you report lost or stolen work device?",
+          "options": [
+            {
+              "text": "At the next team meeting",
+              "correct": false
+            },
+            {
+              "text": "So, access can be denied and the device can be wiped immediately.",
+              "correct": true
+            },
+            {
+              "text": "Having looked for it for one or two days,",
+              "correct": false
+            },
+            {
+              "text": "Only if not password protected",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "Which of these is a real problem with public wi-fi these days?",
+          "options": [
+            {
+              "text": "Anyone in the vicinity can easily read the traffic of encrypted websites",
+              "correct": false
+            },
+            {
+              "text": "A network set up by an attacker using a convincing name",
+              "correct": true
+            },
+            {
+              "text": "Disabling the antivirus on public Wi-Fi",
+              "correct": false
+            },
+            {
+              "text": "The network of the laptop that automatically changes the files on the laptop.",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "Which of these are among the ASD Essential Eight mitigation strategies?",
+          "options": [
+            {
+              "text": "Shredding paper, locking doors, CCTV and visitor badges",
+              "correct": false
+            },
+            {
+              "text": "Monthly password changes, screensavers and antivirus",
+              "correct": false
+            },
+            {
+              "text": "Patching applications, patching operating systems, regular backups and restricting administrative privileges",
+              "correct": true
+            },
+            {
+              "text": "Encrypting email, blocking social media and monitoring staff",
+              "correct": false
+            }
+          ]
+        }
+      ],
+      "bank": [
+        {
+          "prompt": "Why does a backup need to be tested?",
+          "options": [
+            {
+              "text": "Untested backups expire after a month",
+              "correct": false
+            },
+            {
+              "text": "Testing makes the backup run faster",
+              "correct": false
+            },
+            {
+              "text": "A backup that cannot be restored is not a backup",
+              "correct": true
+            },
+            {
+              "text": "Testing is required before the backup will start",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "You dismiss an update prompt every day because there is never a convenient time. What is the better approach?",
+          "options": [
+            {
+              "text": "Schedule a time to apply it, and restart when asked",
+              "correct": true
+            },
+            {
+              "text": "Leave it, since antivirus covers the same risk",
+              "correct": false
+            },
+            {
+              "text": "Wait until the next major version is released",
+              "correct": false
+            },
+            {
+              "text": "Apply it only if a problem appears",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "Why is the small office router worth attention?",
+          "options": [
+            {
+              "text": "It is the only device that can be encrypted",
+              "correct": false
+            },
+            {
+              "text": "It needs replacing every year",
+              "correct": false
+            },
+            {
+              "text": "Default passwords and old firmware leave it open to attack",
+              "correct": true
+            },
+            {
+              "text": "It stores copies of every email sent through it",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "Working on a shared family computer at home is a risk mainly because:",
+          "options": [
+            {
+              "text": "Anything that reaches that computer can also reach the work files on it",
+              "correct": true
+            },
+            {
+              "text": "It is slower than a work laptop",
+              "correct": false
+            },
+            {
+              "text": "Family members are likely to be attackers",
+              "correct": false
+            },
+            {
+              "text": "Home computers cannot connect to work email",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "What does a VPN provided by your workplace do?",
+          "options": [
+            {
+              "text": "Removes the need to install updates",
+              "correct": false
+            },
+            {
+              "text": "Hides your activity from your employer",
+              "correct": false
+            },
+            {
+              "text": "Creates a protected connection back to the workplace over a network you do not control",
+              "correct": true
+            },
+            {
+              "text": "Makes your computer immune to malware",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "Which statement about antivirus software is most accurate?",
+          "options": [
+            {
+              "text": "It makes backups unnecessary",
+              "correct": false
+            },
+            {
+              "text": "It removes the need to install updates",
+              "correct": false
+            },
+            {
+              "text": "It is useful but does not replace updates, backups and careful habits",
+              "correct": true
+            },
+            {
+              "text": "It prevents all phishing emails from arriving",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "You are about to join a network named after the cafe you are in. What is the sensible precaution?",
+          "options": [
+            {
+              "text": "Turn off your firewall so the connection works properly",
+              "correct": false
+            },
+            {
+              "text": "Do not install anything it offers and do not enter work credentials in pages it opens",
+              "correct": true
+            },
+            {
+              "text": "Check that the network name is spelled correctly and then trust it",
+              "correct": false
+            },
+            {
+              "text": "Use it only for a short time",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "prompt": "Why does locking your screen matter even in your own office?",
+          "options": [
+            {
+              "text": "It is only needed in public places",
+              "correct": false
+            },
+            {
+              "text": "It saves electricity",
+              "correct": false
+            },
+            {
+              "text": "It prevents software from updating",
+              "correct": false
+            },
+            {
+              "text": "Anyone passing, including visitors and contractors, can otherwise use your session",
+              "correct": true
+            }
+          ]
+        },
+        {
+          "prompt": "What is the best description of ransomware?",
+          "options": [
+            {
+              "text": "A weakness in an out-of-date application",
+              "correct": false
+            },
+            {
+              "text": "An email pretending to be from your manager",
+              "correct": false
+            },
+            {
+              "text": "A network set up to imitate a legitimate one",
+              "correct": false
+            },
+            {
+              "text": "This software renders your files unusable and requires you to pay in order to restore them.",
+              "correct": true
+            }
+          ]
+        },
+        {
+          "prompt": "Which single habit does most to make a lost laptop survivable?",
+          "options": [
+            {
+              "text": "Keeping everything on the desktop to have quick access to it.",
+              "correct": false
+            },
+            {
+              "text": "A full disk encryption and a locked screen.",
+              "correct": true
+            },
+            {
+              "text": "Making sure the laptop is covered in the laptop bag",
+              "correct": false
+            },
+            {
+              "text": "Ensuring that the laptop is stored in a protective case.",
+              "correct": false
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

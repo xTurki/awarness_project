@@ -16,6 +16,7 @@ from fastapi import FastAPI, Request, Response
 from sqlmodel import SQLModel
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from app import content_seed
 from app.config import settings
 from app.database import assert_utf8mb4, engine, wait_for_database
 from app.rendering import render
@@ -55,6 +56,7 @@ async def lifespan(app: FastAPI):
     wait_for_database()
     assert_utf8mb4()
     SQLModel.metadata.create_all(engine)
+    content_seed.run()
 
     # In the backend container that already runs, on the loop that already
     # exists. No fourth container, no worker, no broker (FR-026, FR-028). This
