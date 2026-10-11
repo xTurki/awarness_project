@@ -251,25 +251,21 @@ reach is itself information they have no claim to.
 
 ```mermaid
 flowchart TB
+    USER(["Browser"])
+
     subgraph Internet
-        USER(["Browser"])
-        CF["Cloudflare edge"]
         GEM[Google Gemini API]
         SMTP["SMTP relay"]
     end
 
     subgraph HOST["Host machine, one Docker network"]
-        TUN["tunnel<br/>cloudflared<br/>outbound only"]
         NG["nginx<br/>1.27-alpine<br/>the only published port"]
         BE["backend<br/>FastAPI + uvicorn<br/>APScheduler in-process"]
         DB[("db<br/>MySQL 8<br/>InnoDB, utf8mb4")]
         VOL[("volumes<br/>db_data, uploads")]
     end
 
-    USER -->|https| CF
-    CF -.->|"tunnel, outbound"| TUN
     USER -->|"http, local network"| NG
-    TUN --> NG
     NG -->|"static files"| VOL
     NG -->|"proxy /"| BE
     BE --> DB
@@ -281,23 +277,7 @@ flowchart TB
 
 **Three containers, one published port.** Only nginx publishes a port. The
 application and the database are reachable only from inside the compose network.
-The tunnel is a fourth container and is deliberately not part of the platform:
-the three tiers run identically without it, which is how the system runs on a
-local network.
-
-**The tunnel is outbound only.** cloudflared opens a connection to Cloudflare
-and serves through it, so the host needs no public address, no forwarded port
-and no certificate of its own. The hop from the connector to nginx is plain HTTP
-inside the Docker network and never leaves the machine.
-
-**One constraint governs that arrangement, and breaking it is invisible.** Every
-connector registered on a tunnel must be able to reach every origin that tunnel
-serves, because Cloudflare distributes requests across all of them and does not
-fail over. A second connector that cannot reach nginx answers 502 for whatever
-share of requests reaches it, and those requests leave no trace in this
-platform's logs because they never arrive. The failure then appears to follow
-the client's network rather than the server, which is what made it hard to place
-(§7.3).
+Browsers on the local network reach nginx on port 80.
 
 **The scheduler runs in-process.** The constitution permits scheduled work inside
 the backend and forbids a broker, a worker container or a separate cron
@@ -1097,7 +1077,6 @@ count.
 | The scheduled sweep died every night | Watching a real scheduled run | `main.py` had shadowed the session type with the session table. Every test called the job with a session already in hand |
 | Page navigation never rendered | A test asserting the links | Comparing model objects rather than ids matched nothing, so every page silently became the last one |
 | nginx would not start on macOS | Deploying to a second platform | Docker Desktop on Windows reported 755 for build-context files and hid a 644 script |
-| Intermittent 502 from the public address | Comparing the two network paths a client can take | A second connector on the same tunnel could not reach nginx. Cloudflare spreads requests across every connector, so roughly half failed, and the failures left no trace in this platform's logs because those requests never arrived |
 | Every save without a file attached was refused | A test that posted the form the way a browser does | An untouched file input still posts a part. Two clients shape it differently, and the route accepted only one of the two shapes |
 
 ---
@@ -1206,5 +1185,4 @@ revision of this table did not.
 ---
 
 *This document describes the system as built and verified on 16 September 2026:
-635 tests passing against MySQL 8, deployed on arm64 macOS behind nginx and a
-Cloudflare tunnel.*
+635 tests passing against MySQL 8, deployed on arm64 macOS behind nginx.*

@@ -2,17 +2,6 @@
 # writes the result to /etc/nginx/conf.d/. Only variables present in the
 # environment are substituted, so nginx's own $host and $scheme survive.
 
-# Behind the Cloudflare tunnel, cloudflared reaches nginx over plain http on
-# the compose network, so nginx own $scheme is always "http" even when the
-# browser is on https. Preferring the header the tunnel sends is what keeps the
-# Secure cookie flag correct; falling back to $scheme keeps direct access on
-# the local network working unchanged.
-map $http_x_forwarded_proto $client_scheme {
-    default $scheme;
-    https   https;
-    http    http;
-}
-
 upstream backend {
     server backend:8000;
 }
@@ -45,8 +34,7 @@ server {
 
     # A restart of the application takes a few seconds, and for those seconds
     # nginx is up while nothing is behind it. Without this the visitor gets a
-    # raw gateway error from whatever sits in front, which reads as a broken
-    # platform rather than a busy one.
+    # raw gateway error, which reads as a broken platform rather than a busy one.
     #
     # Mapped to 503 rather than kept as 502: this is temporary and says so, so
     # a cache in front does not treat it as the site being down.
@@ -68,7 +56,7 @@ server {
         proxy_set_header X-Real-IP         $remote_addr;
         proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
         # The application decides the Secure cookie flag from this header.
-        proxy_set_header X-Forwarded-Proto $client_scheme;
+        proxy_set_header X-Forwarded-Proto $scheme;
 
         proxy_read_timeout 30s;
     }
