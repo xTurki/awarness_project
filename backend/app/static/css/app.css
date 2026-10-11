@@ -17,6 +17,34 @@
  */
 
 /* ==========================================================================
+   0. Typeface
+   ========================================================================== */
+
+/* Inter, self-hosted as one variable file per script range, so every weight
+   comes from a single download and the interface looks the same on every
+   machine rather than borrowing whatever the operating system ships. */
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url("/static/vendor/inter/inter-latin-wght-normal.woff2") format("woff2-variations");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+                 U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122,
+                 U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url("/static/vendor/inter/inter-latin-ext-wght-normal.woff2") format("woff2-variations");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF,
+                 U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF,
+                 U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* ==========================================================================
    1. Tokens
    ========================================================================== */
 
@@ -24,8 +52,8 @@
   /* ---- Neutral ramp. Slate rather than pure grey, so white surfaces read
           warm against it rather than clinical. ---- */
   --n-0:   #ffffff;
-  --n-25:  #f5f7f9;
-  --n-50:  #eef1f5;
+  --n-25:  #f4f6fa;
+  --n-50:  #eef1f6;
   --n-100: #e3e7ec;
   --n-200: #cbd2db;
   --n-400: #8b96a5;
@@ -65,6 +93,11 @@
   --accent-hover:  var(--brand-600);
   --accent-tint:   var(--brand-50);
   --accent-on:     var(--n-0);
+  --accent-soft:   var(--brand-100);
+
+  /* The one gradient in the system: the brand mark and the page hero. */
+  --brand-gradient: linear-gradient(135deg, #2563eb 0%, #1d4ed8 45%, #4338ca 100%);
+  --hero-wash: linear-gradient(120deg, var(--brand-50) 0%, var(--n-0) 65%);
 
   /* ---- Type scale, 1.125 ratio from a 15.6px base. Small steps, because
           this interface is dense tables and short labels, not a magazine. ---- */
@@ -98,9 +131,9 @@
   --space-16: 4rem;
 
   /* ---- Radius ---- */
-  --radius-sm: 0.45rem;
-  --radius:    0.625rem;
-  --radius-lg: 0.9rem;
+  --radius-sm: 0.5rem;
+  --radius:    0.75rem;
+  --radius-lg: 1rem;
   --radius-pill: 2rem;
 
   /* ---- Elevation. Every surface rests on a soft shadow so a page reads as
@@ -126,7 +159,7 @@
   --bs-body-color: var(--ink);
   --bs-body-bg: var(--canvas);
   --bs-border-color: var(--line);
-  --bs-body-font-family: system-ui, -apple-system, "Segoe UI", Roboto,
+  --bs-body-font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto,
                          "Helvetica Neue", Arial, sans-serif;
   --bs-body-font-size: var(--text-base);
   --bs-body-line-height: var(--leading-body);
@@ -158,6 +191,8 @@
   --accent-hover:  #a6c2ff;
   --accent-tint:   #1a2436;
   --accent-on:     #0f1419;
+  --accent-soft:   #22304a;
+  --hero-wash: linear-gradient(120deg, #1a2436 0%, #171e28 65%);
 
   --ok-500:   #4ade80;
   --ok-50:    #16281f;
@@ -244,19 +279,20 @@ hr { border-color: var(--line); opacity: 1; }
 /* Drawn in CSS rather than shipped as a file: one less request, and it takes
    the accent colour in whichever theme it lands in. */
 .app-mark {
-  width: 1.7rem;
-  height: 1.7rem;
+  width: 2rem;
+  height: 2rem;
   border-radius: var(--radius-sm);
-  background: linear-gradient(140deg, var(--accent), var(--accent-hover));
-  color: var(--accent-on);
-  font-size: var(--text-xs);
-  font-weight: var(--weight-bold);
+  background: var(--brand-gradient);
+  color: #fff;
+  font-size: 1.05rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
-  letter-spacing: 0;
+  box-shadow: 0 2px 6px -1px rgb(29 78 216 / 0.45);
 }
+
+.app-header { padding-block: var(--space-2); }
 
 .app-header .nav-link {
   color: var(--ink-soft);
@@ -266,12 +302,55 @@ hr { border-color: var(--line); opacity: 1; }
   min-height: var(--tap);
   display: inline-flex;
   align-items: center;
+  gap: var(--space-2);
   transition: color var(--t-fast), background-color var(--t-fast);
 }
+.app-header .nav-link .bi { font-size: 1.05em; opacity: 0.85; }
 .app-header .nav-link:hover { color: var(--ink); background: var(--canvas); }
 .app-header .nav-link:active { background: var(--line); }
+.app-header .nav-link.active {
+  color: var(--accent);
+  background: var(--accent-tint);
+  font-weight: var(--weight-semi);
+}
+.app-header .nav-link.active .bi { opacity: 1; }
+
+/* Initials in a circle: who is signed in, at a glance, without a photo. */
+.avatar {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: var(--weight-semi);
+  font-size: var(--text-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  text-transform: uppercase;
+}
+
+.app-whoami {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+  min-width: 0;
+}
+.app-whoami strong { font-size: var(--text-sm); color: var(--ink); }
+.app-whoami span {
+  font-size: var(--text-xs);
+  color: var(--ink-soft);
+  text-transform: capitalize;
+}
 
 .offcanvas { background-color: var(--surface); color: var(--ink); }
+
+/* Bootstrap has no responsive border utilities; the shell needs this one so
+   the divider above the user block exists in the drawer and not in the bar. */
+@media (min-width: 992px) {
+  .border-lg-0 { border: 0 !important; }
+}
 
 /* ==========================================================================
    4. Page furniture
@@ -298,6 +377,186 @@ hr { border-color: var(--line); opacity: 1; }
 .crumb:hover { color: var(--accent); }
 .crumb::before { content: "\2190"; }
 
+.page-head h1 { letter-spacing: -0.02em; }
+
+/* A small label above a heading that says what kind of page this is. */
+.eyebrow {
+  display: flex;
+  width: fit-content;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semi);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: var(--space-2);
+}
+
+/* ---- The hero: the top of the dashboard. A wash of the brand colour rather
+        than a block of it, so it introduces the page without shouting. ---- */
+.hero {
+  position: relative;
+  overflow: hidden;
+  background: var(--hero-wash);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-8);
+  margin-bottom: var(--space-6);
+}
+.hero h1 { font-size: var(--text-3xl); font-weight: var(--weight-bold); margin-bottom: var(--space-2); }
+.hero p { color: var(--ink-soft); margin-bottom: 0; max-width: 40rem; }
+.hero-mark {
+  position: absolute;
+  right: -1.5rem;
+  bottom: -2.5rem;
+  font-size: 11rem;
+  line-height: 1;
+  color: var(--accent);
+  opacity: 0.07;
+  pointer-events: none;
+}
+.hero-actions { position: relative; display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-5); }
+
+/* ---- Pages seen before signing in: a soft glow of the brand colour at the
+        top, so the way in does not look like a bare form. ---- */
+body.is-public {
+  background:
+    radial-gradient(48rem 26rem at 50% -6rem, var(--accent-soft), transparent 70%),
+    var(--canvas);
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+.is-public main { padding-top: var(--space-12) !important; }
+
+.app-mark-lg {
+  width: 4rem;
+  height: 4rem;
+  font-size: 2rem;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 24px -6px rgb(29 78 216 / 0.5);
+}
+
+.auth-card { box-shadow: var(--shadow-lg); }
+.auth-card .card-body { padding: var(--space-8); }
+.auth-icon {
+  width: 3rem;
+  height: 3rem;
+  border-radius: var(--radius);
+  background: var(--accent-tint);
+  color: var(--accent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  margin-bottom: var(--space-4);
+}
+
+.feature {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.feature .stat-icon { margin-bottom: var(--space-2); }
+
+/* ---- A role as a quiet chip with its own icon, so a long list of accounts
+        can be scanned by role without reading every row. ---- */
+.role-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  background: var(--surface-sunk);
+  border: 1px solid var(--line);
+  color: var(--ink-soft);
+}
+.role-administrator { background: var(--accent-tint); border-color: var(--accent-soft); color: var(--accent); }
+.role-instructor    { background: var(--ok-50); border-color: transparent; color: var(--ok-500); }
+
+/* ---- The terms of a test, as four small tiles rather than a list. ---- */
+.facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+  gap: var(--space-3);
+}
+.fact {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface-sunk);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.fact > .bi { font-size: 1.3rem; color: var(--accent); }
+.fact-label { font-size: var(--text-xs); color: var(--ink-soft); }
+.fact-value { font-weight: var(--weight-semi); color: var(--ink); }
+
+/* ---- Summary figures. The number carries the weight; the label explains it. */
+.stat {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-4) var(--space-5);
+  height: 100%;
+}
+.stat-icon {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: var(--radius);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex: 0 0 auto;
+  background: var(--accent-tint);
+  color: var(--accent);
+}
+.stat-icon.is-ok   { background: var(--ok-50);   color: var(--ok-500); }
+.stat-icon.is-warn { background: var(--warn-50); color: #9a6b00; }
+.stat-icon.is-bad  { background: var(--bad-50);  color: var(--bad-500); }
+[data-bs-theme="dark"] .stat-icon.is-warn { color: var(--warn-500); }
+.stat-value {
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-bold);
+  line-height: 1.1;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.stat-label { font-size: var(--text-sm); color: var(--ink-soft); }
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-base);
+  font-weight: var(--weight-semi);
+  color: var(--ink);
+  margin: var(--space-6) 0 var(--space-3);
+}
+.section-title .bi { color: var(--ink-faint); }
+
+.progress {
+  --bs-progress-bg: var(--line);
+  --bs-progress-bar-bg: var(--accent);
+  --bs-progress-border-radius: var(--radius-pill);
+}
+.reading-progress { height: 4px; max-width: 46rem; }
+.module-summary { font-size: var(--text-lg); max-width: 46rem; }
+
 /* ==========================================================================
    5. Surfaces
    ========================================================================== */
@@ -307,7 +566,7 @@ hr { border-color: var(--line); opacity: 1; }
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
-  transition: border-color var(--t-fast), box-shadow var(--t-fast);
+  transition: border-color var(--t-norm), box-shadow var(--t-norm), transform var(--t-norm);
 }
 .card-body { padding: var(--space-5); }
 .card-title { font-size: var(--text-base); font-weight: var(--weight-semi); }
@@ -316,8 +575,8 @@ hr { border-color: var(--line); opacity: 1; }
    business suggesting it can. */
 .card:has(.stretched-link):hover {
   border-color: var(--line-strong);
-  box-shadow: var(--shadow-md);
-  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-3px);
 }
 
 .panel {
@@ -483,6 +742,14 @@ hr { border-color: var(--line); opacity: 1; }
 }
 [data-bs-theme="dark"] .btn-outline-danger { --bs-btn-hover-color: var(--n-900); }
 
+/* The arrow is drawn here rather than written into the link, so the link's
+   own text starts with the word. */
+.btn-prev::before {
+  content: "\f12f";
+  font-family: bootstrap-icons;
+  line-height: 1;
+}
+
 .btn-link { color: var(--ink-soft); }
 .btn-link:hover { color: var(--accent); }
 
@@ -563,17 +830,16 @@ select[multiple].form-select { min-height: auto; }
   color: var(--ink-soft);
 }
 .nothing .nothing-mark {
-  width: var(--tap);
-  height: var(--tap);
+  width: 3.5rem;
+  height: 3.5rem;
   border-radius: 50%;
-  background: var(--surface-sunk);
-  border: 1px solid var(--line);
-  color: var(--ink-faint);
+  background: var(--accent-tint);
+  color: var(--accent);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   margin-bottom: var(--space-3);
-  font-size: var(--text-lg);
+  font-size: 1.5rem;
 }
 .nothing p { margin-bottom: 0; }
 
@@ -585,10 +851,12 @@ select[multiple].form-select { min-height: auto; }
   color: var(--ink-soft);
   border-radius: var(--radius-sm);
   padding: var(--space-2) var(--space-3);
-  font-size: var(--text-base);
+  font-size: var(--text-sm);
   min-height: var(--tap);
   display: flex;
   align-items: center;
+  gap: var(--space-3);
+  position: relative;
   transition: color var(--t-fast), background-color var(--t-fast);
 }
 .side-nav .nav-link:hover { background: var(--surface-sunk); color: var(--ink); }
@@ -596,6 +864,37 @@ select[multiple].form-select { min-height: auto; }
   background: var(--accent-tint);
   color: var(--accent);
   font-weight: var(--weight-semi);
+}
+.side-nav .nav-link.active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 22%;
+  bottom: 22%;
+  width: 3px;
+  border-radius: 3px;
+  background: var(--accent);
+}
+
+/* The step number beside each page: a small circle, filled once you are on it. */
+.step-no {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  border: 1px solid var(--line-strong);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semi);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  color: var(--ink-soft);
+  background: var(--surface);
+}
+.side-nav .nav-link.active .step-no {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-on);
 }
 
 /* ==========================================================================
@@ -620,6 +919,33 @@ select[multiple].form-select { min-height: auto; }
 .rich-text img { max-width: 100%; height: auto; border-radius: var(--radius-sm); }
 .rich-text pre { overflow-x: auto; }
 .rich-text > :last-child { margin-bottom: 0; }
+
+/* Reading comfort: a slightly larger size and a measure that stops a line
+   running the full width of a wide monitor. */
+.rich-text { font-size: var(--text-lg); line-height: 1.7; max-width: 46rem; }
+.rich-text p { margin-bottom: var(--space-4); }
+.rich-text h2, .rich-text h3, .rich-text h4 {
+  margin-top: var(--space-8);
+  margin-bottom: var(--space-3);
+  font-weight: var(--weight-semi);
+}
+.rich-text h3 { font-size: var(--text-xl); }
+.rich-text > :first-child { margin-top: 0; }
+.rich-text ul, .rich-text ol { padding-left: var(--space-6); margin-bottom: var(--space-4); }
+.rich-text li { margin-bottom: var(--space-2); }
+.rich-text li::marker { color: var(--accent); }
+.rich-text ol li::marker { font-weight: var(--weight-semi); }
+.rich-text blockquote {
+  margin: var(--space-5) 0;
+  padding: var(--space-4) var(--space-5);
+  background: var(--accent-tint);
+  border-left: 4px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  color: var(--ink);
+  font-style: italic;
+}
+.rich-text blockquote p:last-child { margin-bottom: 0; }
+.rich-text a { text-underline-offset: 3px; }
 
 .code-entry {
   letter-spacing: 0.5rem;
@@ -670,17 +996,18 @@ select[multiple].form-select { min-height: auto; }
   border: 1px solid var(--line);
 }
 
-/* A faint diagonal, so a plain colour has some depth rather than reading as
-   a block of flat paint. */
+/* A dot grid fading out to the right, so a plain colour has texture rather
+   than reading as a block of flat paint. Drawn in the colour's own ink. */
 .module-art::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(115deg, rgb(255 255 255 / 0.3), transparent 70%);
+  background-image: radial-gradient(var(--art-ink) 1px, transparent 1.4px);
+  background-size: 14px 14px;
+  opacity: 0.16;
+  -webkit-mask-image: linear-gradient(100deg, transparent 15%, #000 85%);
+          mask-image: linear-gradient(100deg, transparent 15%, #000 85%);
   pointer-events: none;
-}
-[data-bs-theme="dark"] .module-art::after {
-  background: linear-gradient(115deg, rgb(255 255 255 / 0.05), transparent 70%);
 }
 
 /* An uploaded picture, in place of the plain colour.
@@ -709,26 +1036,61 @@ select[multiple].form-select { min-height: auto; }
    top of, and a wash is nearly white by design. With nothing drawn on it the
    band is the whole cover, so each one is now a colour rather than a hint of
    one. `color` is gone with the strokes it used to paint. */
-.module-art-indigo { background: #c5cff5; }
-.module-art-sky    { background: #bbdcf2; }
-.module-art-teal   { background: #a9dcd4; }
-.module-art-green  { background: #b9dcc1; }
-.module-art-amber  { background: #f2d9a6; }
-.module-art-rose   { background: #f4c5cc; }
-.module-art-violet { background: #d3c6f3; }
-.module-art-slate  { background: #c8d1db; }
+.module-art-indigo { background: linear-gradient(135deg, #dfe5fc, #b3c0f2); --art-ink: #3730a3; }
+.module-art-sky    { background: linear-gradient(135deg, #dcedf9, #a7d1ef); --art-ink: #075985; }
+.module-art-teal   { background: linear-gradient(135deg, #d6efeb, #93d3c9); --art-ink: #115e59; }
+.module-art-green  { background: linear-gradient(135deg, #dcefe0, #a6d5b1); --art-ink: #166534; }
+.module-art-amber  { background: linear-gradient(135deg, #fbefd6, #f0cf8c); --art-ink: #92400e; }
+.module-art-rose   { background: linear-gradient(135deg, #fbe2e6, #f1b3bd); --art-ink: #9f1239; }
+.module-art-violet { background: linear-gradient(135deg, #e9e3fb, #c3b1f0); --art-ink: #5b21b6; }
+.module-art-slate  { background: linear-gradient(135deg, #e5e9ef, #bcc6d2); --art-ink: #334155; }
 
 /* In the dark theme they carry more colour rather than less light: going
    darker here would take them to black and lose the distinction the band
    exists to make. */
-[data-bs-theme="dark"] .module-art-indigo { background: #232f57; }
-[data-bs-theme="dark"] .module-art-sky    { background: #17324a; }
-[data-bs-theme="dark"] .module-art-teal   { background: #143b36; }
-[data-bs-theme="dark"] .module-art-green  { background: #1b3a26; }
-[data-bs-theme="dark"] .module-art-amber  { background: #3a2c14; }
-[data-bs-theme="dark"] .module-art-rose   { background: #3d1f26; }
-[data-bs-theme="dark"] .module-art-violet { background: #2c2148; }
-[data-bs-theme="dark"] .module-art-slate  { background: #262d37; }
+[data-bs-theme="dark"] .module-art-indigo { background: linear-gradient(135deg, #1c2546, #2e3b6e); --art-ink: #a5b4fc; }
+[data-bs-theme="dark"] .module-art-sky    { background: linear-gradient(135deg, #12283b, #1d4160); --art-ink: #7dd3fc; }
+[data-bs-theme="dark"] .module-art-teal   { background: linear-gradient(135deg, #102f2b, #1a4a44); --art-ink: #5eead4; }
+[data-bs-theme="dark"] .module-art-green  { background: linear-gradient(135deg, #152e1f, #234a31); --art-ink: #86efac; }
+[data-bs-theme="dark"] .module-art-amber  { background: linear-gradient(135deg, #2e2310, #4a3818); --art-ink: #fcd34d; }
+[data-bs-theme="dark"] .module-art-rose   { background: linear-gradient(135deg, #31191f, #4d2630); --art-ink: #fda4af; }
+[data-bs-theme="dark"] .module-art-violet { background: linear-gradient(135deg, #231a3a, #382a5c); --art-ink: #c4b5fd; }
+[data-bs-theme="dark"] .module-art-slate  { background: linear-gradient(135deg, #1e242d, #2f3845); --art-ink: #cbd5e1; }
+
+/* ---- A module card: cover, title, two lines of summary, and a footer that
+        says where it stands. The footer sits at the bottom whatever the
+        length of the summary, so a row of cards lines up. ---- */
+.module-card .card-body { display: flex; flex-direction: column; gap: var(--space-2); }
+.module-card .card-title { font-size: var(--text-lg); margin: 0; line-height: var(--leading-tight); }
+.module-card .card-text {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+  margin: 0;
+}
+.module-card .card-foot {
+  margin-top: auto;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+}
+.module-card .card-go {
+  color: var(--accent);
+  font-weight: var(--weight-semi);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  transition: gap var(--t-fast);
+}
+.module-card:hover .card-go { gap: var(--space-2); }
 
 /* The card wraps it, so the artwork keeps the card corners. */
 .card:has(.module-art) { overflow: hidden; }
@@ -839,6 +1201,15 @@ select[multiple].form-select { min-height: auto; }
   h1.h4 { font-size: var(--text-lg); }
   .nothing { padding: var(--space-8) var(--space-4); }
   .btn { width: auto; }
+  .hero { padding: var(--space-6) var(--space-5); }
+  /* Three figures stay side by side on a phone, icon above number. */
+  .stat { flex-direction: column; align-items: flex-start; gap: var(--space-2); padding: var(--space-3); }
+  .stat-icon { width: 2.25rem; height: 2.25rem; font-size: 1rem; }
+  .stat-value { font-size: var(--text-xl); }
+  .stat-label { font-size: var(--text-xs); }
+  .hero h1 { font-size: var(--text-2xl); }
+  .hero-mark { font-size: 7rem; }
+  .rich-text { font-size: var(--text-base); }
 }
 
 /* A desktop gets a slightly larger interface. Every size in this file is in

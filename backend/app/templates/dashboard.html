@@ -2,47 +2,78 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<div class="page-head d-flex flex-wrap gap-3 justify-content-between align-items-start">
-  <div>
-    <h1 class="h3">Welcome, {{ account.full_name }}</h1>
-    <p class="lead-sm">Signed in as {{ account.role }}.</p>
-  </div>
+{% set published = modules|selectattr("is_published")|list|length %}
+
+<section class="hero">
+  <i class="bi bi-shield-lock hero-mark" aria-hidden="true"></i>
+  <div class="eyebrow"><i class="bi bi-stars" aria-hidden="true"></i> {{ account.role }}</div>
+  <h1>Welcome, {{ account.full_name }}</h1>
+  <p>
+    {% if account.role == "administrator" %}
+      Create modules, put people on them, and see who has completed their training.
+    {% else %}
+      The modules you run, their pages, tests and the people on them.
+    {% endif %}
+  </p>
 
   {% if account.role == "administrator" %}
-    <div class="d-flex flex-wrap gap-2">
-      <a class="btn btn-sm btn-outline-secondary" href="/admin/accounts">Manage accounts</a>
-      <a class="btn btn-sm btn-primary" href="/modules/new">New module</a>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="/modules/new"><i class="bi bi-plus-lg" aria-hidden="true"></i> New module</a>
+      <a class="btn btn-outline-secondary" href="/admin/accounts"><i class="bi bi-people" aria-hidden="true"></i> Manage accounts</a>
     </div>
   {% endif %}
+</section>
+
+<div class="row g-3 mb-2">
+  <div class="col-4">
+    <div class="stat">
+      <span class="stat-icon"><i class="bi bi-journal-bookmark" aria-hidden="true"></i></span>
+      <div><div class="stat-value">{{ modules|length }}</div><div class="stat-label">Modules</div></div>
+    </div>
+  </div>
+  <div class="col-4">
+    <div class="stat">
+      <span class="stat-icon is-ok"><i class="bi bi-broadcast" aria-hidden="true"></i></span>
+      <div><div class="stat-value">{{ published }}</div><div class="stat-label">Published</div></div>
+    </div>
+  </div>
+  <div class="col-4">
+    <div class="stat">
+      <span class="stat-icon is-warn"><i class="bi bi-pencil-square" aria-hidden="true"></i></span>
+      <div><div class="stat-value">{{ modules|length - published }}</div><div class="stat-label">Drafts</div></div>
+    </div>
+  </div>
 </div>
 
-<h2 class="h6 text-body-secondary mb-3">
-  {% if account.role == "administrator" %}Modules
-  {% elif account.role == "instructor" %}Modules you run
-  {% else %}Your training{% endif %}
+<h2 class="section-title">
+  <i class="bi bi-collection" aria-hidden="true"></i>
+  {% if account.role == "administrator" %}Modules{% else %}Modules you run{% endif %}
 </h2>
 
 {# One list. Phase 3 adds a state against each of these rows rather than a
    second page listing the same modules again. #}
-<div class="row g-3">
+<div class="row g-4">
   {% for module in modules %}
     <div class="col-12 col-md-6 col-xl-4">
-      <div class="card h-100">
+      <div class="card module-card h-100">
         {% include "components/module_art.html" %}
-        <div class="card-body d-flex flex-column">
-          <h3 class="h6 card-title mb-2">
-            <a href="/modules/{{ module.id }}" class="stretched-link row-title">
-              {{ module.title }}
-            </a>
+        <div class="card-body">
+          <h3 class="card-title">
+            <a href="/modules/{{ module.id }}" class="stretched-link row-title">{{ module.title }}</a>
           </h3>
 
-          {% if account.role != "trainee" and not module.is_published %}
-            <div><span class="badge text-bg-secondary">Unpublished</span></div>
+          {% if module.description %}
+            <p class="card-text">{{ module.description }}</p>
           {% endif %}
 
-          {% if module.description %}
-            <p class="card-text small text-body-secondary mt-2 mb-0">{{ module.description }}</p>
-          {% endif %}
+          <div class="card-foot">
+            {% if module.is_published %}
+              <span class="badge text-bg-success">Published</span>
+            {% else %}
+              <span class="badge text-bg-secondary">Unpublished</span>
+            {% endif %}
+            <span class="card-go">Open <i class="bi bi-arrow-right" aria-hidden="true"></i></span>
+          </div>
         </div>
       </div>
     </div>
@@ -50,11 +81,9 @@
     <div class="col-12">
       <div class="panel">
         <div class="nothing">
-          <span class="nothing-mark">&#9675;</span>
+          <span class="nothing-mark"><i class="bi bi-journal-plus" aria-hidden="true"></i></span>
           <p>
-            {% if account.role == "trainee" %}
-              You are not on any modules yet. Somebody will put you on one.
-            {% elif account.role == "instructor" %}
+            {% if account.role == "instructor" %}
               You do not run any modules yet.
             {% else %}
               No modules yet. <a href="/modules/new">Create the first one</a>.

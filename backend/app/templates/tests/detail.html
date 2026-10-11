@@ -22,8 +22,8 @@
       {% if can_write %}
         <div class="d-flex flex-wrap gap-2">
           <a class="btn btn-sm btn-outline-secondary"
-             href="/modules/{{ module.id }}/tests/{{ test.id }}/edit">Settings</a>
-          <a class="btn btn-sm btn-outline-secondary" href="/tests/{{ test.id }}/attempts">Attempts</a>
+             href="/modules/{{ module.id }}/tests/{{ test.id }}/edit"><i class="bi bi-gear" aria-hidden="true"></i> Settings</a>
+          <a class="btn btn-sm btn-outline-secondary" href="/tests/{{ test.id }}/attempts"><i class="bi bi-bar-chart" aria-hidden="true"></i> Attempts</a>
           <form method="post" class="m-0"
                 action="/modules/{{ module.id }}/tests/{{ test.id }}/publish">
             <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token }}">
@@ -37,7 +37,11 @@
     </div>
 
     <div class="panel mb-4">
-      <div class="panel-head">Before you start</div>
+      <div class="panel-head">
+        <span class="d-inline-flex align-items-center gap-2">
+          <i class="bi bi-info-circle text-body-secondary" aria-hidden="true"></i> Before you start
+        </span>
+      </div>
       <div class="panel-body">
 
         {# The instructions the instructor wrote come first: they are the point
@@ -48,14 +52,29 @@
         {% endif %}
 
         {# Shown before starting, always (FR-009). #}
-        <ul class="list-unstyled mb-0">
-          <li><strong>Questions:</strong> {{ test.question_count }}</li>
-          <li><strong>Time limit:</strong>
-            {% if test.time_limit_minutes %}{{ test.time_limit_minutes }} minutes{% else %}none{% endif %}</li>
-          <li><strong>Attempts allowed:</strong>
-            {% if test.retake_interval_days %}as many as you need{% else %}{{ test.allowed_attempts }}{% endif %}</li>
-          <li><strong>Pass mark:</strong>
-            {% if test.passing_score is not none %}{{ test.passing_score }}%{% else %}none{% endif %}</li>
+        <div class="facts mb-3">
+          <div class="fact">
+            <i class="bi bi-question-circle" aria-hidden="true"></i>
+            <div><div class="fact-label">Questions:</div><div class="fact-value">{{ test.question_count }}</div></div>
+          </div>
+          <div class="fact">
+            <i class="bi bi-stopwatch" aria-hidden="true"></i>
+            <div><div class="fact-label">Time limit:</div>
+              <div class="fact-value">{% if test.time_limit_minutes %}{{ test.time_limit_minutes }} min{% else %}None{% endif %}</div></div>
+          </div>
+          <div class="fact">
+            <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
+            <div><div class="fact-label">Attempts allowed:</div>
+              <div class="fact-value">{% if test.retake_interval_days %}as many as you need{% else %}{{ test.allowed_attempts }}{% endif %}</div></div>
+          </div>
+          <div class="fact">
+            <i class="bi bi-trophy" aria-hidden="true"></i>
+            <div><div class="fact-label">Pass mark:</div>
+              <div class="fact-value">{% if test.passing_score is not none %}{{ test.passing_score }}%{% else %}None{% endif %}</div></div>
+          </div>
+        </div>
+
+        <ul class="list-unstyled mb-0 small text-body-secondary">
 
           {# Shown to the people registered on it, not only to whoever set it
              (Phase 4 FR-006). #}
@@ -96,6 +115,7 @@
       <form method="post" action="/tests/{{ test.id }}/attempts" class="mb-3">
         <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token }}">
         <button type="submit" class="btn btn-primary btn-lg">
+          <i class="bi bi-play-fill" aria-hidden="true"></i>
           {% if attempts and not attempts[0].is_submitted %}Resume your attempt{% else %}Start the test{% endif %}
         </button>
       </form>
