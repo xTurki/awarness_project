@@ -1,10 +1,11 @@
 {# One markup block, two behaviours from CSS: a drawer below 992px, a bar above.
    Administrative navigation is absent for the other two roles, not disabled. #}
+{% set here = request.url.path %}
 <nav class="navbar navbar-expand-lg app-header">
   <div class="container">
 
     <a class="navbar-brand app-brand p-0" href="/">
-      <span class="app-mark">SA</span>
+      <span class="app-mark"><i class="bi bi-shield-lock-fill" aria-hidden="true"></i></span>
       <span>Security Awareness</span>
     </a>
 
@@ -16,30 +17,51 @@
     <div class="offcanvas offcanvas-end" tabindex="-1" id="mainNav" aria-labelledby="mainNavLabel">
       <div class="offcanvas-header border-bottom">
         <h5 class="offcanvas-title app-brand" id="mainNavLabel">
-          <span class="app-mark">SA</span> Menu
+          <span class="app-mark"><i class="bi bi-shield-lock-fill" aria-hidden="true"></i></span> Menu
         </h5>
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
       </div>
 
       <div class="offcanvas-body">
-        <ul class="navbar-nav me-auto mb-3 mb-lg-0 gap-lg-1">
-          <li class="nav-item"><a class="nav-link" href="/">Dashboard</a></li>
-          <li class="nav-item"><a class="nav-link" href="/modules">Modules</a></li>
+        <ul class="navbar-nav me-auto mb-3 mb-lg-0 gap-lg-1 ms-lg-4">
+          <li class="nav-item">
+            <a class="nav-link{% if here == '/' %} active{% endif %}" href="/"
+               {% if here == '/' %}aria-current="page"{% endif %}>
+              <i class="bi bi-grid-1x2" aria-hidden="true"></i> Dashboard
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link{% if here.startswith('/modules') or here.startswith('/results') or here.startswith('/attempts') %} active{% endif %}"
+               href="/modules">
+              <i class="bi bi-journal-bookmark" aria-hidden="true"></i> Modules
+            </a>
+          </li>
           <li class="nav-item">{% include "components/nav_badge.html" %}</li>
 
           {% if account.role == "administrator" %}
-            <li class="nav-item"><a class="nav-link" href="/admin/accounts">Accounts</a></li>
+            <li class="nav-item">
+              <a class="nav-link{% if here.startswith('/admin') %} active{% endif %}" href="/admin/accounts">
+                <i class="bi bi-people" aria-hidden="true"></i> Accounts
+              </a>
+            </li>
           {% endif %}
         </ul>
 
         <div class="d-flex align-items-center gap-3 pt-3 pt-lg-0 border-top border-lg-0">
+          <span class="avatar" aria-hidden="true">
+            {%- for part in account.full_name.split()[:2] %}{{ part[0] }}{% endfor -%}
+          </span>
           <div class="app-whoami text-truncate">
             <strong class="text-truncate">{{ account.full_name }}</strong>
             <span>{{ account.role }}</span>
           </div>
-          <form method="post" action="/logout" class="m-0 ms-auto ms-lg-0">
+          <form method="post" action="/logout" class="m-0 ms-auto ms-lg-2">
             <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token }}">
-            <button type="submit" class="btn btn-outline-secondary btn-sm">Sign out</button>
+            <button type="submit" class="btn btn-outline-secondary btn-sm" title="Sign out">
+              <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+              <span class="d-lg-none">Sign out</span>
+              <span class="visually-hidden d-none d-lg-inline">Sign out</span>
+            </button>
           </form>
         </div>
       </div>

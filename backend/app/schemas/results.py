@@ -22,6 +22,10 @@ class ModuleResultRow(BaseModel):
     #: Where following this row goes: the attempt if one is in progress,
     #: otherwise the module's history.
     link: str
+    #: The module's cover and summary, so a trainee's card matches everyone else's.
+    description: str | None = None
+    art_colour: str = ""
+    art_image: str | None = None
 
 
 class AttemptRow(BaseModel):

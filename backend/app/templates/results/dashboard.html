@@ -4,56 +4,91 @@
 {% block content %}
 {# A trainee's dashboard is their results page. One route, one template, one
    list. There is no second page listing the same modules (FR-001). #}
+{% set passed = rows|selectattr("state", "equalto", "passed")|list|length %}
+{% set overdue = rows|selectattr("state", "equalto", "overdue")|list|length %}
+{% set to_do = rows|selectattr("state", "in", ["not started", "in progress", "due", "failed"])|list|length %}
 
-<div class="page-head">
-  <h1 class="h3">Your training</h1>
-  <p class="lead-sm">
-    Everything you are on, and what is outstanding. Anything still to do is at the top.
+<section class="hero">
+  <i class="bi bi-shield-lock hero-mark" aria-hidden="true"></i>
+  <div class="eyebrow"><i class="bi bi-mortarboard" aria-hidden="true"></i> Your training</div>
+  <h1>Welcome, {{ account.full_name }}</h1>
+  <p>
+    {% if overdue %}
+      You have {{ overdue }} overdue {{ "module" if overdue == 1 else "modules" }}. Anything still to do is at the top.
+    {% elif to_do %}
+      You have {{ to_do }} {{ "module" if to_do == 1 else "modules" }} to finish. Anything still to do is at the top.
+    {% elif rows %}
+      You are up to date. Well done.
+    {% else %}
+      Everything you are on, and what is outstanding, will appear here.
+    {% endif %}
   </p>
-</div>
+</section>
 
 {% if rows %}
-  <div class="panel">
-    <div class="table-responsive">
-      <table class="table table-hover align-middle">
-        <thead>
-          <tr>
-            <th scope="col">Module</th>
-            <th scope="col">State</th>
-            <th scope="col">Score</th>
-            <th scope="col" class="text-end"><span class="visually-hidden">Open</span></th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for row in rows %}
-            <tr>
-              <td>
-                <a href="/modules/{{ row.module_id }}" class="row-title">{{ row.title }}</a>
-              </td>
-              <td>
-                {% with state = row.state %}{% include "components/state_badge.html" %}{% endwith %}
-              </td>
-              <td class="text-body-secondary">
-                {% if row.score_percent is not none %}{{ row.score_percent }}%{% else %}&mdash;{% endif %}
-              </td>
-              <td class="text-nowrap text-end">
-                <a class="btn btn-sm btn-outline-secondary" href="{{ row.link }}">
-                  {% if row.state == "in progress" %}Resume
-                  {% elif row.state == "no test available" %}Open
-                  {% else %}Details{% endif %}
-                </a>
-              </td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+  <div class="row g-3 mb-2">
+    <div class="col-4">
+      <div class="stat">
+        <span class="stat-icon is-warn"><i class="bi bi-hourglass-split" aria-hidden="true"></i></span>
+        <div><div class="stat-value">{{ to_do }}</div><div class="stat-label">To do</div></div>
+      </div>
     </div>
+    <div class="col-4">
+      <div class="stat">
+        <span class="stat-icon is-ok"><i class="bi bi-patch-check" aria-hidden="true"></i></span>
+        <div><div class="stat-value">{{ passed }}</div><div class="stat-label">Completed</div></div>
+      </div>
+    </div>
+    <div class="col-4">
+      <div class="stat">
+        <span class="stat-icon is-bad"><i class="bi bi-exclamation-octagon" aria-hidden="true"></i></span>
+        <div><div class="stat-value">{{ overdue }}</div><div class="stat-label">Overdue</div></div>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="section-title"><i class="bi bi-collection" aria-hidden="true"></i> Your modules</h2>
+
+  <div class="row g-4">
+    {% for row in rows %}
+      {% set module = row %}
+      <div class="col-12 col-md-6 col-xl-4">
+        <div class="card module-card h-100">
+          {% include "components/module_art.html" %}
+          <div class="card-body">
+            <h3 class="card-title">
+              <a href="/modules/{{ row.module_id }}" class="row-title">{{ row.title }}</a>
+            </h3>
+
+            {% if row.description %}
+              <p class="card-text">{{ row.description }}</p>
+            {% endif %}
+
+            <div class="card-foot">
+              <span class="d-inline-flex align-items-center gap-2">
+                {% with state = row.state %}{% include "components/state_badge.html" %}{% endwith %}
+                {% if row.score_percent is not none %}
+                  <span class="fw-semibold text-body">{{ row.score_percent }}%</span>
+                {% endif %}
+              </span>
+              <a class="btn btn-sm {% if row.state in ['in progress', 'due', 'overdue', 'not started'] %}btn-primary{% else %}btn-outline-secondary{% endif %}"
+                 href="{{ row.link }}">
+                {% if row.state == "in progress" %}Resume
+                {% elif row.state == "no test available" %}Open
+                {% else %}Details{% endif %}
+                <i class="bi bi-arrow-right" aria-hidden="true"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
   </div>
 {% else %}
   {# A statement, not an empty frame (FR-024). #}
   <div class="panel">
     <div class="nothing">
-      <span class="nothing-mark">&#9675;</span>
+      <span class="nothing-mark"><i class="bi bi-inbox" aria-hidden="true"></i></span>
       <p>You are not on any modules yet. Somebody will put you on one.</p>
     </div>
   </div>

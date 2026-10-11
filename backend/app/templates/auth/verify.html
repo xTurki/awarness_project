@@ -6,7 +6,7 @@
 
   <div class="text-center mb-4">
     <a class="app-brand justify-content-center" href="/">
-      <span class="app-mark">SA</span>
+      <span class="app-mark"><i class="bi bi-shield-lock-fill" aria-hidden="true"></i></span>
       <span>Security Awareness</span>
     </a>
   </div>
@@ -29,8 +29,9 @@
     </div>
   {% endif %}
 
-  <div class="card">
-    <div class="card-body p-4">
+  <div class="card auth-card">
+    <div class="card-body">
+      <span class="auth-icon"><i class="bi bi-envelope-check" aria-hidden="true"></i></span>
       <h1 class="h4 mb-1">Check your email</h1>
       <p class="text-body-secondary small">
         We sent a six-digit code to <strong>{{ email }}</strong>. It works once and expires shortly.

@@ -24,12 +24,14 @@
     })();
   </script>
 
+  <link rel="preload" href="/static/vendor/inter/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/static/css/bootstrap.min.css?v={{ asset_version }}">
+  <link rel="stylesheet" href="/static/vendor/bootstrap-icons/bootstrap-icons.min.css?v=1.11.3">
   {# The project's own layer. Vendored Bootstrap is never edited, so replacing
      it is replacing one file. Both are local: nothing here loads from a CDN. #}
   <link rel="stylesheet" href="/static/css/app.css?v={{ asset_version }}">
 </head>
-<body>
+<body{% if not account %} class="is-public"{% endif %}>
 
   {% if account %}
     {% include "components/nav.html" %}

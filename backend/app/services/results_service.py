@@ -15,6 +15,7 @@ from __future__ import annotations
 from sqlmodel import Session as DbSession
 from sqlmodel import select
 
+from app import art
 from app.models.attempt import Attempt
 from app.models.module import Module
 from app.models.registration import Registration
@@ -116,6 +117,9 @@ def for_person(db: DbSession, user: User) -> list[ModuleResultRow]:
                 state=current_state.value,
                 score_percent=state.score_for(mine),
                 link=_link_for(current_state, module.id, mine),
+                description=module.description,
+                art_colour=art.parse_colour(module.art, module.id),
+                art_image=art.uploaded(module.art),
             )
         )
 

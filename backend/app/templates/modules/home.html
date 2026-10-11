@@ -31,9 +31,9 @@
 
       {% if can_write %}
         <div class="d-flex flex-wrap gap-2">
-          <a class="btn btn-sm btn-outline-secondary" href="/modules/{{ module.id }}/pages">Pages</a>
-          <a class="btn btn-sm btn-outline-secondary" href="/modules/{{ module.id }}/tests">Tests</a>
-          <a class="btn btn-sm btn-outline-secondary" href="/modules/{{ module.id }}/roster">Roster</a>
+          <a class="btn btn-sm btn-outline-secondary" href="/modules/{{ module.id }}/pages"><i class="bi bi-file-earmark-text" aria-hidden="true"></i> Pages</a>
+          <a class="btn btn-sm btn-outline-secondary" href="/modules/{{ module.id }}/tests"><i class="bi bi-ui-checks" aria-hidden="true"></i> Tests</a>
+          <a class="btn btn-sm btn-outline-secondary" href="/modules/{{ module.id }}/roster"><i class="bi bi-people" aria-hidden="true"></i> Roster</a>
 
           {# Publishing is an administrator's act (FR-005), and it belongs on
              this page rather than behind Settings: the badge that says whether
@@ -50,39 +50,54 @@
                      value="{{ 'false' if module.is_published else 'true' }}">
               <button type="submit"
                       class="btn btn-sm {{ 'btn-outline-secondary' if module.is_published else 'btn-primary' }}">
+                <i class="bi {{ 'bi-eye-slash' if module.is_published else 'bi-broadcast' }}" aria-hidden="true"></i>
                 {{ "Unpublish" if module.is_published else "Publish" }}
               </button>
             </form>
 
-            <a class="btn btn-sm btn-outline-secondary" href="/modules/{{ module.id }}/edit">Settings</a>
+            <a class="btn btn-sm btn-outline-secondary" href="/modules/{{ module.id }}/edit"><i class="bi bi-gear" aria-hidden="true"></i> Settings</a>
           {% endif %}
         </div>
       {% endif %}
     </div>
 
     {% if module.description %}
-      <p class="text-body-secondary">{{ module.description }}</p>
+      <p class="text-body-secondary mb-4 module-summary">{{ module.description }}</p>
     {% endif %}
 
-    <div class="panel">
-      <div class="panel-body">
-        {% if pages %}
-          <div class="small text-body-secondary mb-2">Start here</div>
-          <a class="btn btn-primary" href="/modules/{{ module.id }}/pages/{{ pages[0].id }}">
-            {{ pages[0].title }}
-          </a>
-        {% else %}
-          {# An empty module is not an error. It is a module with nothing in it yet. #}
-          <p class="text-body-secondary mb-0">
-            This module has no readable pages yet.
-            {% if can_write %} Add one from <a href="/modules/{{ module.id }}/pages">Pages</a>.{% endif %}
-          </p>
-        {% endif %}
+    <div class="row g-3">
+      <div class="col-12 col-md-7">
+        <div class="stat">
+          <span class="stat-icon"><i class="bi bi-book" aria-hidden="true"></i></span>
+          <div class="flex-grow-1">
+            {% if pages %}
+              <div class="stat-label">Start here &middot; {{ pages|length }} {{ "page" if pages|length == 1 else "pages" }}</div>
+              <div class="fw-semibold mb-2">{{ pages[0].title }}</div>
+              <a class="btn btn-primary btn-sm" href="/modules/{{ module.id }}/pages/{{ pages[0].id }}">
+                Start reading <i class="bi bi-arrow-right" aria-hidden="true"></i>
+              </a>
+            {% else %}
+              {# An empty module is not an error. It is a module with nothing in it yet. #}
+              <p class="text-body-secondary mb-0">
+                This module has no readable pages yet.
+                {% if can_write %} Add one from <a href="/modules/{{ module.id }}/pages">Pages</a>.{% endif %}
+              </p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
 
-        <hr>
-        <a class="btn btn-outline-secondary btn-sm" href="/modules/{{ module.id }}/tests">
-          Tests on this module
-        </a>
+      <div class="col-12 col-md-5">
+        <div class="stat">
+          <span class="stat-icon is-ok"><i class="bi bi-ui-checks" aria-hidden="true"></i></span>
+          <div class="flex-grow-1">
+            <div class="stat-label">Assessment</div>
+            <div class="fw-semibold mb-2">{{ final_test.title if final_test else "Tests on this module" }}</div>
+            <a class="btn btn-outline-secondary btn-sm" href="/modules/{{ module.id }}/tests">
+              Tests on this module
+            </a>
+          </div>
+        </div>
       </div>
     </div>
 

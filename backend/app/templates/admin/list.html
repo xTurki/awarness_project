@@ -10,7 +10,7 @@
       nobody administers their own: another administrator changes yours.
     </p>
   </div>
-  <a class="btn btn-primary btn-sm" href="/admin/accounts/new">New account</a>
+  <a class="btn btn-primary" href="/admin/accounts/new"><i class="bi bi-person-plus" aria-hidden="true"></i> New account</a>
 </div>
 
 <div class="panel">
@@ -29,9 +29,21 @@
       <tbody>
         {% for person in accounts %}
           <tr>
-            <td class="fw-semibold">{{ person.full_name }}</td>
+            <td>
+              <span class="d-inline-flex align-items-center gap-3">
+                <span class="avatar" aria-hidden="true">
+                  {%- for part in person.full_name.split()[:2] %}{{ part[0] }}{% endfor -%}
+                </span>
+                <span class="fw-semibold">{{ person.full_name }}</span>
+              </span>
+            </td>
             <td class="text-break text-body-secondary">{{ person.email }}</td>
-            <td class="text-body-secondary text-capitalize">{{ person.role }}</td>
+            <td>
+              <span class="role-chip role-{{ person.role }}">
+                <i class="bi {{ {'administrator': 'bi-shield-check', 'instructor': 'bi-easel', 'trainee': 'bi-mortarboard'}[person.role] }}" aria-hidden="true"></i>
+                <span class="text-capitalize">{{ person.role }}</span>
+              </span>
+            </td>
             <td>
               {% if person.is_active %}
                 <span class="badge text-bg-success">Active</span>
@@ -45,7 +57,7 @@
                  is what makes zero administrators unreachable without counting
                  anything. The service refuses it too, so a crafted request
                  fails exactly as a click would. #}
-              <a class="btn btn-sm btn-outline-secondary" href="/admin/accounts/{{ person.id }}">Edit</a>
+              <a class="btn btn-sm btn-outline-secondary" href="/admin/accounts/{{ person.id }}"><i class="bi bi-pencil" aria-hidden="true"></i> Edit</a>
               <form method="post" action="/admin/accounts/{{ person.id }}/active" class="d-inline">
                 <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token }}">
                 <input type="hidden" name="is_active" value="{{ 'false' if person.is_active else 'true' }}">
@@ -58,7 +70,7 @@
         {% else %}
           <tr><td colspan="5">
             <div class="nothing">
-              <span class="nothing-mark">&#9675;</span>
+              <span class="nothing-mark"><i class="bi bi-people" aria-hidden="true"></i></span>
               <p>No other accounts yet.</p>
             </div>
           </td></tr>
