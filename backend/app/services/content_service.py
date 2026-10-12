@@ -274,7 +274,7 @@ def set_cover(
     content: bytes,
     filename: str,
 ) -> ModuleRead:
-    """Put an uploaded picture on a module in place of its plain colour.
+    """Put an uploaded picture on a module in place of its colour.
 
     The permission is checked before a byte is written, so a caller who could
     not have saved the module never leaves a file behind on the volume.
@@ -309,7 +309,7 @@ def set_cover(
 
 
 def clear_cover(db: DbSession, actor: User, module_id: int) -> ModuleRead:
-    """Take the picture off, leaving the module its plain colour.
+    """Take the picture off, leaving the module its colour.
 
     The column goes back to null, and `art.colour_for` then gives the module
     the same colour it wore before any picture was put on it. Nothing is

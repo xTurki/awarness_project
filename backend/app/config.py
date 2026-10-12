@@ -17,7 +17,9 @@ class Settings(BaseSettings):
     mysql_host: str = "db"
     mysql_port: int = 3306
 
-    # Application
+    # Application. Required, but read by nothing: sessions are random tokens in
+    # the `session` table and CSRF tokens are random values, neither of them
+    # signed. Kept so an existing .env still loads.
     session_secret: str
 
     # Email

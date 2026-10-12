@@ -11,14 +11,16 @@ Setting `SHOW_LOGIN_CODE=false` in `.env` is enough: every function here returns
 nothing and the page shows nothing. That is the switch to throw first, because
 it takes effect on a restart and touches no code.
 
-To take it out for good, delete this file and the three places that mention it.
-They are the only three, and each is marked with the comment `development-only`:
+To take it out for good, delete this file and the four places that use it.
+They are the only four, and each is marked with the comment `development-only`:
 
 1. `app/services/auth_service.py`, one call in `start_login`
-2. `app/routers/auth.py`, one call in `verify_form`
-3. `app/templates/auth/verify.html`, one block
+2. `app/services/auth_service.py`, one call in `_clear_code`
+3. `app/routers/auth.py`, one call in `verify_form`
+4. `app/templates/auth/verify.html`, one block
 
-The setting in `config.py` and `.env.example` can go with them.
+Then remove `development` from the imports of those two Python files. The
+setting in `config.py` and `.env.example` can go with them.
 
 ## Why the code is held here and not read back from the database
 

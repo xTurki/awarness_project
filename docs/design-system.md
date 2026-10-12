@@ -1,7 +1,7 @@
 # Security Awareness Training, UI Design System
 
-**Implementation**: `backend/app/static/css/app.css`, one file, on top of vendored Bootstrap 5.3.3
-**Applied across**: all 32 templates under `backend/app/templates/`
+**Implementation**: `backend/app/static/css/app.css`, one file, on top of vendored Bootstrap 5.3.3, Bootstrap Icons 1.11.3 and the Inter typeface
+**Applied across**: all 35 templates under `backend/app/templates/`
 **Contrast**: measured, not asserted. Every ratio below was computed from WCAG relative luminance.
 
 ---
@@ -31,7 +31,7 @@ against it rather than clinical.
 | Token | Light | Use |
 |---|---|---|
 | `--n-0` | `#ffffff` | surfaces |
-| `--n-25` | `#f5f7f9` | page canvas, table heads |
+| `--n-25` | `#f4f6fa` | page canvas, table heads |
 | `--n-100` | `#e3e7ec` | hairlines |
 | `--n-200` | `#cbd2db` | input borders |
 | `--n-400` | `#8b96a5` | faint text |
@@ -45,6 +45,11 @@ against it rather than clinical.
 | `--brand-500` / `--accent` | `#1d4ed8` | `#8ab0ff` |
 | `--brand-600` / `--accent-hover` | `#1a3fae` | `#a6c2ff` |
 | `--brand-50` / `--accent-tint` | `#eef3fe` | `#1a2436` |
+| `--brand-100` / `--accent-soft` | `#dbe5fd` | `#22304a` |
+
+The one gradient in the system, `--brand-gradient`, runs from `#2563eb` to
+`#4338ca` and is used only on the brand mark. The dashboard hero uses
+`--hero-wash`, a fade from the accent tint to the surface.
 
 **Semantic.** Darkened from the Bootstrap defaults, which sit at exactly
 **4.50:1** with white text and leave no margin at all.
@@ -64,11 +69,12 @@ Computed with WCAG relative luminance. The requirement is 4.5:1 for normal text.
 | Pair | Ratio |
 |---|---|
 | body text on surface | **18.16:1** |
-| body text on canvas | **16.91:1** |
+| body text on canvas | **16.78:1** |
 | secondary text on surface | **5.92:1** |
-| secondary text on canvas | **5.51:1** |
+| secondary text on canvas | **5.47:1** |
 | link on surface | **6.70:1** |
-| link on its own tint | **6.03:1** |
+| accent on its own tint (active nav link, eyebrow, administrator chip) | **6.03:1** |
+| success text on its tint (instructor chip) | **5.70:1** |
 | white on the primary button | **6.70:1** |
 | white on success | **6.45:1** |
 | white on danger | **6.50:1** |
@@ -79,17 +85,30 @@ Computed with WCAG relative luminance. The requirement is 4.5:1 for normal text.
 | Pair | Ratio |
 |---|---|
 | body text on surface | **13.87:1** |
+| body text on canvas | **15.32:1** |
 | secondary text on surface | **6.85:1** |
 | link on surface | **7.77:1** |
+| accent on its own tint | **7.21:1** |
+| success text on its tint | **8.88:1** |
 | dark text on the primary button | **8.58:1** |
-| dark text on success | **10.62:1** |
-| dark text on danger | **6.69:1** |
+| dark text on success | **10.42:1** |
+| dark text on danger | **6.56:1** |
 
-**Lowest pair in either theme: 5.51:1**, against a 4.5:1 requirement.
+**Lowest text pair in either theme: 5.47:1**, against a 4.5:1 requirement.
+
+Icons that sit in a tinted square beside a figure (`.stat-icon`) are graphics
+and are held to 3:1: the lowest, the warning hourglass in light mode, is
+4.35:1. The small icon beside a section title is decorative, hidden from
+assistive technology, and drawn in the faint text colour (2.77:1); it carries
+no information that the heading beside it does not already say.
 
 ### Typography
 
-One family, the system stack, so no font is fetched and no text reflows on load.
+One family, **Inter**, self-hosted as two variable `woff2` files (Latin and
+Latin Extended, about 120KB together), so every weight comes from one download
+and the interface looks the same on every machine. The system stack follows it
+as the fallback, and `font-display: swap` shows text immediately while the file
+loads. Nothing is fetched from outside the platform.
 Scale is a 1.125 ratio from a 15.6px base. The steps are small deliberately:
 this interface is dense tables and short labels, not a magazine.
 
@@ -115,13 +134,13 @@ vertical rhythm is a consequence rather than an effort.
 
 ### Radius and elevation
 
-`--radius-sm` 7.2px · `--radius` 10px · `--radius-lg` 14.4px · `--radius-pill` 32px
+`--radius-sm` 8px · `--radius` 12px · `--radius-lg` 16px · `--radius-pill` 32px
 
 Three shadows, all layered, all used. `--shadow-sm` is the resting state of
-every panel, card, alert and the sticky header. `--shadow-md` is the hover of a
+every panel, card, alert and the sticky header. `--shadow-lg` is the hover of a
 card that **leads somewhere**, selected by `:has(.stretched-link)` and paired
-with a single pixel of lift. A card that cannot be clicked has no business
-suggesting it can.
+with three pixels of lift, and the resting state of the sign-in card. A card
+that cannot be clicked has no business suggesting it can.
 
 On dark the near stop carries most of the separation, because a wide soft
 shadow disappears against a dark ground.
@@ -145,7 +164,19 @@ shadow disappears against a dark ground.
 | Badge | `.badge`, `.text-bg-*` | seven semantic fills, both themes |
 | Empty state | `.nothing` | one treatment everywhere |
 | Breadcrumb | `.crumb` | default, hover |
-| Side navigation | `.side-nav` | default, hover, active |
+| Side navigation | `.side-nav`, `.step-no` | default, hover, active with an accent bar and a filled step number |
+| Header link | `.app-header .nav-link` | default, hover, active (the current area) |
+| Avatar | `.avatar` | the account's initials in a circle |
+| Page label | `.eyebrow` | small uppercase label above a heading |
+| Hero | `.hero`, `.hero-mark`, `.hero-actions` | the top of each dashboard |
+| Summary figure | `.stat`, `.stat-icon`, `.stat-value`, `.stat-label` | four icon tints: accent, ok, warn, bad |
+| Section title | `.section-title` | heading with a quiet icon |
+| Module card | `.module-card`, `.card-foot`, `.card-go` | cover, three-line summary, state and link at the foot |
+| Module cover | `.module-art`, `.module-art-{colour}` | eight two-tone gradients with a dot grid, or an uploaded picture |
+| Test terms | `.facts`, `.fact` | four tiles: questions, time limit, attempts, pass mark |
+| Role chip | `.role-chip`, `.role-{role}` | administrator, instructor, trainee |
+| Sign-in card | `.auth-card`, `.auth-icon` | on pages seen before signing in (`body.is-public`) |
+| Reading progress | `.progress`, `.reading-progress` | page position within a module |
 
 ### Component states
 
@@ -153,17 +184,18 @@ shadow disappears against a dark ground.
 Focus is defined **once**, globally, on `:focus-visible`, so no component can
 be missed and none can disagree with another.
 
-**Empty.** `.nothing` is the single treatment: a mark, and a sentence saying
+**Empty.** `.nothing` is the single treatment: an icon in a tinted circle, and a sentence saying
 what the situation is. Somebody with nothing to do should be told that, rather
 than left looking at a blank panel wondering whether the page failed to load.
 
 **Error.** Server-rendered into the `.alert` block in `base.html`, tinted from
 the semantic ramp so it reads in both themes.
 
-**Loading.** Deliberately absent. The platform is server-rendered and answers in
-milliseconds; the only asynchronous thing is saving one test answer, which
-reports itself in place next to the question. Skeleton screens for pages that
-never take long would be decoration.
+**Loading.** Deliberately minimal. The platform is server-rendered and answers in
+milliseconds. Two things happen in place: saving one test answer, which reports
+itself next to the question, and asking the study assistant, which shows a
+waiting line through htmx's indicator until the answer arrives. Skeleton screens
+for pages that never take long would be decoration.
 
 ---
 
@@ -174,7 +206,7 @@ Mobile first. Bootstrap's grid and breakpoints, with the container capped at
 
 | Band | Behaviour |
 |---|---|
-| under 576px | tighter padding, smaller headings, drawer navigation |
+| under 576px | tighter padding, smaller headings, drawer navigation; the three summary figures stay side by side with the icon above the number |
 | 576 to 992px | drawer navigation, single-column forms |
 | 992px and up | bar navigation, persistent module sidebar, multi-column |
 | **1200px and up** | **root 106.25%**, so the whole interface is proportionally larger |
@@ -199,7 +231,8 @@ content, which here means every table, scrolls inside its own
 
 | Requirement | Status |
 |---|---|
-| 4.5:1 contrast for normal text | **measured**, lowest pair 5.51:1 |
+| 4.5:1 contrast for normal text | **measured**, lowest pair 5.47:1 |
+| 3:1 for meaningful graphics | **measured** on the summary icons, lowest 4.35:1 |
 | 3:1 for large text | met by consequence |
 | Visible focus indicator | one global `:focus-visible` rule, 2px accent, 2px offset |
 | Touch targets | `--tap: 44px` minimum on buttons, inputs, nav links, choice rows |
@@ -255,13 +288,19 @@ dark mode.
 
 ### Performance
 
-- Two local stylesheets, no CDN, no web font, no icon font.
-- The brand mark is a CSS gradient, not an image file.
-- No JavaScript beyond Bootstrap's bundle, htmx, and the three-line theme
-  script.
-- `app.css` is roughly 14KB uncompressed.
+- Three local stylesheets (Bootstrap, Bootstrap Icons, `app.css`) and three
+  local font files. No CDN: every asset is served by nginx from the platform
+  itself, so the interface works on a machine with no outbound access.
+- The Latin Inter file is preloaded from `base.html`; the icon font is about
+  130KB and loads once, then comes from the browser cache.
+- The brand mark is a shield icon on a CSS gradient, not an image file.
+- No JavaScript beyond Bootstrap's bundle, htmx, `localtime.js`, and the short
+  theme script.
+- `app.css` is about 44KB uncompressed, most of it comments.
 
 ---
 
-**Design system date**: 2026-09-11
-**Verification**: 471 tests pass; every page walked over HTTPS returning 200.
+**Design system date**: 2026-10-12
+**Verification**: 645 tests pass. The dashboards, module and reading pages,
+test page, accounts list and sign-in pages were checked in a headless browser
+at desktop and phone width, in light and dark.

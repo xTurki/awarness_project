@@ -249,7 +249,7 @@ async def update(
 
     # After the rest of the save, so a rejected title does not take the
     # picture with it. A new file replaces whatever was there; ticking remove
-    # takes the picture off and lets the patterns come back.
+    # takes the picture off and the module goes back to its colour.
     if picture is not None:
         content_service.set_cover(
             db,

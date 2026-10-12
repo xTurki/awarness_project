@@ -1,4 +1,4 @@
-"""An uploaded picture as a module's cover, in place of its plain colour.
+"""An uploaded picture as a module's cover, in place of its colour.
 
 The picture is a field of the module form, saved by the same button as the
 title. That is what these tests hold in place: there is one Save, it works on a
@@ -207,7 +207,7 @@ def test_the_module_page_shows_the_picture(
 def test_the_cover_is_the_same_picture_in_the_list(
     client, db, sign_in, csrf, admin, module
 ):
-    """One cover, everywhere. A card showing a plain colour while the module
+    """One cover, everywhere. A card showing its colour while the module
     page showed a photograph would read as two different modules."""
     sign_in(admin)
     _save(client, csrf, module, files=_picture())
