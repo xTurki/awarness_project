@@ -15,13 +15,15 @@
 ## Contents
 
 1. [Introduction and scope](#1-introduction-and-scope)
-2. [Requirements analysis](#2-requirements-analysis)
-3. [System architecture](#3-system-architecture)
-4. [Data design](#4-data-design)
-5. [Process design](#5-process-design)
-6. [Interface design](#6-interface-design)
-7. [Verification](#7-verification)
-8. [Evaluation and limitations](#8-evaluation-and-limitations)
+2. [Requirements analysis](#2-requirements-analysis) (waterfall stage 1)
+3. [System design: architecture](#3-system-design-architecture) (stage 2)
+4. [System design: data](#4-system-design-data) (stage 2)
+5. [System design: processes](#5-system-design-processes) (stage 2)
+6. [System design: interface](#6-system-design-interface) (stage 2)
+7. [Implementation](#7-implementation) (stage 3)
+8. [Testing](#8-testing) (stage 4)
+9. [Deployment and maintenance](#9-deployment-and-maintenance) (stage 5)
+10. [Evaluation and limitations](#10-evaluation-and-limitations)
 
 ---
 
@@ -68,26 +70,52 @@ that never finishes. Excluded by decision, not by omission:
 | Multiple organisations in one instance | One deployment serves one SME |
 | Certificates, badges, gamification | A pass is a record, not a prize |
 
-### 1.4 Delivery method
+### 1.4 Development model
 
-The system was specified before it was built, using a specification-first
-workflow: a written constitution of eight principles, then five phase
-specifications, each carrying its own functional requirements, implementation
-plan, data model, route contracts and task breakdown. Every phase ends with
-running software.
+The project follows the **waterfall model**. The work moves through five stages
+in a fixed order. Each stage is completed and its output reviewed before the
+next begins, and each stage works only from the output of the stage before it:
+design from the requirements, implementation from the design, testing against
+the requirements and the design.
 
-| Phase | Delivers | FRs |
+```mermaid
+flowchart LR
+    R["1. Requirements<br/>project specification<br/>177 functional requirements"]
+    D["2. Design<br/>architecture, data,<br/>processes, interface"]
+    I["3. Implementation<br/>models, services,<br/>routers, templates"]
+    T["4. Testing<br/>645 automated tests<br/>against MySQL 8"]
+    M["5. Deployment and<br/>maintenance<br/>three containers"]
+    R --> D --> I --> T --> M
+```
+
+| Stage | Output | In this document |
 |---|---|---|
-| 0 Foundation | Identity, two-step sign-in, sessions, roles, the application shell | 36 |
-| 1 Modules and content | Modules, ordered pages, rich text, images, registration | 35 |
-| 2 Tests | Question bank, tests, attempts, automatic scoring | 39 |
-| 3 Results | Derived state, dashboards, cohort views | 27 |
-| 4 Scheduling | Retake intervals, the daily sweep, notifications | 40 |
+| 1. Requirements | The project specification: a constitution of eight principles, the scope boundaries, and 177 functional requirements in five groups | §1.3, §2 |
+| 2. Design | The architecture, the data model, the process designs and the interface design | §3 to §6 |
+| 3. Implementation | The application, built to the design | §7 |
+| 4. Testing | The automated suite, run against the requirements, and the defects it found | §8 |
+| 5. Deployment and maintenance | The running platform, and every change made to it after deployment | §9 |
+
+The requirements are organised in five groups. A requirement is identified by
+its number and its group, so FR-018 (P1) is requirement 18 of group P1. The
+groups also fix the order in which the implementation stage builds the system
+(§7.2), because each group depends on the ones before it.
+
+| Group | Covers | FRs |
+|---|---|---|
+| P0 Foundation | Identity, two-step sign-in, sessions, roles, the application shell | 36 |
+| P1 Modules and content | Modules, ordered pages, rich text, images, registration | 35 |
+| P2 Tests | Question bank, tests, attempts, automatic scoring | 39 |
+| P3 Results | Derived state, dashboards, cohort views | 27 |
+| P4 Scheduling | Retake intervals, the daily sweep, notifications | 40 |
 | | **Total** | **177** |
 
 ---
 
 ## 2. Requirements analysis
+
+*Waterfall stage 1. The output of this stage is the project specification; every
+later stage works from it.*
 
 ### 2.1 Actors
 
@@ -103,7 +131,7 @@ frequently missed and matters throughout the design.
 
 **The distinction.** A platform role is not a capacity on a module.
 `registration.role_in_module` is independent of `user.role`, so the same person
-may instruct one module and train on another (FR-026, Phase 1). Authorisation
+may instruct one module and train on another (FR-026, group P1). Authorisation
 asks the registration, never the platform role. This is why the roster form asks
 "register them as" before it asks "who".
 
@@ -172,7 +200,7 @@ and instructors reach that state by the same path.
 
 ### 2.3 Functional requirements
 
-177 requirements across five phases. Rather than restate them, this section names
+177 requirements across five groups. Rather than restate them, this section names
 the ones that shaped the architecture, because those are the ones a reader needs
 in order to understand why the system is built as it is.
 
@@ -224,7 +252,11 @@ in order to understand why the system is built as it is.
 
 ---
 
-## 3. System architecture
+## 3. System design: architecture
+
+*Waterfall stage 2. Sections 3 to 6 are the output of the design stage: the
+architecture, the data model, the processes and the interface, each derived
+from the requirements in §2. The implementation in §7 is built to them.*
 
 ### 3.1 Architectural style
 
@@ -249,7 +281,7 @@ The consequence appears throughout: the platform answers **404 rather than 403**
 for a module somebody may not see, because the existence of a module they cannot
 reach is itself information they have no claim to.
 
-### 3.2 Deployment
+### 3.2 Deployment architecture
 
 ```mermaid
 flowchart TB
@@ -421,11 +453,11 @@ is not yours" is never leaked by a status code.
 `art.py` sits outside `services/` because it touches neither the database nor
 the request: it decides which colour a module's cover carries, and whether a
 picture was uploaded for it. `content_seed.py` sits there too, as the one
-module that writes rows at startup (§4.6).
+module that writes rows at startup (§4.5).
 
 ---
 
-## 4. Data design
+## 4. System design: data
 
 ### 4.1 Entity relationship diagram
 
@@ -619,68 +651,11 @@ is the single schema authority. `create_all` creates a missing table but never
 alters an existing one, so a new table appears on restart while a new **column**
 requires the database to be recreated.
 
-This is a time-limited principle, recorded as such in the constitution. It has
-been departed from three times on the live deployment, each time by hand and
-each time recorded, rather than by discarding real data:
+This is a time-limited principle, recorded as such in the constitution. The
+changes made to a live database after deployment, each by hand, are recorded
+with the rest of the maintenance work in §9.3.
 
-| Change | Statement | Why it could not wait |
-|---|---|---|
-| `module.art` added | `ALTER TABLE module ADD COLUMN art VARCHAR(32) NULL` | The cover feature, on a database already carrying modules |
-| `module.art` widened to 64 | `ALTER TABLE module MODIFY art VARCHAR(64) NULL` | A stored image name is a 32-character uuid plus an extension, which does not fit the width a colour name needed |
-| Seven columns dropped | `ALTER TABLE ... DROP COLUMN` on `content_image`, `session` and `attempt_answer` | They were written on every operation and read by nothing (§4.5) |
-
-In every case the model carries the change, so a database created fresh is
-already correct, and the running instance was brought level by hand. The pattern
-is the same each time: the model is the specification, and a live database is
-reconciled to it deliberately rather than automatically.
-
-### 4.5 Columns removed after audit
-
-Schemas accumulate columns that were plausible when written and are read by
-nothing once the system exists. An audit compared every column against the code
-that reads it, distinguishing a column that is *written* from one that is
-*read*: a value assigned on every operation and never consulted looks like
-recorded data and is not.
-
-Seven were removed, with the code that wrote them:
-
-| Table | Column | Written | Read |
-|---|---|---|---|
-| `content_image` | `content_type` | Every upload | Nowhere |
-| `content_image` | `size_bytes` | Every upload | Nowhere |
-| `content_image` | `uploaded_by` | Every upload | Nowhere |
-| `content_image` | `uploaded_at` | Every upload | Nowhere |
-| `session` | `ip` | Every sign-in | Nowhere |
-| `session` | `user_agent` | Every sign-in | Nowhere |
-| `attempt_answer` | `answered_at` | Every answer change | Nowhere |
-
-`content_image` fell from eight columns to four.
-
-Not every unread column was caught. `config.session_secret` is still required
-in `.env` and read by nothing: sessions are random tokens held in the
-`session` table and CSRF tokens are random values compared against a cookie, so
-neither is signed. It is recorded here rather than silently left. `uploaded_by` was the only
-foreign key in the schema that no query ever traversed, so its constraint was
-dropped with it.
-
-**Three were kept although unread**, because the distinction is between a column
-nobody reads and a column nobody reads *yet*. `attempt.points_earned`,
-`attempt.points_possible` and `attempt_answer.points_awarded` are the raw
-numbers behind a percentage. Without them a score of 75% is a number that cannot
-be explained or recomputed, and the information cannot be recovered later
-because it was never kept. The `created_at` timestamps were kept on the same
-reasoning.
-
-The audit also found five definitions in the code that nothing referenced: two
-service functions, an exception never raised, and two request models never
-constructed. One of them, `most_recent_submitted`, carried a docstring claiming
-two phases read it; in fact the rule it named had been rewritten three times
-elsewhere, against a list rather than a query, once the services began loading
-attempts in bulk. The function was removed. **The duplication it left behind is
-recorded as outstanding in §8.2**, because that is a design question rather than
-dead code.
-
-### 4.6 Initial content
+### 4.5 Initial content
 
 The four training modules are part of the platform, not something an
 administrator types in. Their text and question banks are kept in
@@ -703,7 +678,7 @@ real installation.
 
 ---
 
-## 5. Process design
+## 5. System design: processes
 
 ### 5.1 The state machine
 
@@ -735,10 +710,12 @@ stateDiagram-v2
     Passed --> NotStarted : a replacement test is published
     Failed --> NotStarted : a replacement test is published
     Overdue --> NotStarted : a replacement test is published
+    NotStarted --> Overdue : scheduled replacement, registered longer ago than the interval
 
     note right of Passed
         The deciding attempt is the
         MOST RECENT, not the best.
+        Against a pass mark of 80%:
         40%, then 90%, then 70%
         is Failed at 70%.
     end note
@@ -752,8 +729,8 @@ stateDiagram-v2
 
 **Two rules that the diagram encodes and prose tends to blur.**
 
-*Most recent, not best.* Somebody who scored 40%, then 90%, then 70% is **failed
-at 70%**. Training measures what a person knows today, not their best day. If the
+*Most recent, not best.* On a test with a pass mark of 80%, somebody who scored
+40%, then 90%, then 70% is **failed at 70%**. Training measures what a person knows today, not their best day. If the
 rule quietly became "best attempt", the platform would report a workforce as
 trained when it is not, and nothing would complain.
 
@@ -762,6 +739,13 @@ published** test. Publishing a replacement makes everyone "not started" again,
 because the module now asks something different. Their old attempts stay in
 history marked as being at a replaced test. The instructor is told the count
 before it happens: "Publish it and reset 12 people".
+
+If the replacement carries a schedule, "not started" is where the reset begins
+rather than where it ends. Nobody has attempted the new test, so `due.py` counts
+each person's first cycle from their own registration date, and somebody
+registered longer ago than the interval is **Due** or **Overdue** at once. There
+is no grace period: a replacement makes the whole cohort answerable to the new
+test immediately.
 
 ### 5.2 Sequence: two-step sign-in
 
@@ -883,7 +867,7 @@ asserts directly.
 **The due date must be a fixed calendar date.** If any branch of `due.py`
 returned "now", the key an overdue row is written under would move every morning,
 and a notification meant to arrive once would arrive daily. This is the single
-defect the whole phase is shaped to prevent, and a test walks every branch to
+defect the scheduling design is shaped to prevent, and a test walks every branch to
 confirm none of them reads a clock.
 
 **One message, several records.** Somebody overdue on three modules receives one
@@ -1011,7 +995,7 @@ written.
 
 ---
 
-## 6. Interface design
+## 6. System design: interface
 
 ### 6.1 Approach
 
@@ -1054,7 +1038,7 @@ the first paint is already correct.
 | 4.5:1 contrast for normal text | **Measured** with WCAG relative luminance. Lowest pair 5.47:1 |
 | 3:1 for graphical objects | **Measured** on the icons beside the summary figures, lowest 4.35:1. Not claimed for covers: a cover is a gradient or an uploaded picture and carries no information |
 | Visible focus | One global `:focus-visible` rule, so no component can be missed |
-| Touch targets | 44px minimum on buttons, inputs, navigation links and choice rows |
+| Touch targets | 44px minimum on standard buttons, inputs, navigation links and choice rows; small buttons are 36px, with smaller type rather than a smaller hit area |
 | Colour never alone | Every state badge carries its word: Passed, Failed, Due, Overdue, Not started, In progress, No test |
 | Reduced motion | `prefers-reduced-motion` collapses every transition |
 | Text scaling | Every size in rem; the desktop step is a root percentage, so a reader's own browser font preference is preserved rather than overruled |
@@ -1089,9 +1073,66 @@ Two save buttons on one page are two ways to half-save it.
 
 ---
 
-## 7. Verification
+## 7. Implementation
 
-### 7.1 Test strategy
+*Waterfall stage 3. The design in §3 to §6 is turned into code. This stage
+builds the requirements and the design as they stand; it does not change them.*
+
+### 7.1 Technology and structure
+
+The technology fixed at design time is listed in Appendix B. The code follows
+the four layers of §3.1, one directory each:
+
+| Layer | Location | Size |
+|---|---|---|
+| Models | `backend/app/models/` | 13 tables in 10 files |
+| Schemas | `backend/app/schemas/` | read and write models in 5 files |
+| Services | `backend/app/services/` | 16 services |
+| Routers | `backend/app/routers/` | 12 routers, 65 routes (Appendix A) |
+| Templates | `backend/app/templates/` | 35 pages and components, 4 email templates |
+
+Beside the layers sit the modules every layer shares: `security.py` (hashing,
+CSRF, rate limiting), `dependencies.py` (route guards), `rendering.py` (every
+page goes through one render function), `sanitise.py`, `art.py`,
+`content_seed.py` and `config.py`, which reads every setting from `.env`.
+
+### 7.2 Order of construction
+
+The five requirement groups were built in the order of their dependencies, each
+on the tables and services of the groups before it:
+
+1. **P0 Foundation.** Users, sessions, the two-step sign-in, roles and the
+   application shell. Everything else needs an account.
+2. **P1 Modules and content.** Modules, registrations, pages, the editor and
+   image storage. A test needs a module to belong to.
+3. **P2 Tests.** The question bank, tests, attempts and scoring.
+4. **P3 Results.** The state function and the views that read it, which need
+   attempts to exist.
+5. **P4 Scheduling.** Due dates, the daily job and notifications, which need
+   state.
+
+### 7.3 Rules applied while building
+
+The constitution's principles became rules for the code, and the ones that can
+be checked mechanically are checked by tests rather than by review (§8.2):
+
+| Rule | Where it holds |
+|---|---|
+| A router parses the request, calls one service and renders or redirects; it never queries | every file in `routers/` |
+| Every module-scoped action checks its own authorisation | `module_service.get_for` and `get_for_write` |
+| No `table=True` instance reaches a template | read models in `schemas/` |
+| Instructor HTML is sanitised before it is stored | `content_service`, through `sanitise.py` |
+| The server owns the clock during an attempt | `attempt_service` |
+| State and due dates are derived, never stored | `state.py`, `due.py` |
+
+---
+
+## 8. Testing
+
+*Waterfall stage 4. The implementation is tested against the requirements of §2
+and the design of §3 to §6.*
+
+### 8.1 Test strategy
 
 **645 tests across 54 files**, run against a real MySQL 8 instance in a
 disposable schema, never SQLite. The project depends on unique indexes, foreign
@@ -1108,9 +1149,10 @@ other's leftovers.
 | Router tests | Status codes, what each role may reach, CSRF, what a page offers |
 | Structural tests | The done-gates, asserted mechanically rather than reviewed |
 
-### 7.2 Done-gates as executable checks
+### 8.2 Done-gates as executable checks
 
-Six gates govern every phase. Two of them are assertions rather than reviews:
+Six done-gates must pass before an implementation is accepted for testing.
+Two of them are assertions rather than reviews:
 
 - **No module under `routers/` imports `Session` or `select`.** A grep, run as a
   test.
@@ -1120,7 +1162,7 @@ Six gates govern every phase. Two of them are assertions rather than reviews:
 Running the second gate as a test is what found `current_test` handing a table
 row to two templates, which reading the routers had not.
 
-### 7.3 Defects found by verification
+### 8.3 Defects found in testing
 
 Several defects in this system were found by a test or by a live check rather
 than by review, and they are recorded because the kind matters more than the
@@ -1138,9 +1180,119 @@ count.
 
 ---
 
-## 8. Evaluation and limitations
+## 9. Deployment and maintenance
 
-### 8.1 Against the objectives
+*Waterfall stage 5. The tested system is deployed, and every change made to it
+afterwards is maintenance, recorded here.*
+
+### 9.1 Deployment
+
+The platform is deployed with Docker Compose as the three containers of §3.2,
+by one command, `docker compose up -d --build`. Every setting comes from one
+`.env` file: the database passwords, the mail App Password and the optional
+Gemini key. On each start the backend waits for the database, checks that the
+connection is `utf8mb4`, creates any missing table, loads the training content
+(§4.5) and starts the daily scheduler.
+
+| The server needs | Why |
+|---|---|
+| Port 80 reachable on the local network | nginx is the only published port |
+| Outbound access to `smtp.gmail.com:587` | sign-in codes and notices are emailed |
+| A correct clock | every time is stored in UTC, and due dates follow it |
+| A machine that does not sleep | the daily sweep runs at a fixed hour |
+
+The demonstration accounts are created by hand with `seed.py`; real accounts
+are created by an administrator. There is no automatic backup: a `mysqldump`
+of the database and a copy of the uploads volume are the whole of it, and the
+README gives both commands.
+
+### 9.2 Maintenance changes
+
+Maintenance is of three kinds: corrective, which fixes a defect; adaptive, which
+responds to a change in the environment; and perfective, which improves
+something that already worked. Every change since deployment is one of them.
+
+| Change | Kind | Where it is described |
+|---|---|---|
+| The cover picture moved into the module form | Corrective | §6.4 |
+| `module.art` added, then widened | Adaptive | §9.3 |
+| Seven unread columns removed | Perfective | §9.4 |
+| The public tunnel removed; the platform is served on the local network | Adaptive | §3.2 |
+| The training content loaded at startup | Perfective | §4.5 |
+| A test's questions drawn at random by count | Perfective | §5.4 |
+| Oversized or non-image uploads refused on the same page | Corrective | §6.1 |
+| The interface refreshed: Inter, icons, summary figures | Perfective | §6.2 |
+| Database names imported from SQLModel rather than SQLAlchemy | Perfective | Appendix B |
+
+### 9.3 Schema changes on the live database
+
+The schema rule in §4.4 has been departed from three times on the live
+deployment, each time by hand and each time recorded, rather than by
+discarding real data:
+
+| Change | Statement | Why it could not wait |
+|---|---|---|
+| `module.art` added | `ALTER TABLE module ADD COLUMN art VARCHAR(32) NULL` | The cover feature, on a database already carrying modules |
+| `module.art` widened to 64 | `ALTER TABLE module MODIFY art VARCHAR(64) NULL` | A stored image name is a 32-character uuid plus an extension, which does not fit the width a colour name needed |
+| Seven columns dropped | `ALTER TABLE ... DROP COLUMN` on `content_image`, `session` and `attempt_answer` | They were written on every operation and read by nothing (§9.4) |
+
+In every case the model carries the change, so a database created fresh is
+already correct, and the running instance was brought level by hand. The pattern
+is the same each time: the model is the specification, and a live database is
+reconciled to it deliberately rather than automatically.
+
+### 9.4 Columns removed after audit
+
+
+Schemas accumulate columns that were plausible when written and are read by
+nothing once the system exists. An audit compared every column against the code
+that reads it, distinguishing a column that is *written* from one that is
+*read*: a value assigned on every operation and never consulted looks like
+recorded data and is not.
+
+Seven were removed, with the code that wrote them:
+
+| Table | Column | Written | Read |
+|---|---|---|---|
+| `content_image` | `content_type` | Every upload | Nowhere |
+| `content_image` | `size_bytes` | Every upload | Nowhere |
+| `content_image` | `uploaded_by` | Every upload | Nowhere |
+| `content_image` | `uploaded_at` | Every upload | Nowhere |
+| `session` | `ip` | Every sign-in | Nowhere |
+| `session` | `user_agent` | Every sign-in | Nowhere |
+| `attempt_answer` | `answered_at` | Every answer change | Nowhere |
+
+`content_image` fell from eight columns to four. `uploaded_by` was the only
+foreign key in the schema that no query ever traversed, so its constraint was
+dropped with it.
+
+Not every unread column was caught. `config.session_secret` is still required
+in `.env` and read by nothing: sessions are random tokens held in the
+`session` table and CSRF tokens are random values compared against a cookie, so
+neither is signed. It is recorded here rather than silently left.
+
+**Three were kept although unread**, because the distinction is between a column
+nobody reads and a column nobody reads *yet*. `attempt.points_earned`,
+`attempt.points_possible` and `attempt_answer.points_awarded` are the raw
+numbers behind a percentage. Without them a score of 75% is a number that cannot
+be explained or recomputed, and the information cannot be recovered later
+because it was never kept. The `created_at` timestamps were kept on the same
+reasoning.
+
+The audit also found five definitions in the code that nothing referenced: two
+service functions, an exception never raised, and two request models never
+constructed. One of them, `most_recent_submitted`, carried a docstring claiming
+two parts of the system read it; in fact the rule it named had been rewritten three times
+elsewhere, against a list rather than a query, once the services began loading
+attempts in bulk. The function was removed. **The duplication it left behind is
+recorded as outstanding in §10.2**, because that is a design question rather than
+dead code.
+
+---
+
+## 10. Evaluation and limitations
+
+### 10.1 Against the objectives
 
 | Objective | Outcome |
 |---|---|
@@ -1150,7 +1302,7 @@ count.
 | A record that stays true without maintenance | State and due dates derived at read time, never stored |
 | Acts without being asked | A daily sweep that is safe to run twice, never, or late |
 
-### 8.2 Known limitations
+### 10.2 Known limitations
 
 **Single instance by design.** The scheduler runs in-process, so two backend
 replicas would run two schedulers. The unique constraint makes that wasted work
@@ -1160,7 +1312,7 @@ does not horizontally scale.
 **No migration path.** `create_all` never alters an existing table, so every
 column change on a live database is a hand-written statement, applied in the
 right order relative to the deploy or the two disagree. Three such changes have
-now been made (§4.4). This is acceptable while the system is being built and is
+now been made (§9.3). This is acceptable while the system is being built and is
 not acceptable once it holds an organisation's training record.
 
 **Derived state has a cost that will eventually be visible.** The dashboard runs
@@ -1169,9 +1321,10 @@ At thousands it would not be, and the answer would be a cache with an explicit
 invalidation rule rather than a stored column.
 
 **Mail delivery is unresolved.** SMTP is implemented and correct, but the
-provider used during development refuses to send. The sign-in code is printed to
-the server console and shown on the verification page in development builds, both
-removable by one setting.
+provider used during development refuses to send. The sign-in code is always
+printed to the server console, so whoever can read the backend log can finish a
+sign-in; that print is permanent by decision. In development builds the code is
+also shown on the verification page, which one setting turns off.
 
 **The assistant sends page content to a third party.** This is inherent to the
 feature. An organisation with a policy against that should leave the API key
@@ -1183,7 +1336,7 @@ most recent rather than the best, with the row id breaking a tie because
 `due`. It was extracted into a single function once, but the services then
 changed to load attempts in bulk and pass lists rather than query one at a time,
 and the extraction was left behind unused instead of being rewritten to match.
-Removing the unused function (§4.5) did not resolve the duplication. Changing
+Removing the unused function (§9.4) did not resolve the duplication. Changing
 the rule today means finding three places, and the compiler will not help.
 
 **A cover is decoration only.** It was once a drawn pattern chosen per module,
@@ -1192,7 +1345,7 @@ a dot grid, or an uploaded picture. Nothing
 about a module's state, progress or urgency is expressed by it, and nothing
 should be: the state badges carry that, in words.
 
-### 8.3 Further work
+### 10.3 Further work
 
 1. A migration tool, before the platform holds a real training record.
 2. A mail provider that will accept the traffic.
