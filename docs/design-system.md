@@ -221,7 +221,8 @@ overrule. The threshold is 1200px so a tablet in landscape stays where it was.
 
 **One rule outranks the rest: nothing may push the page sideways.** Wide
 content, which here means every table, scrolls inside its own
-`.table-responsive` box. This is the only layout rule the test suite asserts.
+`.table-responsive` box. No automated test checks this; it was checked in a
+headless browser at phone width.
 
 ---
 
@@ -235,7 +236,7 @@ content, which here means every table, scrolls inside its own
 | 3:1 for meaningful graphics | **measured** on the summary icons, lowest 4.35:1 |
 | 3:1 for large text | met by consequence |
 | Visible focus indicator | one global `:focus-visible` rule, 2px accent, 2px offset |
-| Touch targets | `--tap: 44px` minimum on buttons, inputs, nav links, choice rows |
+| Touch targets | `--tap: 44px` minimum on standard buttons, inputs, nav links, choice rows; `.btn-sm` is 36px |
 | Colour never carries meaning alone | every state badge carries its word: Passed, Failed, Due, Overdue, Not started, In progress, No test |
 | Reduced motion | `prefers-reduced-motion` collapses all transitions; nothing animated here carries meaning |
 | Text scaling | every size in `rem`, no fixed-height text container |
