@@ -1,19 +1,20 @@
 /* Security Awareness Training, design system.
  * ============================================
  *
- * One layer on top of vendored Bootstrap 5.3. Bootstrap itself is never edited
- * and never rebuilt, so replacing it is replacing one file. Nothing here loads
- * from a CDN, which keeps the platform working on a machine with no outbound
- * access, and keeps the whole interface in two local files.
+ * One layer on top of vendored Bootstrap 5.3, Bootstrap Icons and the Inter
+ * typeface. None of those is ever edited, so replacing one is replacing its
+ * files. Nothing here loads from a CDN, which keeps the platform working on a
+ * machine with no outbound access.
  *
  * Everything below is a token or a component built from tokens. No page carries
- * its own colour, spacing, or radius: a value that appears once in a template is
- * a value that drifts.
+ * its own colour or radius: a value that appears once in a template is a value
+ * that drifts. The few inline styles left in templates set a width, an offset
+ * or a computed progress value.
  *
  * Contrast is measured, not assumed. Every foreground and background pair used
  * for text in this file was computed against WCAG relative luminance, and the
  * ratios are recorded in docs/design-system.md. The lowest pair in either theme
- * is 5.51:1 against a 4.5:1 requirement.
+ * is 5.47:1 against a 4.5:1 requirement.
  */
 
 /* ==========================================================================
@@ -95,7 +96,8 @@
   --accent-on:     var(--n-0);
   --accent-soft:   var(--brand-100);
 
-  /* The one gradient in the system: the brand mark and the page hero. */
+  /* The brand gradient is the brand mark's alone. The hero's wash is a fade
+     from the accent tint to the surface. */
   --brand-gradient: linear-gradient(135deg, #2563eb 0%, #1d4ed8 45%, #4338ca 100%);
   --hero-wash: linear-gradient(120deg, var(--brand-50) 0%, var(--n-0) 65%);
 
@@ -118,8 +120,9 @@
   --leading-tight: 1.25;
   --leading-body:  1.6;
 
-  /* ---- Spacing, 4px base. Every margin and padding in this file is one of
-          these, so vertical rhythm is a consequence rather than an effort. ---- */
+  /* ---- Spacing, 4px base. Margins, paddings and gaps use these, so vertical
+          rhythm is a consequence rather than an effort. The exceptions are the
+          small insets inside badges and chips, which follow their text. ---- */
   --space-1:  0.25rem;
   --space-2:  0.5rem;
   --space-3:  0.75rem;
@@ -175,7 +178,7 @@
 /* ---- Dark theme. Only the role block and the semantics are redefined: the
         ramps above stay put, and no component below knows which theme it is in.
 
-        Set from the operating system by a three-line script in base.html.
+        Set from the operating system by a short script in base.html.
         There is no toggle, because a preference the browser already knows is
         not a control worth building. ---- */
 [data-bs-theme="dark"] {
@@ -276,8 +279,8 @@ hr { border-color: var(--line); opacity: 1; }
 }
 .app-brand:hover { color: var(--accent); }
 
-/* Drawn in CSS rather than shipped as a file: one less request, and it takes
-   the accent colour in whichever theme it lands in. */
+/* A shield icon on the brand gradient, drawn in CSS rather than shipped as an
+   image: one less request, and the same mark in both themes. */
 .app-mark {
   width: 2rem;
   height: 2rem;
@@ -967,16 +970,16 @@ select[multiple].form-select { min-height: auto; }
    13b. Module artwork
    ========================================================================== */
 
-/* A repeating geometric pattern per module, drawn as a tiling SVG rather than
-   uploaded, so a cover costs no file storage and stays crisp at any size.
+/* A module's cover: one of eight two-tone gradients with a faint dot grid, or
+   a picture an administrator uploaded. Drawn entirely in CSS, so a cover costs
+   no file storage and stays crisp at any size.
 
-   Six patterns and eight colours are chosen per module and kept in one nullable
-   column; a module with nothing chosen falls back to a pair derived from its id
-   (app/art.py). The colour class below drives `currentColor`, which is what the
-   pattern strokes are drawn in, so one class themes the whole tile.
+   The colour is chosen per module and kept in one nullable column; a module
+   with nothing chosen gets one derived from its id (app/art.py). Each colour
+   class sets its gradient and an `--art-ink`, which the dot grid is drawn in.
 
-   Every stroke was measured against its own wash: sixteen pairs, lowest 4.84:1,
-   against the 3:1 that WCAG asks of a graphical object. */
+   Nothing on a cover carries information and no text sits on it, so the
+   gradients are not held to a contrast ratio. */
 
 .module-art {
   position: relative;
@@ -996,7 +999,7 @@ select[multiple].form-select { min-height: auto; }
   border: 1px solid var(--line);
 }
 
-/* A dot grid fading out to the right, so a plain colour has texture rather
+/* A dot grid fading out to the right, so the gradient has texture rather
    than reading as a block of flat paint. Drawn in the colour's own ink. */
 .module-art::after {
   content: "";
@@ -1010,16 +1013,16 @@ select[multiple].form-select { min-height: auto; }
   pointer-events: none;
 }
 
-/* An uploaded picture, in place of the plain colour.
+/* An uploaded picture, in place of the colour.
 
    Cropped from the centre rather than fitted whole: the same file is shown at
    two proportions (a 16/7 card cover and a 6.5rem page band), and a picture
    fitted whole would sit in a band of empty colour at one of them. Cropping
    loses the edges of a photograph; letterboxing loses the cover.
 
-   The diagonal wash above is turned off over a photograph, where it reads as
-   a faded print rather than as depth. Written as an override so a browser
-   without `:has` keeps the wash instead of losing it everywhere. */
+   The dot grid above is turned off over a photograph, where it would read as
+   a screen in front of the picture. Written as an override so a browser
+   without `:has` keeps the grid instead of losing it everywhere. */
 .module-art-photo {
   display: block;
   width: 100%;
@@ -1030,12 +1033,8 @@ select[multiple].form-select { min-height: auto; }
 
 .module-art:has(.module-art-photo)::after { display: none; }
 
-/* The eight colours.
-
-   Deeper than they were. They began as a wash for a pattern to be drawn on
-   top of, and a wash is nearly white by design. With nothing drawn on it the
-   band is the whole cover, so each one is now a colour rather than a hint of
-   one. `color` is gone with the strokes it used to paint. */
+/* The eight colours, each a light-to-deeper gradient of one hue, with the
+   darker ink of the same hue for the dot grid. */
 .module-art-indigo { background: linear-gradient(135deg, #dfe5fc, #b3c0f2); --art-ink: #3730a3; }
 .module-art-sky    { background: linear-gradient(135deg, #dcedf9, #a7d1ef); --art-ink: #075985; }
 .module-art-teal   { background: linear-gradient(135deg, #d6efeb, #93d3c9); --art-ink: #115e59; }
@@ -1057,7 +1056,7 @@ select[multiple].form-select { min-height: auto; }
 [data-bs-theme="dark"] .module-art-violet { background: linear-gradient(135deg, #231a3a, #382a5c); --art-ink: #c4b5fd; }
 [data-bs-theme="dark"] .module-art-slate  { background: linear-gradient(135deg, #1e242d, #2f3845); --art-ink: #cbd5e1; }
 
-/* ---- A module card: cover, title, two lines of summary, and a footer that
+/* ---- A module card: cover, title, three lines of summary, and a footer that
         says where it stands. The footer sits at the bottom whatever the
         length of the summary, so a row of cards lines up. ---- */
 .module-card .card-body { display: flex; flex-direction: column; gap: var(--space-2); }

@@ -7,8 +7,8 @@
 | Course | COMP6900 Major Project, University of Newcastle |
 | Group | 5 |
 | Document | System analysis and design |
-| Date | 15 September 2026 |
-| System under description | 13 tables, 65 routes, 177 functional requirements, 635 automated tests |
+| Date | 12 October 2026 |
+| System under description | 13 tables, 65 routes, 177 functional requirements, 645 automated tests |
 
 ---
 
@@ -45,7 +45,9 @@ Three things are actually needed, and only the third is difficult:
 ### 1.2 What the system does
 
 An administrator creates accounts and modules and assigns instructors. An
-instructor writes the module's pages and builds a test from a bank of questions.
+instructor writes the module's pages, builds a question bank, and creates a test
+by saying how many questions it should have; the platform draws that many from
+the bank at random.
 A trainee reads the pages in order, sits the test at the end, and sees where they
 stand. From then on the platform works out who is due, tells them before their
 training lapses and once it has, and keeps doing so with nobody signed in.
@@ -213,11 +215,11 @@ in order to understand why the system is built as it is.
 |---|---|---|
 | Deployability | One command on one machine | `docker compose up`, three containers |
 | Portability | No managed cloud service | MySQL, nginx, a Python process. Verified on x86 Windows and arm64 macOS |
-| Offline operation | No CDN, no external font | Bootstrap, htmx and Quill are vendored into the repository |
+| Offline operation | No CDN, no externally hosted font | Bootstrap, Bootstrap Icons, the Inter typeface, htmx and Quill are vendored into the repository |
 | Response time | Server-rendered pages in tens of milliseconds | No client framework, no build step |
-| Accessibility | WCAG AA contrast | Measured, not asserted. Lowest measured pair 5.51:1 against a 4.5:1 requirement |
+| Accessibility | WCAG AA contrast | Measured, not asserted. Lowest measured text pair 5.47:1 against a 4.5:1 requirement |
 | Responsiveness | Usable at phone, tablet and desktop widths | One layout rule outranks the rest: nothing may push the page sideways |
-| Correctness | Every user-facing behaviour covered | 635 automated tests against a real MySQL instance |
+| Correctness | Every user-facing behaviour covered | 645 automated tests against a real MySQL instance |
 | Data integrity | Guarantees in the database, not in application code | Unique constraints on email, registration, answer and notification |
 
 ---
@@ -386,23 +388,24 @@ classDiagram
 
 ### 3.4 Service layer
 
-Sixteen services. Four are pure functions with no database access at all, which
-is the design's most deliberate structural choice: the rules that are easiest to
-get subtly wrong are the ones isolated where they can be tested exhaustively
-against a table of cases.
+Sixteen services. Three of them are pure functions with no database access at
+all, and `app/art.py` beside them is a fourth pure module. That is the design's
+most deliberate structural choice: the rules that are easiest to get subtly
+wrong are the ones isolated where they can be tested exhaustively against a
+table of cases.
 
 | Service | Pure | Responsibility |
 |---|---|---|
 | `scoring` | **yes** | Points earned, percentage, pass or fail |
 | `state` | **yes** | Which of seven states a person is in on a module |
 | `due` | **yes** | When somebody's training next falls due |
-| `art` | **yes** | Which colour a module's cover carries, and whether a picture was uploaded for it |
+| `email_service` | | Sending one message over SMTP, off the event loop |
 | `auth_service` | | Password, code issue and verification, sessions |
 | `admin_service` | | Accounts. Nobody administers their own |
 | `module_service` | | Modules, and the `get_for` / `get_for_write` chokepoint |
 | `content_service` | | Pages, ordering, image storage |
 | `question_service` | | The question bank |
-| `test_service` | | Building a test, and the freeze once attempted |
+| `test_service` | | Building a test, drawing its questions at random from the bank, and the freeze once attempted |
 | `attempt_service` | | Taking, saving, submitting and reviewing |
 | `registration_service` | | Putting people on modules and taking them off |
 | `results_service` | | Everything derived. Nothing here writes |
@@ -414,6 +417,11 @@ against a table of cases.
 or `get_for_write`. Neither ever answers "found but forbidden" for a module the
 caller may not see, so the distinction between "does not exist" and "exists but
 is not yours" is never leaked by a status code.
+
+`art.py` sits outside `services/` because it touches neither the database nor
+the request: it decides which colour a module's cover carries, and whether a
+picture was uploaded for it. `content_seed.py` sits there too, as the one
+module that writes rows at startup (§4.6).
 
 ---
 
@@ -646,7 +654,12 @@ Seven were removed, with the code that wrote them:
 | `session` | `user_agent` | Every sign-in | Nowhere |
 | `attempt_answer` | `answered_at` | Every answer change | Nowhere |
 
-`content_image` fell from eight columns to four. `uploaded_by` was the only
+`content_image` fell from eight columns to four.
+
+Not every unread column was caught. `config.session_secret` is still required
+in `.env` and read by nothing: sessions are random tokens held in the
+`session` table and CSRF tokens are random values compared against a cookie, so
+neither is signed. It is recorded here rather than silently left. `uploaded_by` was the only
 foreign key in the schema that no query ever traversed, so its constraint was
 dropped with it.
 
@@ -666,6 +679,27 @@ elsewhere, against a list rather than a query, once the services began loading
 attempts in bulk. The function was removed. **The duplication it left behind is
 recorded as outstanding in §8.2**, because that is a design question rather than
 dead code.
+
+### 4.6 Initial content
+
+The four training modules are part of the platform, not something an
+administrator types in. Their text and question banks are kept in
+`backend/app/seed_content/training_content.json`, generated from the training
+content document, and `content_seed.run()` loads them in the application
+lifespan straight after `create_all`.
+
+| Loaded per module | Count |
+|---|---|
+| Published pages | 6 |
+| Questions in the bank | 20 |
+| Published test | 1, "End-of-module quiz", the document's 10 questions, pass mark 70%, two attempts |
+
+A module whose title already exists is skipped, soft-deleted ones included. A
+restart therefore never duplicates content, never overwrites an
+administrator's edit, and never brings back a module somebody removed. The
+demonstration accounts are not loaded this way: `seed.py` stays a manual step,
+because accounts with a known password should not appear by themselves on a
+real installation.
 
 ---
 
@@ -748,7 +782,7 @@ sequenceDiagram
     S->>S: verify_secret(password_hash)
 
     alt wrong credentials or inactive
-        S-->>R: InvalidCredentials
+        S-->>R: InvalidCredentials or InactiveAccount
         R-->>B: 401, the form again
     else accepted
         S->>S: generate 6-digit code
@@ -826,7 +860,7 @@ sequenceDiagram
         end
     end
 
-    J->>D: every notification with emailed_at IS NULL
+    J->>D: every due_soon or overdue notification with emailed_at IS NULL
     D-->>J: rows, grouped by person
     loop each person
         J->>M: one message listing every module
@@ -912,6 +946,15 @@ moment is submitted and scored **the next time anyone reads it**, which is why
 the diagram has a second entry point. The rule holds wherever a read happens: the
 trainee's dashboard, the instructor's cohort view, or the attempt itself.
 
+**Where a test's questions come from.** The instructor does not pick questions
+one by one. The test form asks how many questions the test should have, and
+`test_service` draws that many from the module's bank at random when the test is
+saved, storing them in bank order in `test_question`. Saving again with the same
+number keeps the questions already drawn, so changing a title cannot quietly
+change the content; a different number draws again. Every person who sits the
+test meets the same questions. `shuffle_questions` is separate: it changes only
+the order, per attempt, when `question_order` is fixed.
+
 ### 5.5 Data flow: the study assistant
 
 ```mermaid
@@ -973,17 +1016,31 @@ written.
 ### 6.1 Approach
 
 Server-rendered Jinja2 templates over vendored Bootstrap 5.3, with htmx for the
-three places that genuinely need to update in place: saving a test answer, asking
-the assistant, and reordering pages. There is no client framework and no build
-step. Every asset is local, so the interface works on a machine with no outbound
-access.
+two places that genuinely need to update in place: saving a test answer, and
+asking the assistant. Reordering pages is an ordinary form post. There is no
+client framework and no build step. Every asset is local, including the Inter
+typeface and the Bootstrap Icons font, so the interface works on a machine with
+no outbound access.
+
+A few checks run in the browser as a convenience on top of the server's own:
+choosing a picture larger than the upload limit, or a file that is not an
+image, is refused on the same page before it is sent. Without that check nginx
+would refuse an oversized file first and replace the form with its own error
+page. The server still validates every upload.
 
 ### 6.2 Design system
 
 35 templates share one stylesheet built entirely from design tokens: a neutral
-ramp, one brand hue, semantic colours, a 1.125 type scale from a 15.6px base, and
-4px spacing. No template carries a colour, a radius or a spacing value of its
-own.
+ramp, one brand hue, semantic colours, a 1.125 type scale from a 15.6px base,
+and 4px spacing. No template carries a colour or a radius of its own; the few
+inline styles set a width, an offset or a computed progress value.
+
+Each dashboard opens with a short welcome section and three summary figures
+computed from data the page already has: modules, published and drafts for
+staff; to do, completed and overdue for a trainee. Modules appear as cards
+whose cover is a two-tone gradient with a dot grid, or an uploaded picture, and
+whose foot carries the state. Reading pages show their position in the module.
+The design system itself is documented in `docs/design-system.md`.
 
 Components reference **role** tokens rather than palette tokens, which is what
 makes the dark theme a redefinition of one block rather than a second stylesheet.
@@ -994,8 +1051,8 @@ the first paint is already correct.
 
 | Requirement | Status |
 |---|---|
-| 4.5:1 contrast for normal text | **Measured** with WCAG relative luminance. Lowest pair 5.51:1 |
-| 3:1 for graphical objects | Not claimed. The drawn covers this measured were removed; a cover is now a plain colour or an uploaded picture, and carries no information |
+| 4.5:1 contrast for normal text | **Measured** with WCAG relative luminance. Lowest pair 5.47:1 |
+| 3:1 for graphical objects | **Measured** on the icons beside the summary figures, lowest 4.35:1. Not claimed for covers: a cover is a gradient or an uploaded picture and carries no information |
 | Visible focus | One global `:focus-visible` rule, so no component can be missed |
 | Touch targets | 44px minimum on buttons, inputs, navigation links and choice rows |
 | Colour never alone | Every state badge carries its word: Passed, Failed, Due, Overdue, Not started, In progress, No test |
@@ -1036,7 +1093,7 @@ Two save buttons on one page are two ways to half-save it.
 
 ### 7.1 Test strategy
 
-**635 tests across 52 files**, run against a real MySQL 8 instance in a
+**645 tests across 54 files**, run against a real MySQL 8 instance in a
 disposable schema, never SQLite. The project depends on unique indexes, foreign
 keys and `utf8mb4`, and SQLite enforces none of them the same way; a suite that
 passed on SQLite would prove less than it appeared to.
@@ -1130,7 +1187,8 @@ Removing the unused function (§4.5) did not resolve the duplication. Changing
 the rule today means finding three places, and the compiler will not help.
 
 **A cover is decoration only.** It was once a drawn pattern chosen per module,
-then a set of emblems, and is now a plain colour or an uploaded picture. Nothing
+then a set of emblems, then a plain colour, and is now a two-tone gradient with
+a dot grid, or an uploaded picture. Nothing
 about a module's state, progress or urgency is expressed by it, and nothing
 should be: the state badges carry that, in words.
 
@@ -1176,7 +1234,7 @@ revision of this table did not.
 | Database | MySQL 8, InnoDB, utf8mb4 | Foreign keys and unique indexes enforced |
 | Driver | PyMySQL with `cryptography` | MySQL 8 defaults to `caching_sha2_password` |
 | Reverse proxy | nginx 1.27-alpine | Serves static files; the only published port |
-| Front end | Bootstrap 5.3, htmx, Quill, all vendored | No CDN, no build step |
+| Front end | Bootstrap 5.3, Bootstrap Icons 1.11, Inter, htmx, Quill, all vendored | No CDN, no build step |
 | Sanitising | nh3 | Server-side, before storage |
 | Passwords and codes | Argon2 | |
 | Scheduling | APScheduler, in-process | No broker, no worker container |
@@ -1184,5 +1242,5 @@ revision of this table did not.
 
 ---
 
-*This document describes the system as built and verified on 16 September 2026:
-635 tests passing against MySQL 8, deployed on arm64 macOS behind nginx.*
+*This document describes the system as built and verified on 12 October 2026:
+645 tests passing against MySQL 8, behind nginx.*

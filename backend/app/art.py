@@ -1,8 +1,8 @@
-"""A module's cover: an uploaded picture, or a plain colour.
+"""A module's cover: an uploaded picture, or a colour.
 
-Nothing is drawn any more. A module wears a picture its administrator
-uploaded, and until one is uploaded it wears a single colour, so a list of
-modules stays legible without anybody having to choose anything.
+A module wears a picture its administrator uploaded, and until one is uploaded
+it wears a colour, which the stylesheet paints as a gradient with a dot grid.
+A list of modules stays legible without anybody having to choose anything.
 
 An administrator picks the colour when they make the module. One that was
 never picked is derived from the module id instead, so a module always has a
@@ -13,17 +13,17 @@ all. A row holding something older, from when covers were drawn patterns, means
 the same as nothing: neither a colour nor an upload, so the colour comes from
 the id.
 
-Nothing here touches the database or the request. It is one list and three
-functions, so the service and the template agree on what a valid cover is
-without either of them defining it a second time.
+Nothing here touches the database or the request. It is one list of colours
+and five small functions, so the service and the template agree on what a
+valid cover is without either of them defining it a second time.
 """
 
 from __future__ import annotations
 
 import re
 
-#: Drawn from the same palette as the rest of the interface, and measured
-#: against it: each is legible in both themes behind the text that sits on it.
+#: Each name has a light and a dark gradient in app.css (`.module-art-<name>`).
+#: No text sits on a cover, so none of them is held to a contrast ratio.
 COLOURS: tuple[str, ...] = (
     "indigo",
     "sky",

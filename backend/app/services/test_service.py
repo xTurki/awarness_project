@@ -1,8 +1,11 @@
-"""Building a test, and the freeze that protects what people have already sat.
+"""Building a test, drawing its questions, and the freeze that protects what
+people have already sat.
 
-`assert_not_attempted` sits at the top of every mutating function. One helper,
-one rule, checked by asking whether an attempt exists rather than by reading a
-flag that could drift from reality (research R6, FR-013).
+`assert_not_attempted` guards every change to an existing test's content. One
+helper, one rule, checked by asking whether an attempt exists rather than by
+reading a flag that could drift from reality (research R6, FR-013). Creating a
+test needs no guard, and publishing deliberately has none: unpublishing is how
+a frozen test is stopped.
 """
 
 from __future__ import annotations
@@ -92,7 +95,8 @@ def get_test(db: DbSession, actor: User, test_id: int) -> TestRead:
 
 
 def questions_of(db: DbSession, test_id: int) -> list[Question]:
-    """In the instructor's chosen order."""
+    """In the order stored in `test_question`, which for a drawn test is the
+    order the questions sit in the bank."""
     pairs = db.exec(
         select(TestQuestion)
         .where(TestQuestion.test_id == test_id)

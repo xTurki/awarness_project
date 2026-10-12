@@ -6,9 +6,9 @@ organisation, tracking who has completed it, and chasing the people who have not
 All five phases are built: **Phase 0** identity, access and the application
 shell, **Phase 1** modules, content and registration, **Phase 2** tests,
 **Phase 3** results and progress, **Phase 4** scheduling and notifications. The
-platform was specified before it was built, phase by phase; that history is not
-part of this checkout but is in git and can be brought back with
-`git restore specs/ .claude/ .specify/` if it is ever wanted again.
+platform was specified before it was built, phase by phase; that history was
+deleted from the checkout but is still in git, and comes back with
+`git checkout 3cd873c -- specs .specify .claude` if it is ever wanted again.
 
 ## What runs
 
@@ -54,7 +54,8 @@ explaining it.
 
 What is **not** on the USB, and cannot be: the data. The database and the
 uploaded images live in Docker volumes on the old machine, not in this folder.
-A fresh install starts empty. To carry the data across, see
+A fresh install starts with the four training modules and nothing else: no
+accounts, no registrations, no attempts. To carry the data across, see
 [Carrying existing data across](#carrying-existing-data-across).
 
 ## 2. What the server needs
@@ -66,8 +67,9 @@ A fresh install starts empty. To carry the data across, see
   [Installing without internet](#installing-without-internet) if the server has
   none.
 - **Outbound access to `smtp.gmail.com:587`. Verify this first.** Every sign-in
-  needs an emailed code and there is no bypass. If mail is blocked, nobody signs
-  in until it is unblocked.
+  needs a six-digit code, and the code is sent by email. If mail is blocked the
+  code is still printed to `docker compose logs backend`, so only someone with
+  access to the server can finish signing in.
 - **Port 80 reachable** from the machines that will use the platform.
 - **A correct clock.** Every time is stored in UTC and converted in the browser.
   A server clock that is wrong shifts every due date and every test window.
@@ -91,7 +93,7 @@ that decide whether the platform works at all:
 | Key | What it is |
 |-----|-----------|
 | `MYSQL_ROOT_PASSWORD`, `MYSQL_PASSWORD` | any two long strings you choose |
-| `SESSION_SECRET` | any long random string; changing it signs everyone out |
+| `SESSION_SECRET` | any value; the settings refuse to start without it, but nothing reads it |
 | `SMTP_USER`, `SMTP_APP_PASSWORD`, `SMTP_FROM` | a Google **App Password**, not an account password |
 
 Two more matter at production time:
@@ -114,6 +116,12 @@ docker compose up -d --build
 
 The first run takes a few minutes: it pulls three images, installs the Python
 dependencies, and initialises MySQL. Afterwards a restart takes seconds.
+
+On every start the backend creates any missing tables and then loads the four
+training modules, with their pages, question banks and quizzes, from
+`backend/app/seed_content/training_content.json`. A module whose title already
+exists is left alone, so restarting never duplicates content or undoes an edit.
+The log says `[content] loaded 4 modules` the first time and nothing after.
 
 ## 5. Create the accounts
 
@@ -268,10 +276,10 @@ docker compose exec backend python seed.py
 
 `down -v` **deletes the database**. Take a dump first if the data matters.
 
-### The one change that was made by hand
+### Widening `module.art` by hand
 
 `module.art` was widened from 32 to 64 characters so it could hold the name of
-an uploaded cover picture as well as a pattern name. `create_all()` never
+an uploaded cover picture as well as a colour name. `create_all()` never
 alters an existing column, so a database created before that change needs one
 statement:
 
@@ -303,8 +311,18 @@ docker compose exec db mysql -uroot -p -e \
 # 2. Delete those files from the volume.
 docker compose exec backend sh -c 'rm -f /data/uploads/<stored_name> ...'
 
-# 3. Then the rows, children first.
+# 3. Then the rows, children first. Every table that points at the module,
+#    directly or through its tests and questions, has to go before it.
 docker compose exec db mysql -uroot -p -e "
+  DELETE FROM lms.attempt_answer WHERE attempt_id IN (
+    SELECT a.id FROM lms.attempt a JOIN lms.test t ON t.id = a.test_id
+    WHERE t.module_id = <id>);
+  DELETE FROM lms.attempt       WHERE test_id IN (SELECT id FROM lms.test WHERE module_id = <id>);
+  DELETE FROM lms.test_question WHERE test_id IN (SELECT id FROM lms.test WHERE module_id = <id>);
+  DELETE FROM lms.test          WHERE module_id = <id>;
+  DELETE FROM lms.answer_option WHERE question_id IN (SELECT id FROM lms.question WHERE module_id = <id>);
+  DELETE FROM lms.question      WHERE module_id = <id>;
+  DELETE FROM lms.notification  WHERE module_id = <id>;
   DELETE FROM lms.content_image WHERE module_id = <id>;
   DELETE FROM lms.page          WHERE module_id = <id>;
   DELETE FROM lms.registration  WHERE module_id = <id>;
@@ -313,6 +331,11 @@ docker compose exec db mysql -uroot -p -e "
 
 Do step 2 before step 3. Once the rows are gone, nothing records which files
 belonged to that module, and they stay on the volume forever.
+
+The four training modules are loaded at startup by title. Remove one of them
+permanently and it comes back, fresh, the next time the backend starts. To
+retire one of those, remove it in the platform instead: a soft-deleted module
+still holds its title, so it is not loaded again.
 
 ---
 
@@ -342,19 +365,23 @@ a forgotten password there is no route back, so keep two.
 Each of these is a recorded decision, not an oversight. The reasoning was
 written down phase by phase during the spec-driven build; that record is not in
 this checkout, but git still has it under `specs/` and it comes back with
-`git restore specs/`.
+`git checkout 3cd873c -- specs`.
 
 # Layout
 
 ```text
-docker-compose.yml     four services; only nginx publishes a port
+docker-compose.yml     three services; only nginx publishes a port
 nginx/                 reverse proxy, the maintenance page, and /static/
+backend/seed.py        the seven demonstration accounts, run by hand
 backend/app/
 ├── models/            the schema, SQLModel table classes
 ├── schemas/           non-table models at every boundary, in and out
 ├── services/          business logic, authorisation, and every query
 ├── routers/           thin: parse, call one service, render or redirect
-├── templates/         Jinja2, with Bootstrap and HTMX vendored under static/
+├── templates/         Jinja2 pages, plus the plain-text email templates
+├── static/            app.css, and vendored Bootstrap, Bootstrap Icons, Inter, htmx, Quill
+├── seed_content/      the four training modules as JSON
+├── content_seed.py    loads those modules at startup
 └── development.py     the sign-in code display; meant to be deleted
 tests/                 pytest, against MySQL
 docs/                  the design system, the analysis report, the testing guide

@@ -50,8 +50,8 @@
   {% if account.role == "administrator" %}Modules{% else %}Modules you run{% endif %}
 </h2>
 
-{# One list. Phase 3 adds a state against each of these rows rather than a
-   second page listing the same modules again. #}
+{# Staff see modules, not training they owe: the card foot says whether each
+   one is published. A trainee's dashboard is results/dashboard.html. #}
 <div class="row g-4">
   {% for module in modules %}
     <div class="col-12 col-md-6 col-xl-4">

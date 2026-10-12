@@ -13,9 +13,8 @@
 
   {# development-only block. `development_code` is None whenever
      SHOW_LOGIN_CODE is off, so this disappears in production without the page
-     knowing why. Delete this block, app/development.py, and the two lines
-     marked development-only in auth_service.py and routers/auth.py to remove
-     the feature for good. #}
+     knowing why. To remove the feature for good, delete this block and follow
+     the list in app/development.py. #}
   {% if development_code %}
     <div class="alert alert-warning" role="alert">
       <div class="fw-semibold">Development build</div>

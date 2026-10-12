@@ -86,7 +86,7 @@ def verify_form(request: Request, email: str = "", mail: str = ""):
         context["message_kind"] = "warning"
 
     # development-only: None in production, and the template shows nothing.
-    # Deleting app/development.py and this line removes the feature entirely.
+    # One of the four places app/development.py lists for removing the feature.
     context["development_code"] = development.code_for(email)
 
     return render(request, "auth/verify.html", context)

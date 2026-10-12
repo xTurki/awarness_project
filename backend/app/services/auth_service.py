@@ -72,7 +72,7 @@ async def start_login(db: DbSession, email: str, password: str) -> None:
     print(f"[login code] {user.email}: {code}", flush=True)
 
     # development-only: hold the code so the verification page can show it.
-    # Deleting app/development.py and this line removes the feature entirely.
+    # One of the four places app/development.py lists for removing the feature.
     development.remember_code(user.email, code)
 
     body = _EMAIL_TEMPLATE.read_text(encoding="utf-8").format(
