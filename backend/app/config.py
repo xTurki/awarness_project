@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     smtp_user: str
     smtp_app_password: str
     smtp_from: str
-    smtp_host: str = "smtp.gmail.com"
+    smtp_host: str = "smtp-relay.brevo.com"
     smtp_port: int = 587
     smtp_timeout_seconds: int = 10
 
