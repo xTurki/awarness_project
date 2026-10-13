@@ -48,9 +48,9 @@ That leaves about 3 MB. Of it, this is what the platform actually needs:
 | `docs/`, `README.md`, `lms-project-spec.md` | documentation |
 
 **Do not forget `.env`.** It is git-ignored on purpose because it holds the
-database passwords, the mail App Password and the Gemini key. A `git clone` will not contain it. Either copy it across yourself,
-or build a fresh one from `.env.example`, which lists every key with a comment
-explaining it.
+database passwords, the Brevo SMTP key and the Gemini key. A `git clone` will
+not contain it. Either copy it across yourself, or build a fresh one from
+`.env.example`, which lists every key with a comment explaining it.
 
 What is **not** on the USB, and cannot be: the data. The database and the
 uploaded images live in Docker volumes on the old machine, not in this folder.
@@ -66,10 +66,13 @@ accounts, no registrations, no attempts. To carry the data across, see
   `python:3.12-slim`, `nginx:1.27-alpine` and `mysql:8.0`. See
   [Installing without internet](#installing-without-internet) if the server has
   none.
-- **Outbound access to `smtp.gmail.com:587`. Verify this first.** Every sign-in
-  needs a six-digit code, and the code is sent by email. If mail is blocked the
-  code is still printed to `docker compose logs backend`, so only someone with
-  access to the server can finish signing in.
+- **Outbound access to `smtp-relay.brevo.com:587`, from an IP address Brevo
+  has authorised. Verify this first.** Every sign-in needs a six-digit code,
+  and the code is sent by email through Brevo. Brevo refuses a connection from
+  an address that is not on the account's Authorised IPs list, so add the
+  server's public address there before the first sign-in. If mail is blocked
+  the code is still printed to `docker compose logs backend`, so only someone
+  with access to the server can finish signing in.
 - **Port 80 reachable** from the machines that will use the platform.
 - **A correct clock.** Every time is stored in UTC and converted in the browser.
   A server clock that is wrong shifts every due date and every test window.
@@ -94,7 +97,7 @@ that decide whether the platform works at all:
 |-----|-----------|
 | `MYSQL_ROOT_PASSWORD`, `MYSQL_PASSWORD` | any two long strings you choose |
 | `SESSION_SECRET` | any value; the settings refuse to start without it, but nothing reads it |
-| `SMTP_USER`, `SMTP_APP_PASSWORD`, `SMTP_FROM` | a Google **App Password**, not an account password |
+| `SMTP_USER`, `SMTP_APP_PASSWORD`, `SMTP_FROM` | the Brevo SMTP login (`…@smtp-brevo.com`), the Brevo SMTP key (`xsmtpsib-…`), and a sender verified in Brevo |
 
 Two more matter at production time:
 
@@ -103,8 +106,8 @@ SHOW_LOGIN_CODE=false     # true prints the sign-in code on the page itself
 GEMINI_API_KEY=           # empty means the study assistant is simply absent
 ```
 
-`SHOW_LOGIN_CODE=true` is a development convenience for when the mail provider
-refuses to send. It shows anyone the code on the page that asks for it, so it
+`SHOW_LOGIN_CODE=true` is a development convenience for when mail cannot be
+sent. It shows anyone the code on the page that asks for it, so it
 must be `false` anywhere real. [`backend/app/development.py`](backend/app/development.py)
 explains how to delete the feature for good.
 

@@ -289,7 +289,7 @@ flowchart TB
 
     subgraph Internet
         GEM[Google Gemini API]
-        SMTP["SMTP relay"]
+        SMTP["Brevo SMTP relay"]
     end
 
     subgraph HOST["Host machine, one Docker network"]
@@ -1189,15 +1189,15 @@ afterwards is maintenance, recorded here.*
 
 The platform is deployed with Docker Compose as the three containers of §3.2,
 by one command, `docker compose up -d --build`. Every setting comes from one
-`.env` file: the database passwords, the mail App Password and the optional
-Gemini key. On each start the backend waits for the database, checks that the
+`.env` file: the database passwords, the Brevo SMTP login and key, and the
+optional Gemini key. On each start the backend waits for the database, checks that the
 connection is `utf8mb4`, creates any missing table, loads the training content
 (§4.5) and starts the daily scheduler.
 
 | The server needs | Why |
 |---|---|
 | Port 80 reachable on the local network | nginx is the only published port |
-| Outbound access to `smtp.gmail.com:587` | sign-in codes and notices are emailed |
+| Outbound access to `smtp-relay.brevo.com:587`, from an IP address authorised in Brevo | sign-in codes and notices are emailed through Brevo, which refuses unlisted addresses |
 | A correct clock | every time is stored in UTC, and due dates follow it |
 | A machine that does not sleep | the daily sweep runs at a fixed hour |
 
@@ -1218,6 +1218,7 @@ something that already worked. Every change since deployment is one of them.
 | `module.art` added, then widened | Adaptive | §9.3 |
 | Seven unread columns removed | Perfective | §9.4 |
 | The public tunnel removed; the platform is served on the local network | Adaptive | §3.2 |
+| Mail moved from the previous SMTP provider to Brevo's SMTP relay | Adaptive | §9.1, §10.2 |
 | The training content loaded at startup | Perfective | §4.5 |
 | A test's questions drawn at random by count | Perfective | §5.4 |
 | Oversized or non-image uploads refused on the same page | Corrective | §6.1 |
@@ -1320,11 +1321,14 @@ whole-set queries. At tens of people across tens of modules this is invisible.
 At thousands it would not be, and the answer would be a cache with an explicit
 invalidation rule rather than a stored column.
 
-**Mail delivery is unresolved.** SMTP is implemented and correct, but the
-provider used during development refuses to send. The sign-in code is always
-printed to the server console, so whoever can read the backend log can finish a
-sign-in; that print is permanent by decision. In development builds the code is
-also shown on the verification page, which one setting turns off.
+**Mail depends on one provider and one IP address.** Mail goes through Brevo's
+SMTP relay, and Brevo accepts a connection only from an address on the
+account's Authorised IPs list. A server whose public address changes stops
+sending until the new address is authorised, and every sign-in then depends on
+the fallback below. The sign-in code is always printed to the server console, so
+whoever can read the backend log can finish a sign-in; that print is permanent
+by decision. In development builds the code is also shown on the verification
+page, which one setting turns off.
 
 **The assistant sends page content to a third party.** This is inherent to the
 feature. An organisation with a policy against that should leave the API key
@@ -1348,7 +1352,8 @@ should be: the state badges carry that, in words.
 ### 10.3 Further work
 
 1. A migration tool, before the platform holds a real training record.
-2. A mail provider that will accept the traffic.
+2. A sending path that does not depend on a fixed public IP address, such as
+   Brevo's HTTP API with an API key, so a changed address does not stop mail.
 3. Extract the deciding-attempt rule into one place that `state` and `due` both
    call, on the list rather than on a query.
 4. Per-question analytics for instructors: which question the cohort fails most.

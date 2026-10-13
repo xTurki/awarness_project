@@ -1,7 +1,7 @@
 # SME Cybersecurity Awareness Training Platform, Project Specification
 
 **Status:** Draft v17
-**Stack:** Docker · Nginx · Python / FastAPI / Jinja2 / HTMX / Bootstrap 5 · SQLModel · MySQL 8 · Gmail SMTP
+**Stack:** Docker · Nginx · Python / FastAPI / Jinja2 / HTMX / Bootstrap 5 · SQLModel · MySQL 8 · Brevo SMTP
 **Method:** Spec-driven development, phased delivery
 
 > **Changes from v17, §7 reconciled with the phase specifications.** The domain model was written before Phases 1–4 were specified in detail and had fallen behind them in six places, all now corrected: the question bank belongs to the **module** with a `test_question` join rather than to one test; `Attempt` carries `ends_at` and `question_order`, fixed at creation, plus the scoring columns; `AttemptAnswer` holds `selected_option_ids` under a unique key per question; `Notification` points at a module rather than a polymorphic subject; `Test` uses `is_published`, `opens_at`, `closes_at`; `ContentImage` uses `content_type`. **Quiz** is renamed **Test** throughout, matching every phase specification and the word trainees see. §6.2's file layout is updated to the files the phase plans actually name.
@@ -32,7 +32,7 @@
 >
 > **Changes from v3:** Recurring test schedules, notifications, and self-registration added to close the gaps in the requirements list (§6.5, new Phase 4). "Module owner" confirmed to mean the instructor registered on the module, no new entity. Pathways considered and dropped.
 >
-> **Changes from v2:** Two-factor authentication added, a six-digit code emailed via Gmail/Workspace SMTP, required of every role on every login (§6.4). The pending code lives in two nullable columns on `User`; there is no challenge table, no resend route, and no attempt counter. Audit logging removed from the system entirely. Lands in Phase 0 alongside session auth, and adds the project's only outbound network dependency.
+> **Changes from v2:** Two-factor authentication added, a six-digit code emailed over SMTP, required of every role on every login (§6.4). The pending code lives in two nullable columns on `User`; there is no challenge table, no resend route, and no attempt counter. Audit logging removed from the system entirely. Lands in Phase 0 alongside session auth, and adds the project's only outbound network dependency.
 >
 > **Changes from v1:** PostgreSQL → MySQL 8. SQLAlchemy 2.0 → SQLModel. Alembic migrations removed (greenfield, no data to preserve). Deployment is now a three-tier Docker Compose stack. Repository layer collapsed into services. Responsive target raised from "tablet width" to phone-first. Rationale for each is recorded inline.
 
@@ -163,7 +163,7 @@ Explicitly out of scope. These exist to be pointed at when scope creep arrives. 
 | Validation | **Pydantic v2**, via SQLModel | Request/response schemas. See the caveat in §5.2, table models are not automatically safe response models. |
 | Auth | **Session cookies**, sessions stored in MySQL | Deliberately *not* JWT. Deliberately *not* Redis, a `sessions` table avoids a fourth container. |
 | Second factor | **Six-digit code emailed on every login** | Every role, every login, no trusted-device exemption. Full flow in §6.4. |
-| Mail transport | **Gmail / Workspace SMTP** on `smtp.gmail.com:587` | Authenticated with a Google **App Password**, Google no longer permits SMTP with an account password. Sent inline from `backend`; no fourth container. |
+| Mail transport | **Brevo SMTP relay** on `smtp-relay.brevo.com:587` | Authenticated with the Brevo SMTP login and an SMTP key (`xsmtpsib-…`). Brevo accepts connections only from authorised IP addresses, and the sender must be verified in the Brevo account. Sent inline from `backend`; no fourth container. |
 | Content authoring | **Vendored rich-text editor** (Quill or equivalent) | Served from the application's own static files, not a CDN. Produces HTML, which is sanitised server-side against an allowlist before storage, the editor is convenience, never a security boundary (§6.6). |
 | Image storage | **Named Docker volume**, metadata in MySQL | Instructor uploads only. The only file handling in the system. |
 | Scheduled work | **APScheduler, in-process** | Started from the FastAPI lifespan inside the existing `backend` container. Required because due and overdue notices must fire with nobody logged in. No broker, no worker container, no cron container. Assumes a single `backend` replica, see §11. |
@@ -261,7 +261,7 @@ Three tiers, three containers, one `docker compose up`.
 - **The MySQL data volume is named, not a bind mount.** Bind-mounting a MySQL data directory into an iCloud-synced Windows folder, which is where this project lives, will corrupt it. This is not a hypothetical.
 - **Static files are shared, not duplicated.** `backend/app/static/` is mounted into the Nginx container so both tiers see one copy.
 - **Uploaded images live in a second named volume**, mounted into both `backend` (which writes them) and `nginx` (which serves them). `client_max_body_size` must match the application's own upload limit, if they disagree, an oversized upload dies in Nginx with an error the application never sees and cannot explain to the instructor.
-- **`backend` requires outbound egress to `smtp.gmail.com:587`.** This is the only outbound network dependency in the entire system, and it sits on the login path. If it is blocked, by an organisation firewall, an outbound-deny rule, or a Google outage, nobody can log in. Verify egress as part of deployment, not on the first day the platform is used.
+- **`backend` requires outbound egress to `smtp-relay.brevo.com:587`, from an IP address authorised in Brevo.** This is the only outbound network dependency in the entire system, and it sits on the login path. If it is blocked, by an organisation firewall, an outbound-deny rule, an unauthorised IP address, or a Brevo outage, nobody can log in. Verify egress as part of deployment, not on the first day the platform is used.
 
 ### 6.2 Application layout
 
@@ -390,7 +390,7 @@ There is no challenge table. The pending code lives in two nullable columns on t
 
 **Sending**
 
-`email_service.send(to, subject, body)` wraps `smtplib` over `smtp.gmail.com:587` with STARTTLS, authenticated by a Google App Password. The call blocks, so it runs in a worker thread under `SMTP_TIMEOUT_SECONDS` and is awaited inline, the login POST takes a second or two. A delivery failure is shown on the login form as "we could not send your code, please try again"; retrying means logging in again.
+`email_service.send(to, subject, body)` wraps `smtplib` over `smtp-relay.brevo.com:587` with STARTTLS, authenticated by the Brevo SMTP login and SMTP key. The call blocks, so it runs in a worker thread under `SMTP_TIMEOUT_SECONDS` and is awaited inline, the login POST takes a second or two. A delivery failure is shown on the login form as "we could not send your code, please try again"; retrying means logging in again.
 
 **Code handling**
 
@@ -466,7 +466,7 @@ Email is a delivery attempt recorded on those rows via `emailed_at`, and **one e
 | Result available | One email, sent immediately |
 | Due soon / overdue | **One digest email per user per run**, listing every module due or overdue for them that day |
 
-The digest exists because one person can be due or overdue on several modules on the same day. Thirty users with five overdue modules each is 30 emails rather than 150, which keeps the load well inside Gmail's limits and stops the notices reading as spam to the person receiving them.
+The digest exists because one person can be due or overdue on several modules on the same day. Thirty users with five overdue modules each is 30 emails rather than 150, which keeps the load well inside the mail provider's limits and stops the notices reading as spam to the person receiving them.
 
 A user therefore never receives an email about anything missing from their in-app list, and the two channels cannot disagree, they simply group differently.
 
@@ -585,7 +585,7 @@ Each phase is one Spec Kit cycle: specify → plan → tasks → build → deplo
 
 ### Phase 0, Foundation
 
-**Delivers:** the three-container Docker Compose stack; users, three roles, MySQL-backed sessions; **two-step login, password plus a six-digit code emailed via Gmail SMTP (§6.4)**, with rate limiting on login; **administrator account management, list, create with any role, edit, reset password, change role, deactivate and reactivate**; **a forced password change at first sign-in on any account an administrator set up (§6.4)**; the Canvas-like application shell (top nav, collapsible sidebar, dashboard placeholder) responsive from phone up; a seed script creating one administrator, one instructor, and five trainees; the project under version control.
+**Delivers:** the three-container Docker Compose stack; users, three roles, MySQL-backed sessions; **two-step login, password plus a six-digit code emailed via Brevo SMTP (§6.4)**, with rate limiting on login; **administrator account management, list, create with any role, edit, reset password, change role, deactivate and reactivate**; **a forced password change at first sign-in on any account an administrator set up (§6.4)**; the Canvas-like application shell (top nav, collapsible sidebar, dashboard placeholder) responsive from phone up; a seed script creating one administrator, one instructor, and five trainees; the project under version control.
 
 **Why first:** everything depends on identity, and since look-and-feel ranks high in priorities, the shell should be right early rather than retrofitted. Getting the container topology right on day one avoids retrofitting deployment onto a working app, the more expensive order. Two-factor belongs here for the same reason: building it alongside session auth means the login path is written once, and there are no existing accounts to migrate onto it.
 
@@ -693,7 +693,7 @@ Announcements · discussion boards · content pages within a module · CSV roste
 - Argon2 or bcrypt password hashing, never plain or fast hashes
 - Every login requires a second factor: a six-digit code emailed to the account address. All roles, every login, no trusted-device exemption
 - One-time codes stored hashed, not in plain text
-- SMTP authenticated with a Google App Password held in `.env`, never an account password
+- SMTP authenticated with a Brevo SMTP key held in `.env`, never an account password
 - Instructor-authored HTML sanitised server-side before storage, never on render alone
 - Uploads limited to images by extension, with a size cap; Nginx `client_max_body_size` and the application limit kept in agreement
 - Authorisation checked in the service layer for every module-scoped action
@@ -752,8 +752,8 @@ Bootstrap 5 is mobile-first; the work is in respecting that rather than fighting
 | **Timezone handling in availability windows** | Store naive UTC in `DATETIME` everywhere; convert at the presentation layer only. MySQL will not catch this for you, it is a review item on every date field. |
 | **Queries leaking into routers** now that repositories are gone | Constitution principle 1, enforced strictly: a router importing `select` or `Session` fails review. |
 | **Leaking `password_hash`** via a table model used as a response or template context | Separate non-table read models; never return or render a `table=True` instance directly. |
-| **Total lockout when Google is unreachable**, with 2FA on every login and no resend route, an SMTP outage or a revoked App Password stops everyone logging in. Accepted knowingly. | A hard `SMTP_TIMEOUT_SECONDS` so a failure is a fast clear error rather than a hung request; egress to `smtp.gmail.com:587` verified at deploy time, not first use; a password can be reset directly in the database if it ever comes to that. |
-| **Burst email throttling**, a class of thirty logging in within a minute before a test | Google's daily cap is not the binding constraint; per-burst throttling is. The 10-minute code TTL means trainees can log in a few minutes ahead. If a class is ever throttled out, revisit the every-login rule for trainees specifically. |
+| **Total lockout when Brevo is unreachable**, with 2FA on every login and no resend route, an SMTP outage, a revoked SMTP key or an unauthorised IP address stops everyone logging in. Accepted knowingly. | A hard `SMTP_TIMEOUT_SECONDS` so a failure is a fast clear error rather than a hung request; egress to `smtp-relay.brevo.com:587` and the server's authorised IP address verified at deploy time, not first use; a password can be reset directly in the database if it ever comes to that. |
+| **Burst email throttling**, a class of thirty logging in within a minute before a test | The provider's daily cap is not the binding constraint; per-burst throttling is. The 10-minute code TTL means trainees can log in a few minutes ahead. If a class is ever throttled out, revisit the every-login rule for trainees specifically. |
 | **Brute force of the code**, since there is no attempt counter | Rate limiting on the verify endpoint is the sole control and must not be removed or weakened without replacing it. Expiry alone does not bound guessing. |
 | **A trainee who never passes is nagged indefinitely**, the cycle restarts only on a pass, so someone failing repeatedly stays overdue | Correct behaviour for mandatory training, and the digest holds it to one email a week. Unlimited retakes on recurring tests mean the trainee always has a way out, so it is never a locked state. Accepted limitation: nothing surfaces "who is persistently overdue" to the instructor, so a struggling trainee is visible only in their own inbox. |
 | **A recurring test saved without a pass mark** would have no way to know when its cycle restarts | `passing_score` is required whenever `retake_interval_days` is set, validated when the owner saves the test rather than discovered by the scheduler at 06:00. |
@@ -789,7 +789,7 @@ Bootstrap 5 is mobile-first; the work is in respecting that rather than fighting
 
 ### Still worth knowing
 
-- The proposal's objective *"System availability: available at any time"* sits badly with two-factor authentication on every login through Gmail. §11 records this as the largest availability risk.
+- The proposal's objective *"System availability: available at any time"* sits badly with two-factor authentication on every login through emailed codes. §11 records this as the largest availability risk.
 - The proposal's ethics section commits to protecting stored emails and scores and calls accountability essential. This specification carries no data-protection stance and no audit trail. If the report keeps those commitments, something here has to change.
 
 ---
