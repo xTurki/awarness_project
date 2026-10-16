@@ -63,7 +63,7 @@ class Settings(BaseSettings):
     code_ttl_minutes: int = 10
     session_hours: int = 12
     login_rate_limit: int = 5
-    login_rate_window_minutes: int = 5
+    login_rate_window_minutes: int = 2
 
     # Checked by extension only. A renamed executable will be accepted and stored;
     # it lands in a directory nginx serves as static content and does not run.
