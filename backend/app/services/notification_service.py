@@ -9,10 +9,16 @@ application (FR-021, FR-025).
 the database, not from a check here: the unique constraint on
 (user_id, kind, module_id, due_date) is what makes the daily job safe to run
 twice, and no amount of bookkeeping in Python would be as reliable (research R5).
+
+The two immediate notices, registration and result, are sent in the background.
+One message takes seconds to reach the mail relay, and the person who added
+fifteen people to a roster should not wait for fifteen of them. The record is
+committed first, as always; the message follows a moment later.
 """
 
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
 from datetime import date, datetime
 from pathlib import Path
 
@@ -20,7 +26,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session as DbSession
 from sqlmodel import select
 
-from app.database import utcnow
+from app.database import engine, utcnow
 from app.models.module import Module
 from app.models.notification import Notification
 from app.models.user import User
@@ -28,6 +34,14 @@ from app.schemas.notification import NotificationRead
 from app.services import email_service
 
 _EMAILS = Path(__file__).resolve().parents[1] / "templates" / "emails"
+
+#: Two workers, so a burst of registrations sends a couple at a time rather
+#: than opening one connection per person at once.
+_SENDER = ThreadPoolExecutor(max_workers=2, thread_name_prefix="mail")
+
+#: Tests switch this off. Their rows live inside a transaction that is rolled
+#: back, which the worker's own database session could never see.
+SEND_IN_BACKGROUND = True
 
 
 # --------------------------------------------------- the two immediate events
@@ -54,7 +68,7 @@ def notify_registered(db: DbSession, person: User, module: Module) -> None:
     body = (_EMAILS / "registered.txt").read_text(encoding="utf-8").format(
         full_name=person.full_name, module_title=module.title
     )
-    deliver(db, person.email, f"Added to {module.title}", body, [row])
+    deliver_soon(db, person.email, f"Added to {module.title}", body, [row])
 
 
 def notify_result(db: DbSession, person: User, module: Module, test, attempt) -> None:
@@ -80,7 +94,7 @@ def notify_result(db: DbSession, person: User, module: Module, test, attempt) ->
         score=score,
         outcome=outcome,
     )
-    deliver(db, person.email, f"Your result for {test.title}", body, [row])
+    deliver_soon(db, person.email, f"Your result for {test.title}", body, [row])
 
 
 # ------------------------------------------------------------------ creating
@@ -149,6 +163,41 @@ def deliver(db: DbSession, to: str, subject: str, body: str, rows: list[Notifica
         db.add(row)
     db.commit()
     return True
+
+
+def deliver_soon(db: DbSession, to: str, subject: str, body: str, rows: list[Notification]) -> None:
+    """`deliver`, without making the request wait for the mail relay.
+
+    The worker has no request and no session, so it carries the row ids and
+    stamps them through a session of its own. A failure leaves them unstamped,
+    exactly as `deliver` would.
+    """
+    if not SEND_IN_BACKGROUND:
+        deliver(db, to, subject, body, rows)
+        return
+
+    ids = [row.id for row in rows]
+    _SENDER.submit(_send_and_stamp, to, subject, body, ids)
+
+
+def _send_and_stamp(to: str, subject: str, body: str, ids: list[int]) -> None:
+    try:
+        email_service.send_email_now(to, subject, body)
+    except email_service.EmailDeliveryFailed as exc:
+        print(f"[notification] delivery failed for {to}: {exc}", flush=True)
+        return
+    _stamp_sent(ids)
+
+
+def _stamp_sent(ids: list[int]) -> None:
+    sent_at = utcnow()
+    with DbSession(engine) as db:
+        for row_id in ids:
+            row = db.get(Notification, row_id)
+            if row is not None:
+                row.emailed_at = sent_at
+                db.add(row)
+        db.commit()
 
 
 # ------------------------------------------------------------------- reading

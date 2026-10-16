@@ -65,7 +65,7 @@
           <div class="fact">
             <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
             <div><div class="fact-label">Attempts allowed:</div>
-              <div class="fact-value">{% if test.retake_interval_days %}as many as you need{% else %}{{ test.allowed_attempts }}{% endif %}</div></div>
+              <div class="fact-value">{% if not test.allowed_attempts %}Unlimited{% elif test.retake_interval_days %}{{ test.allowed_attempts }} per cycle{% else %}{{ test.allowed_attempts }}{% endif %}</div></div>
           </div>
           <div class="fact">
             <i class="bi bi-trophy" aria-hidden="true"></i>

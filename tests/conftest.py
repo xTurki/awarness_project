@@ -105,6 +105,9 @@ def mail(monkeypatch):
         sent.append((to, subject, body))
 
     monkeypatch.setattr("app.services.email_service.send_email_now", fake_send)
+    # Immediate notices are sent inline here, so a test can assert on them
+    # straight away and their rows stay inside the test's transaction.
+    monkeypatch.setattr("app.services.notification_service.SEND_IN_BACKGROUND", False)
     return sent
 
 

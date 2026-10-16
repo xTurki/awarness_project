@@ -163,7 +163,7 @@ Explicitly out of scope. These exist to be pointed at when scope creep arrives. 
 | Validation | **Pydantic v2**, via SQLModel | Request/response schemas. See the caveat in §5.2, table models are not automatically safe response models. |
 | Auth | **Session cookies**, sessions stored in MySQL | Deliberately *not* JWT. Deliberately *not* Redis, a `sessions` table avoids a fourth container. |
 | Second factor | **Six-digit code emailed on every login** | Every role, every login, no trusted-device exemption. Full flow in §6.4. |
-| Mail transport | **Brevo SMTP relay** on `smtp-relay.brevo.com:587` | Authenticated with the Brevo SMTP login and an SMTP key (`xsmtpsib-…`). Brevo accepts connections only from authorised IP addresses, and the sender must be verified in the Brevo account. Sent inline from `backend`; no fourth container. |
+| Mail transport | **Brevo SMTP relay** on `smtp-relay.brevo.com:587` | Authenticated with the Brevo SMTP login and an SMTP key (`xsmtpsib-…`). Brevo accepts connections only from authorised IP addresses, and the sender must be verified in the Brevo account. Sent from inside `backend`: the sign-in code within the request, the registration and result notices by a background worker so the page does not wait for the relay. No fourth container. |
 | Content authoring | **Vendored rich-text editor** (Quill or equivalent) | Served from the application's own static files, not a CDN. Produces HTML, which is sanitised server-side against an allowlist before storage, the editor is convenience, never a security boundary (§6.6). |
 | Image storage | **Named Docker volume**, metadata in MySQL | Instructor uploads only. The only file handling in the system. |
 | Scheduled work | **APScheduler, in-process** | Started from the FastAPI lifespan inside the existing `backend` container. Required because due and overdue notices must fire with nobody logged in. No broker, no worker container, no cron container. Assumes a single `backend` replica, see §11. |
@@ -437,11 +437,11 @@ for each (user, test):
 
 > **Validation rule:** `passing_score` is **required whenever `retake_interval_days` is set.** A recurring test with no pass mark has no way of knowing when its cycle restarts. This is checked when the owner saves the test, not discovered later by the scheduler.
 
-**Attempt limits do not apply to recurring tests.** When `retake_interval_days` is set, `allowed_attempts` is ignored and a trainee may retake as often as they need until they pass.
+**Attempt limits apply to recurring tests per cycle.** The instructor either sets a number of attempts or ticks Unlimited attempts, stored as `allowed_attempts` = 0. On a recurring test the number counts only the attempts made since the trainee last passed, so passing starts a fresh allowance.
 
-This is not a convenience. Because the cycle restarts only on a pass, a trainee who exhausted a fixed attempt limit without passing would be permanently overdue and unable to do anything about it, a stuck state with no exit that the trainee controls. Removing the limit removes the state. Mandatory training measures competence, not whether someone got it right first time, so there is nothing to protect by capping attempts.
+Counting per cycle is what keeps a limit usable on a test that recurs for years: the attempts of earlier cycles never use it up. A trainee who uses every attempt in a cycle without passing is overdue with no exit of their own; the way out is the instructor's, who raises the number or ticks Unlimited attempts. An instructor who wants no such state leaves the test unlimited.
 
-`allowed_attempts` still applies normally to one-off tests, where no such cycle exists.
+On a one-off test, where no cycle exists, the number counts every attempt.
 
 A user who has never passed a recurring test gets a first due date one full interval after their registration, so a newcomer has the same time to complete it as anyone completing a later cycle. Because nothing is stored, an owner changing the interval re-dates every registered user at once, which is what "totally customisable" has to mean in practice.
 
@@ -543,7 +543,7 @@ Content and test are both available from the module home page. A trainee may tak
 **Test**, id, module_id, title, instructions (Text), is_published, opens_at (nullable), closes_at (nullable), time_limit_minutes (nullable), allowed_attempts, shuffle_questions, retake_interval_days (nullable), completion_deadline_days (nullable), passing_score (nullable), created_at
 > Two states, held as a boolean rather than a state column: published or not. A test is **frozen from its first attempt**, no adding, removing, reordering, or rewording, and no change to its pass mark. Nothing records this; the check is whether any attempt row exists, because a stored flag could disagree with reality. An instructor who needs a different test unpublishes this one and builds a replacement.
 >
-> `retake_interval_days` is the module owner's retake frequency (§6.5); null means a one-off test. `passing_score` is the mark at or above which an attempt counts as passed, and is **required whenever `retake_interval_days` is set**, because the recurrence cycle restarts on a pass. When `retake_interval_days` is set, `allowed_attempts` is ignored, retakes are unlimited until the trainee passes (§6.5). `opens_at` / `closes_at` are the window a single sitting must **start** inside; the interval is the cadence on which sittings recur.
+> `retake_interval_days` is the module owner's retake frequency (§6.5); null means a one-off test. `passing_score` is the mark at or above which an attempt counts as passed, and is **required whenever `retake_interval_days` is set**, because the recurrence cycle restarts on a pass. `allowed_attempts` of 0 means unlimited. When `retake_interval_days` is set, any other number applies per cycle and starts again after each pass (§6.5). `opens_at` / `closes_at` are the window a single sitting must **start** inside; the interval is the cadence on which sittings recur.
 
 **Question**, id, module_id, prompt (Text), points, position, created_at
 > **The bank belongs to the module, not to one test.** A question may be used in more than one test, and a test is an ordered selection from the bank rather than everything in it.

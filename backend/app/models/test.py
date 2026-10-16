@@ -36,6 +36,8 @@ class Test(SQLModel, table=True):
     # Null means untimed.
     time_limit_minutes: int | None = Field(default=None, nullable=True)
 
+    # 0 means unlimited. On a recurring test the limit is per cycle: it counts
+    # the attempts made since the person last passed.
     allowed_attempts: int = Field(default=1, nullable=False)
     shuffle_questions: bool = Field(default=False, nullable=False)
 

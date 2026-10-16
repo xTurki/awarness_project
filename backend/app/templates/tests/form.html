@@ -65,11 +65,20 @@
                value="{{ test.time_limit_minutes if test and test.time_limit_minutes else '' }}">
       </div>
 
-      <div class="col-6 col-lg-2">
+      {# 0 is unlimited. The number keeps whatever was typed while the box is
+         ticked, so unticking it brings the number back rather than a blank. #}
+      {% set unlimited = test is defined and test and test.allowed_attempts == 0 %}
+      <div class="col-6 col-lg-3">
         <label for="allowed_attempts" class="form-label">Attempts</label>
         <input type="number" class="form-control" id="allowed_attempts"
                name="allowed_attempts" min="1"
-               value="{{ test.allowed_attempts if test else 1 }}">
+               value="{{ test.allowed_attempts if test and test.allowed_attempts else 1 }}"
+               {% if unlimited %}disabled{% endif %}>
+        <div class="form-check mt-2">
+          <input class="form-check-input" type="checkbox" id="unlimited_attempts"
+                 name="unlimited_attempts" value="true" {% if unlimited %}checked{% endif %}>
+          <label class="form-check-label" for="unlimited_attempts">Unlimited attempts</label>
+        </div>
       </div>
 
       <div class="col-6 col-lg-2">
@@ -94,7 +103,7 @@
         <input type="number" class="form-control" id="retake_interval_days"
                name="retake_interval_days" min="1"
                value="{{ test.retake_interval_days if test and test.retake_interval_days else '' }}">
-        <div class="form-text">It recurs. Attempt limits do not apply.</div>
+        <div class="form-text">It recurs. The attempts allowed apply to each cycle and start again after a pass.</div>
       </div>
 
       <div class="col-6 col-lg-3">
@@ -156,4 +165,15 @@
 
   <a class="btn btn-link mt-3" href="/modules/{{ module.id }}/tests">Cancel</a>
 </form>
+
+<script>
+  // Ticking Unlimited puts the number away. The server reads the box, not the
+  // number, so the page works the same with no JavaScript at all.
+  (function () {
+    const box = document.getElementById('unlimited_attempts');
+    const count = document.getElementById('allowed_attempts');
+    if (!box || !count) return;
+    box.addEventListener('change', function () { count.disabled = box.checked; });
+  })();
+</script>
 {% endblock %}
