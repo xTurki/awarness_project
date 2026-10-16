@@ -49,6 +49,16 @@ def _optional_int(value: str) -> int | None:
     return int(value) if value not in ("", None) else None
 
 
+def _attempts(value: str, unlimited: str) -> int:
+    """0 when Unlimited is ticked. Otherwise the number typed, where anything
+    that is not a whole number of at least one becomes -1, which the schema
+    refuses with a sentence saying what to do."""
+    if unlimited == "true":
+        return 0
+    value = (value or "").strip()
+    return int(value) if value.isdigit() and int(value) >= 1 else -1
+
+
 def _question_count(value: str) -> int:
     """Blank or non-numeric becomes 0, which the service refuses with the range."""
     return int(value) if value.strip().isdigit() else 0
@@ -120,7 +130,8 @@ def create(
     opens_at: str = Form(""),
     closes_at: str = Form(""),
     time_limit_minutes: str = Form(""),
-    allowed_attempts: int = Form(1),
+    allowed_attempts: str = Form(""),
+    unlimited_attempts: str = Form(""),
     shuffle_questions: str = Form(""),
     passing_score: str = Form(""),
     retake_interval_days: str = Form(""),
@@ -137,7 +148,7 @@ def create(
             opens_at=_when(opens_at),
             closes_at=_when(closes_at),
             time_limit_minutes=_optional_int(time_limit_minutes),
-            allowed_attempts=allowed_attempts,
+            allowed_attempts=_attempts(allowed_attempts, unlimited_attempts),
             shuffle_questions=shuffle_questions == "true",
             passing_score=_optional_int(passing_score),
             retake_interval_days=_optional_int(retake_interval_days),
@@ -214,7 +225,8 @@ def update(
     opens_at: str = Form(""),
     closes_at: str = Form(""),
     time_limit_minutes: str = Form(""),
-    allowed_attempts: int = Form(1),
+    allowed_attempts: str = Form(""),
+    unlimited_attempts: str = Form(""),
     shuffle_questions: str = Form(""),
     passing_score: str = Form(""),
     retake_interval_days: str = Form(""),
@@ -235,7 +247,7 @@ def update(
                 opens_at=_when(opens_at),
                 closes_at=_when(closes_at),
                 time_limit_minutes=_optional_int(time_limit_minutes),
-                allowed_attempts=allowed_attempts,
+                allowed_attempts=_attempts(allowed_attempts, unlimited_attempts),
                 shuffle_questions=shuffle_questions == "true",
                 passing_score=_optional_int(passing_score),
                 retake_interval_days=_optional_int(retake_interval_days),

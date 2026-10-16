@@ -216,5 +216,5 @@ def test_a_trainee_is_shown_the_retake_interval(
 
     assert page.status_code == 200
     assert f"every {INTERVAL} days" in page.text
-    # And the limit that no longer applies is not quoted at them (FR-005).
-    assert "as many as you need" in page.text
+    # And the attempts they have, which on a recurring test is per cycle.
+    assert "1 per cycle" in page.text

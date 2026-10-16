@@ -120,13 +120,9 @@ def start(db: DbSession, actor: User, test_id: int) -> Attempt:
         raise OutsideWindow("This test has closed.")
 
     taken = _submitted_count(db, test_id, actor.id)
-    # A recurring test ignores the limit entirely: a person may retake it as
-    # often as they need until they pass. A fixed number would otherwise leave
-    # somebody permanently overdue with no way out of it (Phase 4 FR-005).
-    if not test.retake_interval_days and taken >= test.allowed_attempts:
-        raise NoAttemptsLeft(
-            f"You have used all {test.allowed_attempts} permitted attempts at this test."
-        )
+    refusal = _limit_reached(db, test, actor.id)
+    if refusal:
+        raise NoAttemptsLeft(refusal)
 
     questions = test_service.questions_of(db, test_id)
     order = [q.id for q in questions]
@@ -189,13 +185,9 @@ def why_not_startable(
     if test.closes_at is not None and now > test.closes_at:
         return CannotStart("This test closed at", test.closes_at)
 
-    if not test.retake_interval_days:
-        taken = _submitted_count(db, test.id, actor.id)
-        if taken >= test.allowed_attempts:
-            return CannotStart(
-                f"You have used all {test.allowed_attempts} permitted attempts "
-                "at this test."
-            )
+    refusal = _limit_reached(db, test, actor.id)
+    if refusal:
+        return CannotStart(refusal)
 
     return None
 
@@ -523,6 +515,43 @@ def _registration(db: DbSession, module_id: int, user_id: int) -> Registration |
             Registration.module_id == module_id, Registration.user_id == user_id
         )
     ).first()
+
+
+def _limit_reached(db: DbSession, test: Test, user_id: int) -> str | None:
+    """The sentence that refuses another attempt, or None if one is allowed.
+
+    `allowed_attempts` of 0 means unlimited. On a recurring test the limit is
+    per cycle: only attempts submitted after the person last passed count, so
+    passing starts a fresh allowance and a test that recurs for years is never
+    used up by the attempts of earlier years.
+    """
+    limit = test.allowed_attempts
+    if not limit:
+        return None
+
+    submitted = db.exec(
+        select(Attempt).where(
+            Attempt.test_id == test.id,
+            Attempt.user_id == user_id,
+            Attempt.is_submitted == True,  # noqa: E712
+        )
+    ).all()
+
+    if test.retake_interval_days:
+        passes = [row for row in submitted if row.passed]
+        if passes:
+            last = max(passes, key=lambda row: (row.submitted_at, row.id))
+            submitted = [
+                row for row in submitted
+                if (row.submitted_at, row.id) > (last.submitted_at, last.id)
+            ]
+        if len(submitted) >= limit:
+            return f"You have used all {limit} permitted attempts in this cycle."
+        return None
+
+    if len(submitted) >= limit:
+        return f"You have used all {limit} permitted attempts at this test."
+    return None
 
 
 def _submitted_count(db: DbSession, test_id: int, user_id: int) -> int:

@@ -1219,6 +1219,8 @@ something that already worked. Every change since deployment is one of them.
 | Seven unread columns removed | Perfective | §9.4 |
 | The public tunnel removed; the platform is served on the local network | Adaptive | §3.2 |
 | Mail moved from the previous SMTP provider to Brevo's SMTP relay | Adaptive | §9.1, §10.2 |
+| Attempts set as a number or as Unlimited (stored as 0); on a recurring test the number now applies per cycle and starts again after a pass, where before a retake interval silently made every test unlimited | Corrective | `attempt_service` |
+| Registration and result notices sent in the background, so a roster save or a submitted attempt no longer waits about three seconds per message for the relay; the record is still committed first, and the sign-in code is still sent inside the request | Perfective | `notification_service` |
 | The training content loaded at startup | Perfective | §4.5 |
 | A test's questions drawn at random by count | Perfective | §5.4 |
 | Oversized or non-image uploads refused on the same page | Corrective | §6.1 |

@@ -181,8 +181,9 @@ class TestWrite(BaseModel):
     @field_validator("allowed_attempts")
     @classmethod
     def _attempts_positive(cls, value: int) -> int:
-        if value < 1:
-            raise ValueError("A test must allow at least one attempt.")
+        """0 means unlimited; anything below it is not a number of attempts."""
+        if value < 0:
+            raise ValueError("Enter how many attempts are allowed, or tick Unlimited attempts.")
         return value
 
     @field_validator("passing_score")

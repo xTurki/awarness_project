@@ -49,10 +49,11 @@ async def send_email(to: str, subject: str, body: str) -> None:
 def send_email_now(to: str, subject: str, body: str) -> None:
     """The same delivery, for callers that are not on the event loop.
 
-    Phase 4's callers are the daily job, which the scheduler runs in a worker
-    thread, and two ordinary synchronous routes. Neither can await, and neither
-    needs to: they are already off the loop, which is the only reason the async
-    form above exists.
+    Its callers are the daily job, which the scheduler runs in a worker thread,
+    and the background sender in `notification_service`, which delivers the
+    registration and result notices. Neither can await, and neither needs to:
+    they are already off the loop, which is the only reason the async form
+    above exists.
     """
     try:
         _send_blocking(to, subject, body)
