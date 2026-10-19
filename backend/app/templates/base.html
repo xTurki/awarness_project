@@ -5,12 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}Training Platform{% endblock %}</title>
 
-  {# Set before the stylesheets so the first paint is already the right theme:
-     applying it afterwards shows a white flash to anybody using dark mode.
-
-     It follows the operating system and offers no toggle. A preference the
-     browser already knows is not a control worth building, and a control would
-     need somewhere to remember the answer. #}
+  {# Set the theme from the OS setting before CSS loads, to avoid a white flash. #}
   <script>
     (function () {
       try {
@@ -27,8 +22,7 @@
   <link rel="preload" href="/static/vendor/inter/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/static/css/bootstrap.min.css?v={{ asset_version }}">
   <link rel="stylesheet" href="/static/vendor/bootstrap-icons/bootstrap-icons.min.css?v=1.11.3">
-  {# The project's own layer, last so it wins. The vendored files above are
-     never edited, and every one of them is local: nothing loads from a CDN. #}
+  {# App styles last so they override the vendor CSS. #}
   <link rel="stylesheet" href="/static/css/app.css?v={{ asset_version }}">
 </head>
 <body{% if not account %} class="is-public"{% endif %}>
@@ -46,8 +40,7 @@
 
   <script src="/static/js/bootstrap.bundle.min.js"></script>
   <script src="/static/js/htmx.min.js"></script>
-  {# Stored moments are naive UTC. Only the browser knows the reader's zone, so
-     the conversion happens there, in both directions. #}
+  {# Converts UTC times to the user's local time zone. #}
   <script src="/static/js/localtime.js?v={{ asset_version }}"></script>
 </body>
 </html>

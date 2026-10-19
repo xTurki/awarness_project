@@ -1,9 +1,4 @@
-"""Immediate notices are recorded at once and sent in the background.
-
-The request that registers somebody, or submits an attempt, must not wait for
-the mail relay. The record is committed before the call returns; the message
-and its `emailed_at` stamp follow from a worker.
-"""
+"""Registration and result emails are sent in a background thread."""
 
 from __future__ import annotations
 
@@ -20,7 +15,7 @@ from app.services import notification_service
 
 @pytest.fixture(autouse=True)
 def one_worker(monkeypatch):
-    """One worker, so a no-op submitted after a send runs only once it is done."""
+    """Use a single worker so tests can wait for sends to finish."""
     worker = ThreadPoolExecutor(max_workers=1)
     monkeypatch.setattr(notification_service, "_SENDER", worker)
     yield worker
@@ -42,7 +37,7 @@ def module(db):
 
 @pytest.fixture()
 def slow_relay(monkeypatch):
-    """A relay that holds every message until the test releases it."""
+    """Fake email sender that blocks until the test releases it."""
     release = threading.Event()
     sent = threading.Event()
     stamped: list[list[int]] = []

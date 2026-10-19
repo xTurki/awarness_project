@@ -1,12 +1,7 @@
-"""Where somebody stands on a module. One function, seven states, no database.
+"""A user's state on a module (not started, in progress, passed, due, ...).
 
-Three call sites read this, and Phase 4 added *due* and *overdue* here rather
-than anywhere else. Any state computed inside a query, a template, or a second
-helper would be a copy of this rule, and copies drift (research R1).
-
-It takes rows and returns an enum. No session, and no knowledge of who is
-asking. The due date it compares against is computed by `due.py` at the call
-site and passed in, so this module stays ignorant of registrations.
+Pure function, no database access. The due date is calculated by `due.py` and
+passed in.
 """
 
 from __future__ import annotations
@@ -26,13 +21,12 @@ class State(str, Enum):
     PASSED = "passed"
     FAILED = "failed"
 
-    # Phase 4, decided from the due_date argument Phase 3 reserved below.
+    # Based on the due date.
     DUE = "due"
     OVERDUE = "overdue"
 
 
-#: The order outstanding things are found in, worst first (research R4).
-#: Overdue outranks everything: it is the one thing that has already been missed.
+# Sort order for states, most urgent first.
 RANK = {
     State.OVERDUE: 0,
     State.FAILED: 1,
@@ -45,16 +39,10 @@ RANK = {
 
 
 def state_for(test, attempts: Iterable, due_date: date | None = None) -> State:
-    """Evaluated in this order, first match winning.
+    """Work out the user's state on a module.
 
-    `test` is the module's currently published test, or None. `attempts` are
-    that person's attempts **at that test**: attempts at a test since replaced
-    are excluded by the caller, which is what makes publishing a replacement
-    reset the whole cohort (FR-008).
-
-    `due_date` comes from `due.py`, computed at the call site. Where it is None
-    the test does not recur and the five states stand alone, which is every test
-    in the platform until an instructor sets a schedule.
+    `test` is the current published test (or None) and `attempts` are the
+    user's attempts at that test only. `due_date` comes from `due.py`.
     """
     if test is None or not test.is_published:
         return State.NO_TEST
@@ -62,16 +50,14 @@ def state_for(test, attempts: Iterable, due_date: date | None = None) -> State:
     rows = list(attempts)
 
     if any(not attempt.is_submitted for attempt in rows):
-        # They are sitting it now. Whatever a date says, that is what they are
-        # doing, and telling them it is overdue while they take it is noise.
+        # An attempt in progress takes priority over due/overdue.
         return State.IN_PROGRESS
 
     submitted = [attempt for attempt in rows if attempt.is_submitted]
     if not submitted:
         return _with_due(State.NOT_STARTED, due_date)
 
-    # The most recent, not the best. The id breaks a tie, because submitted_at
-    # has second precision (FR-005).
+    # Use the latest attempt (id breaks ties).
     deciding = max(submitted, key=lambda a: (a.submitted_at, a.id))
 
     if deciding.passed:
@@ -80,19 +66,11 @@ def state_for(test, attempts: Iterable, due_date: date | None = None) -> State:
 
 
 def _with_due(settled: State, due_date: date | None) -> State:
-    """The two states Phase 4 added, considered after the five above.
-
-    Somebody who passed within the current cycle is not due, and this needs no
-    separate check: `due.py` sets their date a full interval after they passed,
-    so it simply has not been reached. Once it has, they have lost currency and
-    the fact that they once passed is exactly what stopped mattering (FR-010,
-    research R2).
-    """
+    """Apply the due/overdue states based on the due date."""
     if due_date is None:
         return settled
 
-    # Naive UTC, like every other date in the project. A due date is a calendar
-    # date, so the comparison is a date comparison.
+    # Compare calendar dates (UTC).
     today = utcnow().date()
     if due_date < today:
         return State.OVERDUE
@@ -102,11 +80,7 @@ def _with_due(settled: State, due_date: date | None) -> State:
 
 
 def score_for(attempts: Iterable) -> int | None:
-    """Whatever the deciding attempt scored, including an instructor's override.
-
-    Phase 2 stores an override in the same column, so nothing here needs to know
-    one happened. A state with no deciding attempt shows no score (FR-004).
-    """
+    """Score of the latest submitted attempt (includes overrides), or None."""
     submitted = [attempt for attempt in attempts if attempt.is_submitted]
     if not submitted:
         return None
@@ -114,5 +88,5 @@ def score_for(attempts: Iterable) -> int | None:
 
 
 def rank(state: State) -> int:
-    """Sorting key. Outstanding things come first (FR-007, FR-020)."""
+    """Sort key: most urgent states first."""
     return RANK.get(state, 9)

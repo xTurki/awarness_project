@@ -1,11 +1,6 @@
-"""Create the demonstration accounts for a fresh installation.
+"""Create demo accounts: one admin, one instructor and five trainees.
 
-Seven accounts: one administrator, one instructor, five trainees. All are created
-with `must_set_password` **false**, demonstration accounts are exempt so the
-platform can be shown working without a detour. Accounts an administrator creates
-are never exempt (spec Assumptions).
-
-Running this twice creates nothing the second time.
+Demo accounts skip the first-login password change. Safe to run more than once.
 """
 
 from __future__ import annotations
@@ -19,8 +14,7 @@ from app.security import hash_secret
 SEED_PASSWORD = "password"
 
 ACCOUNTS = [
-    # The administrator uses the real sending address, so a fresh installation can
-    # be signed into with a code that actually arrives. Everyone else is a placeholder.
+    # The admin uses a real address so the login code can be received.
     ("computingproject6@gmail.com", "admin", "administrator"),
     ("ins@e.com", "Instructor", "instructor"),
     ("1@e.com", "Trainee One", "trainee"),

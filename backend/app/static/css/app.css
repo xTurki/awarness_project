@@ -1,29 +1,15 @@
-/* Security Awareness Training, design system.
- * ============================================
+/* Security Awareness Training - app styles.
  *
- * One layer on top of vendored Bootstrap 5.3, Bootstrap Icons and the Inter
- * typeface. None of those is ever edited, so replacing one is replacing its
- * files. Nothing here loads from a CDN, which keeps the platform working on a
- * machine with no outbound access.
- *
- * Everything below is a token or a component built from tokens. No page carries
- * its own colour or radius: a value that appears once in a template is a value
- * that drifts. The few inline styles left in templates set a width, an offset
- * or a computed progress value.
- *
- * Contrast is measured, not assumed. Every foreground and background pair used
- * for text in this file was computed against WCAG relative luminance, and the
- * ratios are recorded in docs/design-system.md. The lowest pair in either theme
- * is 5.47:1 against a 4.5:1 requirement.
+ * Built on top of Bootstrap 5.3, Bootstrap Icons and Inter (all served locally).
+ * Colours, spacing and radii are defined as variables below.
+ * Contrast ratios are listed in docs/design-system.md.
  */
 
 /* ==========================================================================
    0. Typeface
    ========================================================================== */
 
-/* Inter, self-hosted as one variable file per script range, so every weight
-   comes from a single download and the interface looks the same on every
-   machine rather than borrowing whatever the operating system ships. */
+/* Inter variable font, self-hosted. */
 @font-face {
   font-family: "Inter";
   font-style: normal;
@@ -50,8 +36,7 @@
    ========================================================================== */
 
 :root {
-  /* ---- Neutral ramp. Slate rather than pure grey, so white surfaces read
-          warm against it rather than clinical. ---- */
+  /* ---- Neutral colours (slate) ---- */
   --n-0:   #ffffff;
   --n-25:  #f4f6fa;
   --n-50:  #eef1f6;
@@ -62,16 +47,14 @@
   --n-800: #2a323d;
   --n-900: #10161f;
 
-  /* ---- Brand. One hue. A coloured thing on a page therefore means
-          something rather than decorating it. ---- */
+  /* ---- Brand colour ---- */
   --brand-50:  #eef3fe;
   --brand-100: #dbe5fd;
   --brand-500: #1d4ed8;
   --brand-600: #1a3fae;
   --brand-700: #16368f;
 
-  /* ---- Semantic. Darkened from the Bootstrap defaults, which sit at
-          4.50:1 with white text and leave no margin at all. ---- */
+  /* ---- Semantic colours (darker than Bootstrap's for better contrast) ---- */
   --ok-500:    #146c43;
   --ok-50:     #e7f4ed;
   --warn-500:  #ffc107;
@@ -80,8 +63,7 @@
   --bad-50:    #fbeaec;
   --info-500:  #1d4ed8;
 
-  /* ---- Roles. Components reference these, never the ramps above, so the
-          dark theme is a redefinition of this block alone. ---- */
+  /* ---- Role colours. Components use these; dark mode overrides them. ---- */
   --surface:       var(--n-0);
   --surface-sunk:  var(--n-25);
   --canvas:        var(--n-25);
@@ -96,13 +78,10 @@
   --accent-on:     var(--n-0);
   --accent-soft:   var(--brand-100);
 
-  /* The brand gradient is the brand mark's alone. The hero's wash is a fade
-     from the accent tint to the surface. */
   --brand-gradient: linear-gradient(135deg, #2563eb 0%, #1d4ed8 45%, #4338ca 100%);
   --hero-wash: linear-gradient(120deg, var(--brand-50) 0%, var(--n-0) 65%);
 
-  /* ---- Type scale, 1.125 ratio from a 15.6px base. Small steps, because
-          this interface is dense tables and short labels, not a magazine. ---- */
+  /* ---- Type scale (1.125 ratio, 15.6px base) ---- */
   --text-xs:   0.75rem;
   --text-sm:   0.825rem;
   --text-base: 0.975rem;
@@ -120,9 +99,7 @@
   --leading-tight: 1.25;
   --leading-body:  1.6;
 
-  /* ---- Spacing, 4px base. Margins, paddings and gaps use these, so vertical
-          rhythm is a consequence rather than an effort. The exceptions are the
-          small insets inside badges and chips, which follow their text. ---- */
+  /* ---- Spacing (4px base) ---- */
   --space-1:  0.25rem;
   --space-2:  0.5rem;
   --space-3:  0.75rem;
@@ -139,13 +116,7 @@
   --radius-lg: 1rem;
   --radius-pill: 2rem;
 
-  /* ---- Elevation. Every surface rests on a soft shadow so a page reads as
-          panels laid on it rather than as boxes drawn on it. Two stops, always:
-          a tight one for the edge and a wide one for the ambient fall, which is
-          what light actually does. One stop reads as a smudge.
-
-          Kept deliberately faint. The interface is dense tables; a heavy
-          shadow under each of them turns a page into a pile. ---- */
+  /* ---- Shadows ---- */
   --shadow-sm: 0 1px 2px rgb(16 22 31 / 0.05), 0 2px 8px -2px rgb(16 22 31 / 0.06);
   --shadow-md: 0 1px 2px rgb(16 22 31 / 0.05), 0 6px 16px -4px rgb(16 22 31 / 0.10);
   --shadow-lg: 0 2px 4px rgb(16 22 31 / 0.06), 0 16px 32px -8px rgb(16 22 31 / 0.14);
@@ -154,11 +125,10 @@
   --t-fast: 120ms ease;
   --t-norm: 220ms ease;
 
-  /* ---- The smallest a thing may be and still be tapped on a phone. ---- */
+  /* ---- Minimum tap target size ---- */
   --tap: 2.75rem;
 
-  /* ---- Bootstrap reads these, so its own components inherit the system
-          rather than being overridden one at a time. ---- */
+  /* ---- Bootstrap variables ---- */
   --bs-body-color: var(--ink);
   --bs-body-bg: var(--canvas);
   --bs-border-color: var(--line);
@@ -175,12 +145,7 @@
   --bs-secondary-color: var(--ink-soft);
 }
 
-/* ---- Dark theme. Only the role block and the semantics are redefined: the
-        ramps above stay put, and no component below knows which theme it is in.
-
-        Set from the operating system by a short script in base.html.
-        There is no toggle, because a preference the browser already knows is
-        not a control worth building. ---- */
+/* ---- Dark theme (set from the OS preference in base.html) ---- */
 [data-bs-theme="dark"] {
   --surface:       #171e28;
   --surface-sunk:  #131924;
@@ -204,8 +169,7 @@
   --bad-500:  #f87171;
   --bad-50:   #2c1719;
 
-  /* Darker and tighter: on a dark ground a wide soft shadow disappears, so
-     the near stop carries most of the separation. */
+  /* Stronger shadows for dark mode. */
   --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.35), 0 2px 8px -2px rgb(0 0 0 / 0.3);
   --shadow-md: 0 1px 3px rgb(0 0 0 / 0.4), 0 6px 16px -4px rgb(0 0 0 / 0.45);
   --shadow-lg: 0 2px 6px rgb(0 0 0 / 0.45), 0 16px 32px -8px rgb(0 0 0 / 0.55);
@@ -233,16 +197,14 @@ h1, h2, h3, h4, h5, h6 {
 
 hr { border-color: var(--line); opacity: 1; }
 
-/* One focus treatment for everything, defined once. It is deliberately visible:
-   an outline nobody can see is the same as no outline. */
+/* Visible focus outline for keyboard users. */
 :focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
   border-radius: var(--radius-sm);
 }
 
-/* Honour the operating system. Anything that moves here is decoration, so
-   there is nothing to preserve when somebody asks for stillness. */
+/* Respect reduced motion. */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.001ms !important;
@@ -262,8 +224,6 @@ hr { border-color: var(--line); opacity: 1; }
   position: sticky;
   top: 0;
   z-index: 1030;
-  /* Content scrolls under it, so it needs to sit above rather than merely
-     in front. */
   box-shadow: var(--shadow-sm);
 }
 
@@ -279,8 +239,7 @@ hr { border-color: var(--line); opacity: 1; }
 }
 .app-brand:hover { color: var(--accent); }
 
-/* A shield icon on the brand gradient, drawn in CSS rather than shipped as an
-   image: one less request, and the same mark in both themes. */
+/* Logo: shield icon on the brand gradient. */
 .app-mark {
   width: 2rem;
   height: 2rem;
@@ -318,7 +277,7 @@ hr { border-color: var(--line); opacity: 1; }
 }
 .app-header .nav-link.active .bi { opacity: 1; }
 
-/* Initials in a circle: who is signed in, at a glance, without a photo. */
+/* User initials avatar. */
 .avatar {
   width: 2.25rem;
   height: 2.25rem;
@@ -349,8 +308,7 @@ hr { border-color: var(--line); opacity: 1; }
 
 .offcanvas { background-color: var(--surface); color: var(--ink); }
 
-/* Bootstrap has no responsive border utilities; the shell needs this one so
-   the divider above the user block exists in the drawer and not in the bar. */
+/* Divider above the user block, only in the mobile drawer. */
 @media (min-width: 992px) {
   .border-lg-0 { border: 0 !important; }
 }
@@ -382,7 +340,7 @@ hr { border-color: var(--line); opacity: 1; }
 
 .page-head h1 { letter-spacing: -0.02em; }
 
-/* A small label above a heading that says what kind of page this is. */
+/* Small label above a heading. */
 .eyebrow {
   display: flex;
   width: fit-content;
@@ -396,8 +354,7 @@ hr { border-color: var(--line); opacity: 1; }
   margin-bottom: var(--space-2);
 }
 
-/* ---- The hero: the top of the dashboard. A wash of the brand colour rather
-        than a block of it, so it introduces the page without shouting. ---- */
+/* ---- Dashboard hero ---- */
 .hero {
   position: relative;
   overflow: hidden;
@@ -422,8 +379,7 @@ hr { border-color: var(--line); opacity: 1; }
 }
 .hero-actions { position: relative; display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-5); }
 
-/* ---- Pages seen before signing in: a soft glow of the brand colour at the
-        top, so the way in does not look like a bare form. ---- */
+/* ---- Public pages (login, landing) background ---- */
 body.is-public {
   background:
     radial-gradient(48rem 26rem at 50% -6rem, var(--accent-soft), transparent 70%),
@@ -468,8 +424,7 @@ body.is-public {
 }
 .feature .stat-icon { margin-bottom: var(--space-2); }
 
-/* ---- A role as a quiet chip with its own icon, so a long list of accounts
-        can be scanned by role without reading every row. ---- */
+/* ---- Role chips ---- */
 .role-chip {
   display: inline-flex;
   align-items: center;
@@ -485,7 +440,7 @@ body.is-public {
 .role-administrator { background: var(--accent-tint); border-color: var(--accent-soft); color: var(--accent); }
 .role-instructor    { background: var(--ok-50); border-color: transparent; color: var(--ok-500); }
 
-/* ---- The terms of a test, as four small tiles rather than a list. ---- */
+/* ---- Test detail tiles ---- */
 .facts {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
@@ -504,7 +459,7 @@ body.is-public {
 .fact-label { font-size: var(--text-xs); color: var(--ink-soft); }
 .fact-value { font-weight: var(--weight-semi); color: var(--ink); }
 
-/* ---- Summary figures. The number carries the weight; the label explains it. */
+/* ---- Summary stats ---- */
 .stat {
   display: flex;
   align-items: center;
@@ -574,8 +529,7 @@ body.is-public {
 .card-body { padding: var(--space-5); }
 .card-title { font-size: var(--text-base); font-weight: var(--weight-semi); }
 
-/* Only cards that lead somewhere lift. A card that cannot be clicked has no
-   business suggesting it can. */
+/* Hover effect only on clickable cards. */
 .card:has(.stretched-link):hover {
   border-color: var(--line-strong);
   box-shadow: var(--shadow-lg);
@@ -645,8 +599,7 @@ body.is-public {
    7. Badges
    ========================================================================== */
 
-/* Every state carries its word as well as its colour, so these need only stay
-   legible; none of them carries meaning on colour alone. */
+/* State badges (always shown with a text label). */
 .badge {
   font-weight: var(--weight-semi);
   font-size: var(--text-xs);
@@ -667,7 +620,7 @@ body.is-public {
   border-color: var(--line) !important;
 }
 
-/* In dark, a saturated fill wants dark text on it rather than white. */
+/* Dark text on bright badges in dark mode. */
 [data-bs-theme="dark"] .text-bg-success,
 [data-bs-theme="dark"] .text-bg-danger,
 [data-bs-theme="dark"] .text-bg-warning,
@@ -697,7 +650,7 @@ body.is-public {
 .btn-sm {
   padding: var(--space-1) var(--space-3);
   font-size: var(--text-sm);
-  /* Still a comfortable target: smaller type, not a smaller hit area. */
+  /* Small buttons keep the minimum tap size. */
   min-height: 2.25rem;
 }
 .btn:disabled, .btn.disabled { opacity: 0.55; }
@@ -745,8 +698,7 @@ body.is-public {
 }
 [data-bs-theme="dark"] .btn-outline-danger { --bs-btn-hover-color: var(--n-900); }
 
-/* The arrow is drawn here rather than written into the link, so the link's
-   own text starts with the word. */
+/* Arrow added with CSS. */
 .btn-prev::before {
   content: "\f12f";
   font-family: bootstrap-icons;
@@ -801,9 +753,7 @@ select[multiple].form-select { min-height: auto; }
   border-color: var(--accent);
 }
 
-/* A row that reads as one choice rather than a loose control floating beside
-   text. The whole row is the target, which on a phone is the difference
-   between tapping an answer and missing it. */
+/* Answer option row (the whole row is clickable). */
 .pick {
   display: block;
   border: 1px solid var(--line);
@@ -824,9 +774,7 @@ select[multiple].form-select { min-height: auto; }
    10. Empty states
    ========================================================================== */
 
-/* A statement, never an empty frame. Somebody with nothing to do is told that
-   is the situation, rather than left looking at a blank panel wondering
-   whether the page failed to load. */
+/* Empty state message. */
 .nothing {
   text-align: center;
   padding: var(--space-12) var(--space-5);
@@ -879,7 +827,7 @@ select[multiple].form-select { min-height: auto; }
   background: var(--accent);
 }
 
-/* The step number beside each page: a small circle, filled once you are on it. */
+/* Page number circle (filled for the current page). */
 .step-no {
   width: 1.5rem;
   height: 1.5rem;
@@ -923,8 +871,7 @@ select[multiple].form-select { min-height: auto; }
 .rich-text pre { overflow-x: auto; }
 .rich-text > :last-child { margin-bottom: 0; }
 
-/* Reading comfort: a slightly larger size and a measure that stops a line
-   running the full width of a wide monitor. */
+/* Page content: larger text and limited line length. */
 .rich-text { font-size: var(--text-lg); line-height: 1.7; max-width: 46rem; }
 .rich-text p { margin-bottom: var(--space-4); }
 .rich-text h2, .rich-text h3, .rich-text h4 {
@@ -970,16 +917,8 @@ select[multiple].form-select { min-height: auto; }
    13b. Module artwork
    ========================================================================== */
 
-/* A module's cover: one of eight two-tone gradients with a faint dot grid, or
-   a picture an administrator uploaded. Drawn entirely in CSS, so a cover costs
-   no file storage and stays crisp at any size.
-
-   The colour is chosen per module and kept in one nullable column; a module
-   with nothing chosen gets one derived from its id (app/art.py). Each colour
-   class sets its gradient and an `--art-ink`, which the dot grid is drawn in.
-
-   Nothing on a cover carries information and no text sits on it, so the
-   gradients are not held to a contrast ratio. */
+/* Module cover: a gradient with a dot grid, or an uploaded image.
+   Each colour class sets the gradient and `--art-ink` (see app/art.py). */
 
 .module-art {
   position: relative;
@@ -990,8 +929,7 @@ select[multiple].form-select { min-height: auto; }
   border-bottom: 1px solid var(--line);
 }
 
-/* On a page header it is a band rather than a panel, so it introduces the page
-   without pushing the content below the fold on a phone. */
+/* Shorter band on page headers. */
 .module-art-tall {
   aspect-ratio: auto;
   height: 6.5rem;
@@ -999,8 +937,7 @@ select[multiple].form-select { min-height: auto; }
   border: 1px solid var(--line);
 }
 
-/* A dot grid fading out to the right, so the gradient has texture rather
-   than reading as a block of flat paint. Drawn in the colour's own ink. */
+/* Dot grid that fades to the right. */
 .module-art::after {
   content: "";
   position: absolute;
@@ -1013,16 +950,7 @@ select[multiple].form-select { min-height: auto; }
   pointer-events: none;
 }
 
-/* An uploaded picture, in place of the colour.
-
-   Cropped from the centre rather than fitted whole: the same file is shown at
-   two proportions (a 16/7 card cover and a 6.5rem page band), and a picture
-   fitted whole would sit in a band of empty colour at one of them. Cropping
-   loses the edges of a photograph; letterboxing loses the cover.
-
-   The dot grid above is turned off over a photograph, where it would read as
-   a screen in front of the picture. Written as an override so a browser
-   without `:has` keeps the grid instead of losing it everywhere. */
+/* Uploaded cover image, cropped to fill. The dot grid is hidden over images. */
 .module-art-photo {
   display: block;
   width: 100%;
@@ -1033,8 +961,7 @@ select[multiple].form-select { min-height: auto; }
 
 .module-art:has(.module-art-photo)::after { display: none; }
 
-/* The eight colours, each a light-to-deeper gradient of one hue, with the
-   darker ink of the same hue for the dot grid. */
+/* Cover colours. */
 .module-art-indigo { background: linear-gradient(135deg, #dfe5fc, #b3c0f2); --art-ink: #3730a3; }
 .module-art-sky    { background: linear-gradient(135deg, #dcedf9, #a7d1ef); --art-ink: #075985; }
 .module-art-teal   { background: linear-gradient(135deg, #d6efeb, #93d3c9); --art-ink: #115e59; }
@@ -1044,9 +971,7 @@ select[multiple].form-select { min-height: auto; }
 .module-art-violet { background: linear-gradient(135deg, #e9e3fb, #c3b1f0); --art-ink: #5b21b6; }
 .module-art-slate  { background: linear-gradient(135deg, #e5e9ef, #bcc6d2); --art-ink: #334155; }
 
-/* In the dark theme they carry more colour rather than less light: going
-   darker here would take them to black and lose the distinction the band
-   exists to make. */
+/* Cover colours in dark mode. */
 [data-bs-theme="dark"] .module-art-indigo { background: linear-gradient(135deg, #1c2546, #2e3b6e); --art-ink: #a5b4fc; }
 [data-bs-theme="dark"] .module-art-sky    { background: linear-gradient(135deg, #12283b, #1d4160); --art-ink: #7dd3fc; }
 [data-bs-theme="dark"] .module-art-teal   { background: linear-gradient(135deg, #102f2b, #1a4a44); --art-ink: #5eead4; }
@@ -1056,9 +981,7 @@ select[multiple].form-select { min-height: auto; }
 [data-bs-theme="dark"] .module-art-violet { background: linear-gradient(135deg, #231a3a, #382a5c); --art-ink: #c4b5fd; }
 [data-bs-theme="dark"] .module-art-slate  { background: linear-gradient(135deg, #1e242d, #2f3845); --art-ink: #cbd5e1; }
 
-/* ---- A module card: cover, title, three lines of summary, and a footer that
-        says where it stands. The footer sits at the bottom whatever the
-        length of the summary, so a row of cards lines up. ---- */
+/* ---- Module card (footer stays at the bottom) ---- */
 .module-card .card-body { display: flex; flex-direction: column; gap: var(--space-2); }
 .module-card .card-title { font-size: var(--text-lg); margin: 0; line-height: var(--leading-tight); }
 .module-card .card-text {
@@ -1091,15 +1014,11 @@ select[multiple].form-select { min-height: auto; }
 }
 .module-card:hover .card-go { gap: var(--space-2); }
 
-/* The card wraps it, so the artwork keeps the card corners. */
+
 .card:has(.module-art) { overflow: hidden; }
 .card:has(.module-art) .card-body { padding-top: var(--space-4); }
 
-/* ---- the colour picker ----
-
-   The radio itself is taken out of the flow rather than hidden, so it keeps
-   its place in the tab order and still answers the keyboard. The swatch beside
-   it is what is seen, and `:checked +` is what marks it. */
+/* ---- Colour picker (radio stays keyboard accessible) ---- */
 
 .colour-choice { display: block; cursor: pointer; margin-bottom: 0; width: 4rem; }
 
@@ -1148,9 +1067,7 @@ select[multiple].form-select { min-height: auto; }
    13c. The study assistant
    ========================================================================== */
 
-/* A question and its answer read as an exchange, not as two paragraphs: the
-   question is indented and quiet, the answer sits at the margin and carries the
-   weight, because the answer is what somebody came back to re-read. */
+/* Question and answer styling. */
 
 .ask-thread {
   display: flex;
@@ -1180,8 +1097,7 @@ select[multiple].form-select { min-height: auto; }
   padding-inline-start: var(--space-3);
 }
 
-/* htmx adds `htmx-request` to the form while the call is out. Without this the
-   word sits there permanently, which reads as a page that is always thinking. */
+/* Loading text, shown only while htmx is waiting. */
 .htmx-indicator { visibility: hidden; }
 .htmx-request .htmx-indicator,
 .htmx-request.htmx-indicator { visibility: visible; }
@@ -1190,8 +1106,7 @@ select[multiple].form-select { min-height: auto; }
    14. Responsive
    ========================================================================== */
 
-/* Phone first, and one rule outranks the rest: nothing here may push the page
-   sideways. Wide things scroll inside their own box instead. */
+/* Prevent horizontal page scroll on small screens. */
 @media (max-width: 575.98px) {
   .card-body, .panel-body { padding: var(--space-4); }
   .panel-head { padding: var(--space-3) var(--space-4); }
@@ -1201,7 +1116,6 @@ select[multiple].form-select { min-height: auto; }
   .nothing { padding: var(--space-8) var(--space-4); }
   .btn { width: auto; }
   .hero { padding: var(--space-6) var(--space-5); }
-  /* Three figures stay side by side on a phone, icon above number. */
   .stat { flex-direction: column; align-items: flex-start; gap: var(--space-2); padding: var(--space-3); }
   .stat-icon { width: 2.25rem; height: 2.25rem; font-size: 1rem; }
   .stat-value { font-size: var(--text-xl); }
@@ -1211,17 +1125,7 @@ select[multiple].form-select { min-height: auto; }
   .rich-text { font-size: var(--text-base); }
 }
 
-/* A desktop gets a slightly larger interface. Every size in this file is in
-   rem, so lifting the root lifts type, spacing, radii and tap targets together
-   and in proportion, rather than nudging a font size and leaving the padding
-   around it where it was.
-
-   The threshold is 1200px, not 992px: a tablet in landscape sits below it, so
-   phone and tablet are left exactly as they were.
-
-   A percentage rather than a pixel value, so somebody who has set a larger
-   default font in their browser keeps that preference and gets this on top of
-   it. A root in px would quietly overrule them. */
+/* Slightly larger root font size on desktop (everything uses rem). */
 @media (min-width: 1200px) {
   :root { font-size: 106.25%; }   /* 17px where the default is 16 */
 }
@@ -1231,7 +1135,6 @@ select[multiple].form-select { min-height: auto; }
 }
 
 @media (min-width: 1400px) {
-  /* Held in px, so it does not grow with the root and stretch a table row
-     across the whole of a wide monitor. */
+  /* px so it doesn't scale with the root font size. */
   .container { max-width: 1240px; }
 }

@@ -1,8 +1,4 @@
-"""The guarantees this project relies on MySQL to provide.
-
-If any of these fail, every other test in the suite is asserting less than it
-appears to (Constitution VI).
-"""
+"""Database constraints the app relies on (unique keys, foreign keys, utf8mb4)."""
 
 from __future__ import annotations
 
@@ -31,7 +27,7 @@ def test_email_carries_a_unique_index(engine):
 
 
 def test_duplicate_email_is_refused_by_the_database(db, make_user):
-    """Not merely by a service check somebody could forget."""
+    """The unique index rejects duplicate emails."""
     from sqlalchemy.exc import IntegrityError
 
     make_user(email="taken@example.com")

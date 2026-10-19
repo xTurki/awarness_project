@@ -1,10 +1,4 @@
-"""The code shown on the page that asks for it, and the switch that hides it.
-
-This covers a feature meant to be deleted. The test that matters most is the one
-proving `SHOW_LOGIN_CODE=false` silences it completely, because that is the
-switch thrown at production time, before anybody gets round to deleting the
-module itself.
-"""
+"""Development-only login code display and the SHOW_LOGIN_CODE switch."""
 
 from __future__ import annotations
 
@@ -16,7 +10,7 @@ from app.config import settings
 
 @pytest.fixture(autouse=True)
 def clean():
-    """The store is process memory, so it outlives a test unless emptied."""
+    """Clear the in-memory codes between tests."""
     development._ISSUED.clear()
     yield
     development._ISSUED.clear()
@@ -59,8 +53,7 @@ def test_the_code_appears_on_the_page_that_asks_for_it(
 
 
 def test_the_shown_code_actually_works(client, make_user, csrf, showing):
-    """If the page shows one code and the database holds another, the feature
-    is worse than useless."""
+    """The code shown on the page is the one that works."""
     make_user(email="a@example.com", password="demo-password")
     _sign_in_step_one(client, csrf)
 
@@ -124,8 +117,7 @@ def test_the_store_does_not_grow_without_bound(showing):
 
 
 def test_the_switch_silences_the_page(client, make_user, csrf, hidden):
-    """`SHOW_LOGIN_CODE=false` and the page says nothing, with no code
-    remembered anywhere. This is what is thrown before launch."""
+    """With SHOW_LOGIN_CODE=false no code is shown or stored."""
     make_user(email="a@example.com", password="demo-password")
     _sign_in_step_one(client, csrf)
 
@@ -142,15 +134,14 @@ def test_nothing_is_remembered_at_all_when_it_is_off(hidden):
 
 
 def test_the_switch_is_off_unless_asked_for():
-    """The default is the production behaviour, so a deployment that forgets to
-    set anything is the safe one."""
+    """The setting is off by default."""
     from app.config import Settings
 
     assert Settings.model_fields["show_login_code"].default is False
 
 
 def test_signing_in_still_works_with_it_off(client, make_user, csrf, hidden):
-    """The feature is a convenience. Removing it changes nothing else."""
+    """Login still works with the feature off."""
     make_user(email="a@example.com", password="demo-password")
     response = _sign_in_step_one(client, csrf)
 

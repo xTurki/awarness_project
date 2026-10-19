@@ -1,7 +1,6 @@
-"""Choosing your own password.
+"""Set-password page shown on first login.
 
-These two are the only authenticated routes not behind `require_password_set`.
-Everything else redirects here while the flag is raised (FR-011).
+Users are redirected here until they set a password.
 """
 
 from __future__ import annotations

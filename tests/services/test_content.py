@@ -1,8 +1,4 @@
-"""Pages: drafts, order, publishing one at a time, and a body that is not cut.
-
-The sanitising rule has its own module; this one is about the mechanics
-(FR-012, FR-013, FR-017, SC-011).
-"""
+"""Pages: drafts, ordering, publishing and long bodies."""
 
 from __future__ import annotations
 
@@ -140,7 +136,7 @@ def test_deleting_a_page_removes_it(db, instructor, module):
 
 
 def test_a_five_thousand_word_body_survives_intact(db, instructor, module):
-    """MEDIUMTEXT, not TEXT: MySQL cuts a TEXT column at 64KB silently."""
+    """Long page bodies are stored in full (MEDIUMTEXT)."""
     words = " ".join(f"word{n}" for n in range(5000))
     body = f"<p>{words}</p>"
 

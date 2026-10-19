@@ -14,9 +14,7 @@
                else '/modules/' ~ module.id ~ '/tests' }}">
   <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token }}">
 
-  {# A frozen test renders read-only, and the warning above says why. Publishing
-     and unpublishing stay available: that is how an instructor stops further
-     attempts on a test they can no longer edit (FR-014). #}
+  {# Read-only once the test has attempts; publish/unpublish still works. #}
   <fieldset {% if frozen %}disabled{% endif %}>
     <div class="panel mb-4"><div class="panel-body">
     <div class="row g-3">
@@ -33,9 +31,7 @@
         <div class="form-text">Plain text. The rich-text editor is for module content.</div>
       </div>
 
-      {# `value` stays UTC so the field still works with no JavaScript, exactly
-         as it did before; the script overwrites it with the local equivalent
-         and converts back on submit. #}
+      {# Value is UTC; JS converts to local time and back on submit. #}
       <div class="col-6 col-lg-3">
         <label for="opens_at" class="form-label">Opens</label>
         <input type="datetime-local" class="form-control" id="opens_at" name="opens_at"
@@ -65,8 +61,7 @@
                value="{{ test.time_limit_minutes if test and test.time_limit_minutes else '' }}">
       </div>
 
-      {# 0 is unlimited. The number keeps whatever was typed while the box is
-         ticked, so unticking it brings the number back rather than a blank. #}
+      {# 0 = unlimited. #}
       {% set unlimited = test is defined and test and test.allowed_attempts == 0 %}
       <div class="col-6 col-lg-3">
         <label for="allowed_attempts" class="form-label">Attempts</label>
@@ -88,8 +83,7 @@
                value="{{ test.passing_score if test and test.passing_score is not none else '' }}">
       </div>
 
-      {# One or the other, never both. Leaving both empty is the normal case:
-         the test is taken once and nobody is ever chased about it (FR-039). #}
+      {# Set one or neither. Leave both empty for a one-off test with no deadline. #}
       <div class="col-12">
         <h2 class="h6 mt-2">How often it must be done</h2>
         <div class="form-text mb-2">

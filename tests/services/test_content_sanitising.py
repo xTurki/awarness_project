@@ -1,9 +1,4 @@
-"""Sanitising happens before storage.
-
-Every assertion here reads **the stored column**, not a rendered page. Asserting
-on the render would pass even if the sanitiser were in the wrong place, which is
-exactly the mistake this test exists to catch (FR-016, SC-004).
-"""
+"""Page HTML is sanitised before it is saved (checks the stored column)."""
 
 from __future__ import annotations
 
@@ -44,7 +39,7 @@ def instructor(db, make_user, module):
 
 
 def _stored_body(db, page_id: int) -> str:
-    """Read the column directly. No service, no template, no filter."""
+    """Read the stored body directly from the database."""
     return db.exec(select(Page).where(Page.id == page_id)).first().body
 
 
@@ -69,7 +64,7 @@ def test_the_harmless_part_is_still_there(db, instructor, module):
 
 
 def test_editing_sanitises_too(db, instructor, module):
-    """Not only creation. An edit is a write, and every write is sanitised."""
+    """Updates are sanitised as well."""
     page = content_service.create_page(
         db, instructor, module.id, PageWrite(title="Clean", body="<p>fine</p>")
     )
@@ -83,7 +78,7 @@ def test_editing_sanitises_too(db, instructor, module):
 
 
 def test_nothing_dangerous_can_reach_the_column_by_any_service_route(db, instructor, module):
-    """Belt and braces: whatever goes in, the column comes out clean."""
+    """No dangerous HTML reaches the database through any service function."""
     for payload in [
         "<iframe src='//evil'></iframe>",
         "<form action='/admin/accounts'><button>x</button></form>",

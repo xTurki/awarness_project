@@ -1,8 +1,4 @@
-"""Account administration, and the role check on every function.
-
-Done-gate 6: every one of these verifies the acting account itself, so the router
-guard is a second line rather than the enforcement.
-"""
+"""Account administration service, including the admin role check."""
 
 from __future__ import annotations
 
@@ -63,7 +59,7 @@ def test_a_duplicate_email_is_refused_on_create(db, admin, trainee):
 
 
 def test_email_comparison_is_lowercase(db, admin, trainee):
-    """Ahmad@x.com and ahmad@x.com are one account."""
+    """Email comparison is case-insensitive."""
     with pytest.raises(admin_service.EmailAlreadyUsed):
         admin_service.create_account(db, admin, _new(email=trainee.email.upper()))
 

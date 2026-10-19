@@ -1,9 +1,7 @@
-"""Engine, session dependency, and the wait-for-MySQL retry loop.
+"""Database engine, session dependency and startup checks.
 
-The compose healthcheck is not enough on a first run: MySQL reports healthy
-once it accepts connections, but initialising the data directory can still be
-in progress. Ten attempts two seconds apart removes an intermittent startup
-failure that would otherwise be blamed on something else (research R5).
+MySQL can report healthy before it is fully ready on first run, so startup
+retries the connection a few times.
 """
 
 from __future__ import annotations
@@ -19,9 +17,8 @@ from app.config import settings
 CONNECT_ATTEMPTS = 10
 CONNECT_WAIT_SECONDS = 2
 
-# Routers annotate their database parameter with this alias rather than importing
-# `Session` themselves, so done-gate 4 stays mechanically checkable: no module
-# under app/routers/ contains the token `Session` or `select` at all.
+# Routers use this alias so they never import `Session` or `select` directly
+# (database access stays in services; a test checks this).
 Db = Session
 
 engine = create_engine(
@@ -32,12 +29,12 @@ engine = create_engine(
 
 
 def utcnow() -> datetime:
-    """Naive UTC, which is what every timestamp column in this project holds."""
+    """Current UTC time as a naive datetime (how timestamps are stored)."""
     return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 def wait_for_database() -> None:
-    """Block until the database answers, or give up loudly."""
+    """Wait until the database accepts connections, or raise."""
     last_error: Exception | None = None
     for attempt in range(1, CONNECT_ATTEMPTS + 1):
         try:
@@ -57,7 +54,7 @@ def wait_for_database() -> None:
 
 
 def assert_utf8mb4() -> None:
-    """Fail at boot rather than discovering mangled text months later (research R6)."""
+    """Fail at startup if the connection is not using utf8mb4."""
     with engine.connect() as connection:
         rows = connection.execute(text("SHOW VARIABLES LIKE 'character_set_%'")).all()
     charsets = {name: value for name, value in rows}

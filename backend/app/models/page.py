@@ -1,9 +1,4 @@
-"""One section of a module's material.
-
-`body` holds HTML that has **already been sanitised**. Nothing unsafe can be in
-this column, because the sanitiser runs before the write, which is why templates
-render it directly (FR-016).
-"""
+"""A page of module content. `body` is HTML that was sanitised before saving."""
 
 from __future__ import annotations
 
@@ -23,18 +18,13 @@ class Page(SQLModel, table=True):
 
     title: str = Field(max_length=255, nullable=False)
 
-    # MEDIUMTEXT, not TEXT: MySQL cuts a TEXT column at 64KB silently, and
-    # formatted HTML reaches that sooner than prose does (research R6, FR-017).
-    # The length is in characters, up to 4 bytes each in utf8mb4: this is the
-    # largest that MySQL still stores as MEDIUMTEXT rather than LONGTEXT.
+    # MEDIUMTEXT (TEXT is limited to 64KB).
     body: str = Field(sa_column=Column(Text(length=4_194_303), nullable=False))
 
-    # Unique within the module. New pages go last; reordering rewrites the
-    # affected rows in one transaction (research R5).
+    # Unique within the module.
     position: int = Field(nullable=False)
 
-    # A page starts as a draft, and each one is published on its own, so an
-    # instructor can work on section four while the first three are live.
+    # Each page is published separately.
     is_published: bool = Field(default=False, nullable=False)
 
     created_at: datetime = Field(default_factory=utcnow, nullable=False)

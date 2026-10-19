@@ -1,8 +1,7 @@
-"""Non-table models at every boundary for this phase.
+"""Read and input models for modules, pages and registrations.
 
-Read models keep the four new `table=True` classes out of templates and
-responses (done-gate 5). Input models are where every form post is validated,
-because SQLModel does not validate table classes.
+Read models are passed to templates instead of table rows. Input models
+validate form data.
 """
 
 from __future__ import annotations
@@ -23,12 +22,9 @@ class ModuleRead(BaseModel):
     title: str
     description: str | None
     is_published: bool
-    #: The colour this module wears: the one picked for it, or one derived
-    #: from its id. Resolved here rather than in a template, so no page has to
-    #: decide what a module with nothing chosen looks like.
+    # Picked colour, or the default one for the module id.
     art_colour: str = art.COLOURS[0]
-    #: The stored file name when a picture was uploaded for this module, and
-    #: `None` when it wears its colour alone.
+    # Uploaded cover file name, or None.
     art_image: str | None = None
 
     @classmethod
@@ -64,7 +60,7 @@ class PageRead(BaseModel):
 
 
 class PageSummary(BaseModel):
-    """Everything the navigation needs and nothing else: bodies are large."""
+    """Page info for navigation (without the body)."""
 
     id: int
     title: str
@@ -100,10 +96,7 @@ class ImageRead(BaseModel):
 class ModuleWrite(BaseModel):
     title: str
     description: str | None = None
-    #: Absent rather than defaulted, so a save can leave the cover alone. The
-    #: form puts the colour picker away while a module wears an uploaded
-    #: picture, and without this a title change would then quietly throw that
-    #: picture away and paint a colour over it.
+    # None = keep the current cover (so saving doesn't remove an uploaded image).
     art_colour: str | None = None
 
     @field_validator("title")
@@ -134,7 +127,7 @@ class PageWrite(BaseModel):
 
 
 class RosterAdd(BaseModel):
-    """Several people registered in one action (FR-025)."""
+    """Register several users at once."""
 
     user_ids: list[int]
     role_in_module: str = "trainee"

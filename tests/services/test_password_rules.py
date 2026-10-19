@@ -1,8 +1,4 @@
-"""The eight-character minimum, in every place a password is set.
-
-Seeding, administrator creation, administrator reset, and the person's own
-choice (FR-005, FR-012).
-"""
+"""The 8-character password minimum applies everywhere a password is set."""
 
 from __future__ import annotations
 

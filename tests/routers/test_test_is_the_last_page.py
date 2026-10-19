@@ -1,9 +1,4 @@
-"""The test closes the module rather than sitting somewhere else.
-
-Somebody reads the pages in order and arrives at it: it is the last entry in the
-module sidebar, the last page reaches it by reading forward, and it renders with
-the same sidebar so that arriving there does not feel like leaving the module.
-"""
+"""The test is shown as the last item of the module (sidebar and next links)."""
 
 from __future__ import annotations
 
@@ -83,7 +78,7 @@ def test_the_test_is_the_last_entry_in_the_module_sidebar(
     text = client.get(f"/modules/{module.id}").text
 
     assert f"/modules/{module.id}/tests/{live_test.id}" in text
-    # After every page, because it is what the reading order ends with.
+    # After all the pages.
     assert text.index(f"/pages/{pages[-1].id}") < text.index(f"/tests/{live_test.id}")
 
 
@@ -109,7 +104,7 @@ def test_a_module_with_no_published_test_shows_no_such_entry(
 def test_the_sidebar_is_there_on_the_test_page_too(
     client, sign_in, trainee, module, pages, live_test
 ):
-    """Arriving at the test must not feel like leaving the module."""
+    """The test page shows the module sidebar."""
     sign_in(trainee)
     text = client.get(f"/modules/{module.id}/tests/{live_test.id}").text
 
@@ -132,7 +127,7 @@ def test_a_middle_page_leads_to_the_next_page(
 def test_the_last_page_leads_to_the_test(
     client, sign_in, trainee, module, pages, live_test
 ):
-    """The whole point: reading forward ends at the test."""
+    """The last page's Next link goes to the test."""
     sign_in(trainee)
     text = client.get(f"/modules/{module.id}/pages/{pages[-1].id}").text
 

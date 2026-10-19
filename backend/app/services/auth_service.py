@@ -1,8 +1,4 @@
-"""Signing in, in two steps, and choosing your own password.
-
-Plain arguments in, plain data out, domain exceptions on failure. No `Request`,
-no `Response`, no `HTTPException` (Principle II).
-"""
+"""Two-step login (password, then emailed code) and password changes."""
 
 from __future__ import annotations
 
@@ -30,19 +26,19 @@ _EMAIL_TEMPLATE = Path(__file__).resolve().parents[1] / "templates" / "emails" /
 
 
 class InvalidCredentials(Exception):
-    """Unknown address, wrong password."""
+    """Unknown email or wrong password."""
 
 
 class InactiveAccount(Exception):
-    """The account exists and is switched off."""
+    """The account is deactivated."""
 
 
 class CodeInvalid(Exception):
-    """Wrong code, already used, or replaced by a newer one."""
+    """Wrong, used or replaced code."""
 
 
 class CodeExpired(Exception):
-    """Right code, too late."""
+    """The code has expired."""
 
 
 def find_by_email(db: DbSession, email: str) -> User | None:
@@ -50,9 +46,10 @@ def find_by_email(db: DbSession, email: str) -> User | None:
 
 
 async def start_login(db: DbSession, email: str, password: str) -> None:
-    """Step one. On success a code is emailed and both `login_code_*` columns are
-    written together. Any outstanding code for this account is overwritten, which
-    is what makes a fresh sign-in invalidate the previous one (FR-018)."""
+    """Step 1: check the password and email a login code.
+
+    A new code replaces any previous one.
+    """
     user = find_by_email(db, email)
     if user is None or not verify_secret(user.password_hash, password):
         raise InvalidCredentials()
@@ -65,14 +62,10 @@ async def start_login(db: DbSession, email: str, password: str) -> None:
     db.add(user)
     db.commit()
 
-    # The code is printed to the server console, deliberately and always. The
-    # rule that forbade codes reaching logs was removed at the owner's direction
-    # when the security surface was reduced, and this keeps the platform usable
-    # when the mail provider is refusing to send.
+    # Print the code to the server log so login still works if email fails.
     print(f"[login code] {user.email}: {code}", flush=True)
 
-    # development-only: hold the code so the verification page can show it.
-    # One of the four places app/development.py lists for removing the feature.
+    # development-only: keep the code so the verify page can show it.
     development.remember_code(user.email, code)
 
     body = _EMAIL_TEMPLATE.read_text(encoding="utf-8").format(
@@ -80,14 +73,12 @@ async def start_login(db: DbSession, email: str, password: str) -> None:
         code=code,
         minutes=settings.code_ttl_minutes,
     )
-    # If this raises, the code is already stored but unusable to anyone who did
-    # not receive it, and signing in again replaces it. The caller reports the
-    # failure rather than sending the person to wait for nothing (FR-020).
+    # If sending fails the caller shows an error; logging in again makes a new code.
     await email_service.send_email(user.email, "Your sign-in code", body)
 
 
 def verify_code(db: DbSession, email: str, code: str) -> SessionRow:
-    """Step two. Clears both code columns and creates the session row."""
+    """Step 2: check the code, clear it and create a session."""
     user = find_by_email(db, email)
     if user is None or user.login_code_hash is None or user.login_code_expires_at is None:
         raise CodeInvalid()
@@ -118,12 +109,7 @@ def verify_code(db: DbSession, email: str, code: str) -> SessionRow:
 
 
 def session_is_valid(db: DbSession, token: str | None) -> bool:
-    """Whether this token still grants access.
-
-    The sign-in page asks before redirecting a visitor away. Treating the mere
-    presence of a cookie as proof produces a redirect loop: `/login` sends them
-    to `/`, `/` finds no live session and sends them back.
-    """
+    """True if the session token is still valid."""
     if not token:
         return False
 
@@ -143,8 +129,7 @@ def sign_out(db: DbSession, token: str) -> None:
 
 
 def set_own_password(db: DbSession, user: User, password: str) -> None:
-    """The eight-character minimum is enforced by `PasswordSet`, in one place
-    rather than in each caller (FR-005, FR-012)."""
+    """Set the user's own password (length is validated by `PasswordSet`)."""
     checked = PasswordSet(password=password)
     user.password_hash = hash_secret(checked.password)
     user.must_set_password = False
@@ -158,14 +143,12 @@ def _clear_code(db: DbSession, user: User) -> None:
     db.add(user)
     db.commit()
 
-    # development-only: a used code stops being offered on the page. This is the
-    # one place codes are cleared, so it is the one place this belongs.
+    # development-only: stop showing a used code.
     development.forget(user.email)
 
 
 def _sweep_expired_sessions(db: DbSession) -> None:
-    """Opportunistic, on each successful sign-in. There is no scheduled cleanup
-    in this phase (data-model.md → session rules)."""
+    """Delete expired sessions (runs on each successful login)."""
     for row in db.exec(select(SessionRow).where(SessionRow.expires_at <= utcnow())).all():
         db.delete(row)
     db.commit()

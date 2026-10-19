@@ -1,11 +1,6 @@
-"""Outbound mail, sent inline but off the event loop.
+"""Sending email over SMTP.
 
-`smtplib` blocks, so calling it directly would stall every other request for its
-duration. A worker thread keeps it off the loop while remaining inline, so the
-person sees the outcome rather than being sent to a page waiting for a code that
-never left (research R8).
-
-This module raises a domain exception and knows nothing about HTTP (Principle II).
+`smtplib` is blocking, so the async version runs it in a thread.
 """
 
 from __future__ import annotations
@@ -19,7 +14,7 @@ from app.config import settings
 
 
 class EmailDeliveryFailed(Exception):
-    """The message did not go. The caller must surface this, never swallow it."""
+    """The email could not be sent."""
 
 
 def _send_blocking(to: str, subject: str, body: str) -> None:
@@ -38,8 +33,7 @@ def _send_blocking(to: str, subject: str, body: str) -> None:
 
 
 async def send_email(to: str, subject: str, body: str) -> None:
-    """Bounded by the SMTP timeout, so a mail outage is reported in seconds
-    rather than leaving the person waiting (FR-021)."""
+    """Send an email without blocking the event loop."""
     try:
         await anyio.to_thread.run_sync(_send_blocking, to, subject, body)
     except Exception as exc:  # noqa: BLE001 - every failure is the same failure here
@@ -47,14 +41,7 @@ async def send_email(to: str, subject: str, body: str) -> None:
 
 
 def send_email_now(to: str, subject: str, body: str) -> None:
-    """The same delivery, for callers that are not on the event loop.
-
-    Its callers are the daily job, which the scheduler runs in a worker thread,
-    and the background sender in `notification_service`, which delivers the
-    registration and result notices. Neither can await, and neither needs to:
-    they are already off the loop, which is the only reason the async form
-    above exists.
-    """
+    """Send an email synchronously (for the daily job and background sender)."""
     try:
         _send_blocking(to, subject, body)
     except Exception as exc:  # noqa: BLE001 - every failure is the same failure here

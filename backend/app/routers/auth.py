@@ -1,8 +1,4 @@
-"""Signing in, and signing out.
-
-Each route parses the request, calls one service function, and renders or
-redirects. Nothing here queries (Principle I, done-gate 4).
-"""
+"""Login (password + emailed code) and logout routes."""
 
 from __future__ import annotations
 
@@ -30,8 +26,7 @@ TOO_MANY = "Too many attempts. Wait a few minutes and try again."
 
 @router.get("/login")
 def login_form(request: Request, db: Db = Depends(get_session)):
-    # A *valid* session sends them to the dashboard. A stale cookie must not:
-    # `/` would bounce it straight back here, and the two would loop forever.
+    # Only redirect if the session is valid, otherwise / and /login would loop.
     if auth_service.session_is_valid(db, request.cookies.get(SESSION_COOKIE)):
         return RedirectResponse("/", status_code=status.HTTP_303_SEE_OTHER)
 
@@ -61,10 +56,8 @@ async def login_submit(
             status.HTTP_401_UNAUTHORIZED,
         )
     except EmailDeliveryFailed:
-        # The code exists and was printed to the server console, so it is
-        # reachable even when the mail provider refuses. Carry the failure to
-        # the code page rather than stopping here: the person is told plainly
-        # (FR-020), and can still finish signing in if they have the code.
+        # Email failed, but the code is in the server log. Continue to the
+        # code page and show the error there.
         return RedirectResponse(
             f"/login/verify?email={email}&mail=failed",
             status_code=status.HTTP_303_SEE_OTHER,
@@ -85,8 +78,7 @@ def verify_form(request: Request, email: str = "", mail: str = ""):
         )
         context["message_kind"] = "warning"
 
-    # development-only: None in production, and the template shows nothing.
-    # One of the four places app/development.py lists for removing the feature.
+    # development-only: always None in production.
     context["development_code"] = development.code_for(email)
 
     return render(request, "auth/verify.html", context)

@@ -1,12 +1,8 @@
-"""Test harness.
+"""Pytest fixtures.
 
-Tests run against **MySQL 8**, never SQLite: this phase relies on a unique index
-on `email`, on foreign keys, and on `utf8mb4`, and SQLite enforces none of them
-the same way (Constitution VI, research R7).
-
-The database is the disposable one the compose stack already runs. A separate
-schema is created for the suite and dropped afterwards, and each test runs inside
-a transaction that is rolled back, so tests never see each other's leftovers.
+Tests run against MySQL (not SQLite) in a separate test schema that is created
+for the run and dropped afterwards. Each test runs in a transaction that is
+rolled back.
 """
 
 from __future__ import annotations
@@ -26,9 +22,7 @@ from app.security import hash_secret, reset_rate_limits
 
 TEST_SCHEMA = f"{settings.mysql_database}_test"
 
-# The application user is scoped to the application database and cannot create or
-# drop another one. The suite needs both, so it connects as root, which exists
-# only in this disposable local container and never in the application itself.
+# Connect as root so the test schema can be created and dropped.
 _ROOT_PASSWORD = os.environ.get("MYSQL_ROOT_PASSWORD", "")
 
 
@@ -75,8 +69,7 @@ def engine():
 def db(engine):
     """One transaction per test, rolled back afterwards.
 
-    `join_transaction_mode="create_savepoint"` is what lets service code call
-    `session.commit()` normally while the outer transaction still rolls back.
+    `create_savepoint` lets service code call `commit()` normally.
     """
     connection = engine.connect()
     transaction = connection.begin()
@@ -92,28 +85,21 @@ def db(engine):
 
 @pytest.fixture(autouse=True)
 def mail(monkeypatch):
-    """No test ever opens an SMTP connection.
-
-    Phase 4 sends mail from inside ordinary service calls, including the submit
-    path that dozens of existing tests exercise. Without this every one of them
-    would sit on a real socket until the SMTP timeout. Tests that care about
-    what was sent read this list; the rest simply never notice it.
-    """
+    """Replace email sending with a list, so no test opens an SMTP connection."""
     sent: list[tuple[str, str, str]] = []
 
     def fake_send(to: str, subject: str, body: str) -> None:
         sent.append((to, subject, body))
 
     monkeypatch.setattr("app.services.email_service.send_email_now", fake_send)
-    # Immediate notices are sent inline here, so a test can assert on them
-    # straight away and their rows stay inside the test's transaction.
+    # Send immediately instead of in the background thread.
     monkeypatch.setattr("app.services.notification_service.SEND_IN_BACKGROUND", False)
     return sent
 
 
 @pytest.fixture()
 def failing_mail(monkeypatch):
-    """Every send refused, so a test can watch a record stay unstamped."""
+    """Make every email send fail."""
     from app.services.email_service import EmailDeliveryFailed
 
     def refuse(to: str, subject: str, body: str) -> None:
@@ -124,10 +110,9 @@ def failing_mail(monkeypatch):
 
 @pytest.fixture()
 def client(db):
-    """A test client whose requests share the test's transaction.
+    """Test client that uses the test's database session.
 
-    Instantiated without a context manager on purpose: entering one would run the
-    lifespan, which waits for the real database and calls `create_all` against it.
+    Not used as a context manager, so the app startup (lifespan) doesn't run.
     """
     app.dependency_overrides[get_session] = lambda: db
     yield TestClient(app, follow_redirects=False)
@@ -136,10 +121,7 @@ def client(db):
 
 @pytest.fixture()
 def sign_in(db, client):
-    """Put a session cookie on the client without walking the two-step flow.
-
-    Tests that are *about* signing in walk it properly; the rest use this.
-    """
+    """Log a user in by creating a session directly (skips the login flow)."""
     from datetime import timedelta
 
     from app.database import utcnow
@@ -163,7 +145,7 @@ def sign_in(db, client):
 
 @pytest.fixture()
 def csrf(client):
-    """Fetch a page so the browser holds a token, and return it for the hidden field."""
+    """Load a page to get a CSRF token and return it."""
 
     def _csrf(path: str = "/login") -> str:
         client.get(path)
@@ -174,7 +156,7 @@ def csrf(client):
 
 @pytest.fixture()
 def make_user(db):
-    """Create an account directly, bypassing the administration routes."""
+    """Create a user directly in the database."""
 
     def _make(
         email: str = "person@example.com",

@@ -1,9 +1,4 @@
-"""What an instructor is allowed to set, and what is refused.
-
-Both refusals exist for the same reason: a schedule that cannot be evaluated is
-worse than no schedule, because it produces confident wrong reminders rather
-than none.
-"""
+"""Validation of retake interval and completion period settings."""
 
 from __future__ import annotations
 
@@ -54,7 +49,7 @@ def _write(**overrides) -> TestWrite:
 
 
 def test_a_retake_interval_needs_a_pass_mark(db, owner, module):
-    """A cycle that restarts on passing has to know what passing means (FR-003)."""
+    """A retake interval requires a pass mark."""
     with pytest.raises(test_service.InvalidSchedule) as refused:
         test_service.create(
             db, owner, module.id, _write(passing_score=None, retake_interval_days=90)
@@ -64,7 +59,7 @@ def test_a_retake_interval_needs_a_pass_mark(db, owner, module):
 
 
 def test_a_completion_period_needs_a_pass_mark(db, owner, module):
-    """Refused for exactly the same reason (FR-038)."""
+    """A completion period requires a pass mark."""
     with pytest.raises(test_service.InvalidSchedule):
         test_service.create(
             db, owner, module.id, _write(passing_score=None, completion_deadline_days=30)
@@ -72,8 +67,7 @@ def test_a_completion_period_needs_a_pass_mark(db, owner, module):
 
 
 def test_an_interval_shorter_than_the_warning_period_is_refused(db, owner, module):
-    """The warning would fire before the person had taken it: a reminder about
-    something they cannot yet have missed (FR-004)."""
+    """The interval can't be shorter than the due-soon warning period."""
     too_short = settings.due_soon_lead_days - 1
 
     with pytest.raises(test_service.InvalidSchedule) as refused:
@@ -124,8 +118,7 @@ def test_a_completion_period_is_stored(db, owner, module):
 
 
 def test_neither_is_the_normal_case(db, owner, module):
-    """A test with neither generates no due date and no notification, ever
-    (FR-039, SC-016)."""
+    """A test with no schedule is valid."""
     created = test_service.create(db, owner, module.id, _write())
 
     assert created.retake_interval_days is None
@@ -138,6 +131,5 @@ def test_a_schedule_can_be_changed_later(db, owner, module):
         db, owner, created.id, _write(retake_interval_days=365)
     )
 
-    # Nothing was migrated: due dates are derived, so every trainee's moves at
-    # once (FR-007).
+    # Due dates are calculated, so they all change at once.
     assert updated.retake_interval_days == 365

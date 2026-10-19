@@ -1,9 +1,4 @@
-"""The study assistant, without calling Google.
-
-Every test here stubs the call. What is worth asserting is not what a model
-replies, which nobody controls, but what is sent, what is refused, and what
-happens when the call does not come back.
-"""
+"""Study assistant service (the Gemini API call is stubbed)."""
 
 from __future__ import annotations
 
@@ -20,7 +15,7 @@ def key(monkeypatch):
 
 @pytest.fixture()
 def captured(monkeypatch, key):
-    """Stand in for the call, and keep what was sent."""
+    """Stub the API call and record the request."""
     sent = {}
 
     class Reply:
@@ -147,8 +142,7 @@ def test_only_the_recent_past_is_sent(captured):
                       history=history)
 
     contents = captured["json"]["contents"]
-    # Six pairs plus the new question. A whole afternoon would cost more each
-    # time and help the answer less.
+    # Only the last six pairs plus the new question are sent.
     assert len(contents) == tutor_service.HISTORY_TURNS * 2 + 1
     assert contents[0]["parts"][0]["text"] == "q14"
 
@@ -180,8 +174,7 @@ def test_a_call_that_does_not_come_back_is_reported_in_words(key, monkeypatch):
 
 
 def test_an_empty_reply_is_treated_as_a_failure(key, monkeypatch):
-    """A refused or truncated response comes back well formed and empty, which
-    would otherwise render as an answer of nothing at all."""
+    """An empty API response raises AssistantUnavailable."""
 
     class Empty:
         def raise_for_status(self):

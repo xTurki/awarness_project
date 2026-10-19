@@ -1,4 +1,4 @@
-"""The question bank. Every route is behind `module:write`."""
+"""Question bank routes."""
 
 from __future__ import annotations
 

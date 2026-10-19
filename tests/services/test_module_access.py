@@ -1,8 +1,4 @@
-"""The authorisation chokepoint.
-
-Every module-scoped action in this phase and in Phases 2 to 4 resolves through
-`get_for`, so this matrix is what proves FR-009, SC-006, and SC-007.
-"""
+"""Module access checks (`module_service.get_for`) for each role."""
 
 from __future__ import annotations
 
@@ -67,7 +63,7 @@ def test_an_assigned_instructor_sees_an_unpublished_module(db, make_module, make
 
 
 def test_an_unassigned_instructor_cannot_see_it_at_all(db, make_module, make_user):
-    """Not found, not forbidden: existence is not disclosed."""
+    """Returns NotFound (not NotPermitted)."""
     instructor = make_user(email="i@example.com", role="instructor")
     module = make_module(published=True)
 

@@ -1,4 +1,4 @@
-"""The same rule over HTTP: the page hides it, the service enforces it."""
+"""Admins can't edit their own account (HTTP)."""
 
 from __future__ import annotations
 
@@ -21,16 +21,13 @@ def test_your_own_row_is_not_on_the_page(client, sign_in, admin, make_user):
     assert page.status_code == 200
     assert "Someone Else" in page.text
 
-    # Their own name still appears in the navigation bar, which is where it
-    # belongs, so the assertion is against the row: no controls point at their
-    # own account anywhere on the page.
+    # Their name is in the navbar, so check there are no controls for their account.
     assert f'href="/admin/accounts/{admin.id}"' not in page.text
     assert f'action="/admin/accounts/{admin.id}/active"' not in page.text
 
 
 def test_the_page_says_why_you_are_not_on_it(client, sign_in, admin):
-    """Absence that is explained reads as a rule. Absence that is not reads as
-    a page that lost a row."""
+    """The page explains why the admin's own account isn't listed."""
     sign_in(admin)
     page = client.get("/admin/accounts")
 
@@ -47,15 +44,14 @@ def test_an_administrator_alone_sees_an_empty_list_not_themselves(
 
 
 def test_your_own_edit_form_is_not_found(client, sign_in, admin):
-    """Typing the address reaches nothing: as far as this page is concerned,
-    your account does not exist."""
+    """Opening your own account's edit page returns 404."""
     sign_in(admin)
 
     assert client.get(f"/admin/accounts/{admin.id}").status_code == 404
 
 
 def test_a_crafted_deactivation_of_yourself_is_refused(client, db, sign_in, admin, csrf):
-    """The page not offering the control is never the enforcement."""
+    """Direct POST requests on your own account are rejected."""
     sign_in(admin)
 
     token = csrf("/admin/accounts")

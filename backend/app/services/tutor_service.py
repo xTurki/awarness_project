@@ -1,21 +1,7 @@
-"""The study assistant: a question about the page in front of somebody.
+"""Study assistant using the Gemini API.
 
-Nothing here is stored. The page already exists, the question arrives in the
-request, and the answer is rendered and forgotten. The thread a trainee builds
-while reading lives in their own browser and comes back with each question, so
-this phase added no table, no column, and no migration.
-
-Two facts shape the rest of this module:
-
-1. **The page text and the question leave the server**, to Google. That is what
-   the feature is. It is named here rather than buried, because it is the first
-   thing anybody reviewing this platform will ask about.
-2. **With no API key the feature is simply absent.** `is_available()` is false,
-   no panel renders, and the route answers as though it were not there. The
-   platform runs unchanged without one, which is how it ran before this existed.
-
-This module knows nothing about HTTP requests or templates (Principle II): it
-takes strings and returns a string.
+Note: the page text and the question are sent to Google. Nothing is stored.
+Without an API key the feature is disabled.
 """
 
 from __future__ import annotations
@@ -27,13 +13,10 @@ from app.config import settings
 
 ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 
-#: Kept to the recent past. A whole afternoon of questions would be sent with
-#: every new one, which costs more each time and helps the answer less.
+# Only the most recent exchanges are sent.
 HISTORY_TURNS = 6
 
-#: Generous, because a model that thinks spends this budget before it writes a
-#: word. The default model does not think, but the setting may name one that
-#: does, and a truncated answer is worse than a slow one.
+# Large enough for models that use "thinking" tokens.
 MAX_OUTPUT_TOKENS = 1200
 
 UNAVAILABLE = (
@@ -70,20 +53,16 @@ Page: {page}
 
 
 class AssistantUnavailable(Exception):
-    """No key configured, or the call did not come back."""
+    """No API key, or the request failed."""
 
 
 def is_available() -> bool:
-    """Whether the feature exists at all on this deployment."""
+    """True if an API key is configured."""
     return bool(settings.gemini_api_key)
 
 
 def page_text(body_html: str) -> str:
-    """The page as words, with its markup removed.
-
-    Sent as text rather than HTML: the tags are how the page looks, which has
-    nothing to do with the question, and they would be most of what is sent.
-    """
+    """Page body as plain text (HTML tags removed)."""
     stripped = nh3.clean(body_html or "", tags=set(), attributes={})
     return " ".join(stripped.split())
 
@@ -96,11 +75,9 @@ def ask(
     body_html: str,
     history: list[tuple[str, str]] | None = None,
 ) -> str:
-    """Answer one question about one page, or raise.
+    """Answer a question about a page. Raises AssistantUnavailable on failure.
 
-    `history` is the exchange so far, oldest first, as (question, answer) pairs.
-    It arrives from the browser rather than from storage, so it is trimmed and
-    treated as what it is: input.
+    `history` is a list of (question, answer) pairs from the browser, oldest first.
     """
     if not is_available():
         raise AssistantUnavailable(UNAVAILABLE)
@@ -137,8 +114,7 @@ def ask(
         "contents": contents,
         "generationConfig": {
             "maxOutputTokens": MAX_OUTPUT_TOKENS,
-            # Low, because this explains material somebody is about to be tested
-            # on. Invention is the failure mode that matters here.
+            # Low temperature to keep answers factual.
             "temperature": 0.2,
         },
     }
@@ -152,7 +128,7 @@ def ask(
         )
         response.raise_for_status()
         data = response.json()
-    except Exception as exc:  # noqa: BLE001 - every failure is the same failure here
+    except Exception as exc:  # noqa: BLE001
         print(f"[assistant] call failed: {type(exc).__name__}: {exc}", flush=True)
         raise AssistantUnavailable(FAILED) from exc
 
@@ -163,11 +139,7 @@ def ask(
 
 
 def _text_of(data: dict) -> str:
-    """The reply, out of a shape that is not guaranteed to hold one.
-
-    A refused or truncated response comes back well formed and empty, so every
-    step here is tried rather than assumed.
-    """
+    """Extract the reply text from the API response (may be empty)."""
     for candidate in data.get("candidates") or []:
         parts = (candidate.get("content") or {}).get("parts") or []
         text = "".join(part.get("text", "") for part in parts).strip()

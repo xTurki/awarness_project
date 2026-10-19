@@ -1,8 +1,6 @@
-"""Account administration.
+"""Account administration (administrators only).
 
-Every route sits behind `require_role("administrator")`, applied to the router
-so refusal happens before any handler runs (FR-027). There is no delete route:
-accounts are deactivated, never removed.
+Accounts are deactivated, never deleted.
 """
 
 from __future__ import annotations
@@ -171,8 +169,7 @@ def set_active(
     try:
         admin_service.set_active(db, actor, user_id, is_active == "true")
     except (admin_service.AccountNotFound, admin_service.CannotAdministerSelf):
-        # Your own account is not in the list, so a request naming it is not a
-        # mistake to explain: as far as this page is concerned it does not exist.
+        # Admins can't edit their own account here, so treat it as not found.
         raise _not_found()
 
     return RedirectResponse("/admin/accounts", status_code=status.HTTP_303_SEE_OTHER)

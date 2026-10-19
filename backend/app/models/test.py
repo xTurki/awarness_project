@@ -1,8 +1,6 @@
-"""A test, and the ordered questions that make it up.
+"""Tests and their questions.
 
-**Frozen once attempted.** No column records this: the check is whether any
-attempt row exists. A boolean would be a second source of truth able to
-disagree with reality (research R6).
+A test can't be edited once it has attempts (checked by looking for attempt rows).
 """
 
 from __future__ import annotations
@@ -17,7 +15,7 @@ from app.database import utcnow
 class Test(SQLModel, table=True):
     __tablename__ = "test"
 
-    # Named Test, which pytest would otherwise try to collect as a test class.
+    # Stop pytest from collecting this class.
     __test__ = False
 
     id: int | None = Field(default=None, primary_key=True)
@@ -28,40 +26,31 @@ class Test(SQLModel, table=True):
 
     is_published: bool = Field(default=False, nullable=False)
 
-    # Null means open from the start, and null means never closes. The window
-    # governs when an attempt may *start*.
+    # When attempts can be started. Null = no limit.
     opens_at: datetime | None = Field(default=None, nullable=True)
     closes_at: datetime | None = Field(default=None, nullable=True)
 
     # Null means untimed.
     time_limit_minutes: int | None = Field(default=None, nullable=True)
 
-    # 0 means unlimited. On a recurring test the limit is per cycle: it counts
-    # the attempts made since the person last passed.
+    # 0 = unlimited. For recurring tests the limit is per cycle.
     allowed_attempts: int = Field(default=1, nullable=False)
     shuffle_questions: bool = Field(default=False, nullable=False)
 
-    # A percentage. Required before a retake interval can be set, because a
-    # cycle that restarts on passing must know what passing means (Phase 4).
+    # Percentage. Required for recurring tests.
     passing_score: int | None = Field(default=None, nullable=True)
 
-    # How often it must be retaken. Null means one-off, and nobody becomes due
-    # for it a second time (FR-002).
+    # Null = one-off test.
     retake_interval_days: int | None = Field(default=None, nullable=True)
 
-    # How long after their own registration a one-off test should be passed.
-    # Null means nobody is chased. If both are set, the interval wins, and the
-    # form offers one or the other.
+    # Days after registration to pass a one-off test. Null = no deadline.
     completion_deadline_days: int | None = Field(default=None, nullable=True)
 
     created_at: datetime = Field(default_factory=utcnow, nullable=False)
 
 
 class TestQuestion(SQLModel, table=True):
-    """Which questions make up a test, and in what order the instructor chose.
-
-    A join table because a bank question may appear in more than one test.
-    """
+    """Questions in a test, in order."""
 
     __tablename__ = "test_question"
 

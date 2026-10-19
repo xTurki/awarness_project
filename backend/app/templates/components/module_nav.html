@@ -1,6 +1,4 @@
-{# One markup block, two behaviours from CSS: an offcanvas drawer below 992px,
-   a persistent column above it. Phases 2, 3, and 4 render inside this, so it is
-   worth getting right once here (research R9, FR-033). #}
+{# Module sidebar: offcanvas drawer below 992px, fixed column above. #}
 
 <button class="btn btn-outline-secondary btn-sm d-lg-none mb-3 w-100" type="button"
         data-bs-toggle="offcanvas" data-bs-target="#moduleNav" aria-controls="moduleNav">
@@ -40,8 +38,7 @@
           <span class="nav-link text-body-secondary">No pages yet.</span>
         {% endfor %}
 
-        {# The test is the last page of the module, not a separate place to go
-           looking for. Somebody reads the material in order and arrives at it. #}
+        {# The test is listed as the last item. #}
         {% if final_test %}
           <hr class="my-2">
           <a class="nav-link{% if on_test %} active{% endif %}"

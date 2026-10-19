@@ -28,8 +28,7 @@
           <span class="badge text-bg-secondary">Draft</span>
         {% endif %}
 
-        {# Each button posts the complete order it wants, so the service rewrites
-           positions in one transaction rather than swapping in place. #}
+        {# Each button posts the full new order. #}
         {% if not loop.first %}
           {% set index = loop.index0 %}
           <form method="post" action="/modules/{{ module.id }}/pages/reorder" class="m-0">

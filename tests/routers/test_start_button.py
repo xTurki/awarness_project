@@ -1,12 +1,6 @@
-"""The Start button appears only for somebody who can actually start.
+"""The Start button is only shown to users who can start the test.
 
-Reported from a real session: an administrator published a test, pressed Start,
-and got a page saying "Not found". The refusal was right, because they were not
-registered on the module, but the page had offered them the button and then
-answered with the least helpful sentence available.
-
-The last test in this file is the one that keeps it honest: whatever the page
-decides, the service must agree.
+The page and `attempt_service.start` must agree.
 """
 
 from __future__ import annotations
@@ -67,11 +61,7 @@ def trainee(db, make_user, module):
 
 
 def _window(db, test_id, opens=None, closes=None):
-    """The column is a DATETIME, so it keeps whole seconds and nothing finer.
-
-    Dropping the microseconds here is what the database does anyway; keeping
-    them would mean comparing a value against a truncated copy of itself.
-    """
+    """Current time without microseconds (DATETIME stores whole seconds)."""
     from app.models.test import Test
 
     row = db.get(Test, test_id)
@@ -83,13 +73,13 @@ def _window(db, test_id, opens=None, closes=None):
     return row
 
 
-# ------------------------------------------------------- the reported case
+# --------------------------------------------------------- administrators
 
 
 def test_somebody_not_registered_is_not_offered_the_button(
     client, sign_in, make_user, module, live_test
 ):
-    """An administrator can see the test. They still cannot sit it."""
+    """Users not registered on the module (e.g. admins) don't get the Start button."""
     sign_in(make_user(email="admin@example.com", role="administrator"))
 
     page = client.get(f"/modules/{module.id}/tests/{live_test.id}")
@@ -108,7 +98,6 @@ def test_and_is_told_why_in_words_they_can_act_on(
 
     assert "not registered on this module" in page.text
     assert "Ask whoever runs it to add you" in page.text
-    # Not the sentence that started this.
     assert "Not found" not in page.text
 
 
@@ -139,8 +128,7 @@ def test_a_test_not_open_yet_says_when_it_opens(
 def test_the_window_is_among_the_terms_before_anybody_presses_anything(
     client, db, sign_in, trainee, module, live_test
 ):
-    """It belongs with the time limit and the pass mark, not as a refusal after
-    the fact."""
+    """The open/close window is shown with the test details."""
     _window(db, live_test.id, opens=utcnow() - timedelta(hours=1),
             closes=utcnow() + timedelta(hours=1))
     sign_in(trainee)
@@ -178,7 +166,7 @@ def test_an_exhausted_limit_is_named_rather_than_discovered(
 def test_an_open_attempt_can_be_resumed_even_past_the_window(
     client, db, sign_in, trainee, module, live_test
 ):
-    """The window governs when an attempt may start. Theirs already did."""
+    """An attempt in progress can be resumed after the test closes."""
     attempt_service.start(db, trainee, live_test.id)
     _window(db, live_test.id, closes=utcnow() + timedelta(seconds=5))
     sign_in(trainee)
@@ -205,8 +193,7 @@ def test_an_open_attempt_can_be_resumed_even_past_the_window(
 def test_whatever_the_page_decides_the_service_agrees(
     db, make_user, module, live_test, trainee, owner, arrange
 ):
-    """The page offering a button the service refuses is the whole bug. This
-    walks every reason and asserts the two never disagree."""
+    """For every case, the button is shown only when `start` succeeds."""
     actor = trainee
 
     if arrange == "not_registered":
@@ -244,19 +231,14 @@ def test_whatever_the_page_decides_the_service_agrees(
 def test_the_window_carries_the_moment_for_the_browser_to_localise(
     client, db, sign_in, trainee, module, live_test
 ):
-    """Reported from Sydney: an instructor typed 05:25 meaning their own clock,
-    it was stored as 05:25 UTC, and the test opened ten hours late.
-
-    The stored moment is naive UTC, which is right. What was missing is the
-    conversion at the edges, and only the browser knows the reader's zone.
-    """
+    """Times are stored in UTC and converted to local time in the browser."""
     row = _window(db, live_test.id, opens=utcnow() + timedelta(days=1))
     sign_in(trainee)
 
     page = client.get(f"/modules/{module.id}/tests/{live_test.id}")
 
     assert f'data-utc="{row.opens_at.isoformat()}"' in page.text
-    # And it still reads correctly with no JavaScript at all, marked UTC.
+    # Without JavaScript it shows UTC.
     assert "UTC" in page.text
 
 
@@ -267,7 +249,7 @@ def test_the_date_fields_carry_it_too(client, db, sign_in, owner, module, live_t
     page = client.get(f"/modules/{module.id}/tests/{live_test.id}/edit")
 
     assert f'data-utc="{row.opens_at.isoformat()}"' in page.text
-    # The plain value stays UTC, so the field works unchanged without the script.
+    # The field value stays in UTC.
     assert row.opens_at.strftime("%Y-%m-%dT%H:%M") in page.text
 
 
@@ -289,8 +271,7 @@ def test_the_script_ships_with_every_page(client, sign_in, trainee):
 
 
 def test_the_script_is_versioned_like_the_stylesheet(client, sign_in, trainee):
-    """Otherwise a change to it is served stale for four hours, which is the
-    bug the asset digest already exists to prevent."""
+    """localtime.js is included in the asset version hash."""
     sign_in(trainee)
     page = client.get("/")
 

@@ -1,8 +1,4 @@
-"""Building and publishing a test.
-
-A trainee sees the time limit, the attempts allowed, and the pass mark before
-they start (FR-009).
-"""
+"""Creating, editing and publishing tests."""
 
 from __future__ import annotations
 
@@ -41,7 +37,7 @@ def _module_for_write(db, module_id: int, account):
 
 
 def _when(value: str) -> datetime | None:
-    """An empty datetime-local field means "no bound", not an error."""
+    """Parse a datetime-local field; empty means None."""
     return datetime.fromisoformat(value) if value else None
 
 
@@ -50,9 +46,7 @@ def _optional_int(value: str) -> int | None:
 
 
 def _attempts(value: str, unlimited: str) -> int:
-    """0 when Unlimited is ticked. Otherwise the number typed, where anything
-    that is not a whole number of at least one becomes -1, which the schema
-    refuses with a sentence saying what to do."""
+    """0 if Unlimited is ticked, else the number (-1 if invalid, rejected by the schema)."""
     if unlimited == "true":
         return 0
     value = (value or "").strip()
@@ -60,17 +54,12 @@ def _attempts(value: str, unlimited: str) -> int:
 
 
 def _question_count(value: str) -> int:
-    """Blank or non-numeric becomes 0, which the service refuses with the range."""
+    """Parse an int field; blank or invalid becomes 0."""
     return int(value) if value.strip().isdigit() else 0
 
 
 def _message_of(exc: Exception) -> str:
-    """The sentence to show above the form.
-
-    A pydantic error arrives wrapped in its own prefix and buried in a list, so
-    it is unwrapped here; every other refusal already carries the sentence the
-    form should show.
-    """
+    """Turn a validation error into a readable message for the form."""
     if isinstance(exc, ValidationError):
         return str(exc.errors()[0].get("msg", "")).removeprefix("Value error, ")
     return str(exc)
@@ -196,7 +185,7 @@ def edit_form(
     except test_service.TestNotFound:
         raise HTTPException(status_code=404, detail="No such test.") from None
 
-    # A frozen test renders read-only, and says why (FR-014).
+    # Tests with attempts are shown read-only.
     drawn = test_service.questions_of(db, test_id)
     return render(
         request,
@@ -265,9 +254,7 @@ def update(
         test_service.InvalidSchedule,
         test_service.InvalidQuestionCount,
     ) as exc:
-        # Back to the form with the reason above it, the way the sign-in page
-        # reports a wrong password. Somebody who has just filled in eight fields
-        # should not have to fill them in again to read why one was refused.
+        # Re-show the form with the error and the entered values.
         return render(
             request,
             "tests/form.html",
@@ -303,9 +290,8 @@ def publish(
 ):
     module = _module_for_write(db, module_id, account)
 
-    # Publishing a replacement resets everyone who had passed, because state
-    # follows the module's currently published test. The instructor is told how
-    # many people that is, before it happens (Phase 3 FR-027).
+    # Publishing a replacement test resets everyone who passed, so show the
+    # instructor how many people are affected first.
     if is_published == "true" and confirmed != "true":
         current = results_service.current_test_row(db, module_id)
         if current is not None and current.id != test_id:
@@ -358,11 +344,10 @@ def detail(
             "test": row,
             "can_write": _can_write(db, module_id, account),
             "attempts": attempt_service.history_for(db, account, test_id),
-            # The sidebar, because this page is the last page of the module.
+            # Sidebar navigation (the test is the module's last page).
             "pages": content_service.list_readable(db, account, module_id),
             "final_test": results_service.current_test_row(db, module_id),
-            # None when they may sit it, otherwise the reason, so the page can
-            # offer the button only to somebody who can use it.
+            # None if the user can start it, otherwise the reason why not.
             "cannot_start": attempt_service.why_not_startable(
                 db, account, test_service.row_of(db, test_id)
             ),

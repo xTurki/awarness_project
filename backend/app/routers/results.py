@@ -1,11 +1,6 @@
-"""Where everyone stands.
+"""Dashboard and results pages.
 
-`GET /` lives here now. It was moved out of `dashboard.py`, which is gone: the
-application must register `GET /` exactly once, and a second registration is
-shadowed silently with no error to find.
-
-A trainee's dashboard **is** their results page. One route, one template, one
-list. Instructors and administrators keep the dashboard Phase 0 gave them.
+`GET /` is defined here. For trainees the dashboard is their results page.
 """
 
 from __future__ import annotations
@@ -31,21 +26,11 @@ def _not_found() -> HTTPException:
 def dashboard(
     request: Request, db: Db = Depends(get_session), account=Depends(optional_account)
 ):
-    """The landing page to a visitor, the dashboard to anyone signed in.
-
-    One route, branching on the session, rather than two. Registering `GET /`
-    twice is shadowed silently with no error to find, which is the thing Phase 3
-    moved this route to prevent.
-    """
+    """Landing page for visitors, dashboard for signed-in users."""
     if account is None:
-        # A visitor gets a page that says what this is and offers a way in,
-        # rather than being dropped into a form with no context.
         return render(request, "welcome.html", {})
 
-    # `optional_account` does not enforce this the way `require_password_set`
-    # does, so the one route that uses it checks for itself. Without this, the
-    # dashboard would be the single page reachable before choosing a password
-    # (Phase 0 FR-011).
+    # `optional_account` doesn't check this, so do it here.
     if account.must_set_password:
         return RedirectResponse("/password/new", status_code=status.HTTP_303_SEE_OTHER)
 
@@ -59,7 +44,7 @@ def dashboard(
             },
         )
 
-    # Unchanged for the other two roles: they see modules, not training they owe.
+    # Instructors and admins see the module list.
     return render(
         request,
         "dashboard.html",
@@ -77,7 +62,7 @@ def module_history(
     db: Db = Depends(get_session),
     account=Depends(require_password_set),
 ):
-    """The caller's own attempts on one module, at every test it has had."""
+    """The current user's attempts on a module."""
     try:
         module = module_service.get_for(db, module_id, account)
         rows = results_service.history_for(db, account, module_id, account)
@@ -133,11 +118,7 @@ def person_history(
     db: Db = Depends(get_session),
     account=Depends(require_password_set),
 ):
-    """One person's attempt history for one module.
-
-    This is what every cohort row links to, and the only route by which FR-018
-    is reachable at all.
-    """
+    """A user's attempt history for a module (linked from the cohort view)."""
     try:
         module = module_service.get_for_write(db, module_id, account)
     except module_service.NotFound:

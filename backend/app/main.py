@@ -1,9 +1,7 @@
-"""The application factory and its lifespan.
+"""Application setup and startup.
 
-`SQLModel.metadata.create_all()` is the single schema authority: there is no
-migration tool, and a model change is applied by recreating the database
-(Constitution IV). The character set is asserted before any table is created,
-because fixing it afterwards is painful (research R6).
+Tables are created with `create_all()`. There are no migrations, so a model
+change means recreating the database.
 """
 
 from __future__ import annotations
@@ -46,9 +44,7 @@ from app.routers import (
 )
 from app.services.daily_job import run_now
 
-# This module deliberately names no session type. `Session` here is the session
-# *table*, imported above to register it, and a database session built under
-# that name would silently construct a row instead. The job builds its own.
+# Note: `Session` here is the session table model, not a database session.
 
 
 @asynccontextmanager
@@ -58,23 +54,16 @@ async def lifespan(app: FastAPI):
     SQLModel.metadata.create_all(engine)
     content_seed.run()
 
-    # In the backend container that already runs, on the loop that already
-    # exists. No fourth container, no worker, no broker (FR-026, FR-028). This
-    # assumes exactly one backend instance; two would run two schedulers.
+    # Runs inside the backend process. Assumes a single backend instance.
     scheduler = AsyncIOScheduler(timezone="UTC")
     scheduler.add_job(
         run_now,
         CronTrigger(hour=settings.scheduler_hour_utc, minute=0, timezone="UTC"),
         id="daily-due-sweep",
-        # Run it however late the wakeup arrives. APScheduler's default grace is
-        # one second, which silently *skips* a firing that is even slightly
-        # late, and a late wakeup is ordinary here: a container VM whose clock
-        # was suspended delivers one minutes after the hour. Skipping would cost
-        # a whole day of reminders for no reason, when this job is a full sweep
-        # precisely so that running it late is safe (FR-027, research R7).
+        # Always run, even if late. The default 1s grace would skip the run
+        # after a sleep/suspend, and the job is safe to run late.
         misfire_grace_time=None,
-        # Several firings missed at once collapse into a single run, because
-        # asking who is due now twice in a row has nothing to add.
+        # Missed runs collapse into one.
         coalesce=True,
         max_instances=1,
     )
@@ -112,16 +101,13 @@ def create_app() -> FastAPI:
     application.include_router(notifications.router)
     application.include_router(tutor.router)
 
-    # Every refusal reaches a person as a page, not as JSON. Without this a
-    # rejected form shows the browser a line of `{"detail": ...}`, which tells
-    # somebody using the platform nothing and reads like a crash.
+    # Show HTTP errors as HTML pages instead of JSON.
     application.add_exception_handler(StarletteHTTPException, _as_a_page)
 
     return application
 
 
-#: What each refusal is called, in the words of somebody who just hit it rather
-#: than the words of the protocol.
+# Error page headings by status code.
 _HEADINGS = {
     400: "That was not accepted",
     401: "Sign in to continue",
@@ -133,11 +119,7 @@ _HEADINGS = {
 
 
 async def _as_a_page(request: Request, exc: StarletteHTTPException) -> Response:
-    """Render a refusal as a page.
-
-    Redirects pass straight through: the route guards raise them as exceptions
-    too, so treating a 303 as a failure would break every sign-in.
-    """
+    """Render an HTTP error as a page. Redirects (3xx) are passed through."""
     if 300 <= exc.status_code < 400:
         return Response(status_code=exc.status_code, headers=dict(exc.headers or {}))
 

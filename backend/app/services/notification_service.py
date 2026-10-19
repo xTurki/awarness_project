@@ -1,19 +1,8 @@
-"""Creating notifications, listing them, and marking them seen.
+"""Creating, sending, listing and marking notifications.
 
-**The record is written before anything is sent.** A message is a delivery of a
-notification, never a substitute for one, so a mail outage costs the delivery
-and leaves the notification in place to be retried and, meanwhile, read in the
-application (FR-021, FR-025).
-
-`create` returns None where the record already exists. That refusal comes from
-the database, not from a check here: the unique constraint on
-(user_id, kind, module_id, due_date) is what makes the daily job safe to run
-twice, and no amount of bookkeeping in Python would be as reliable (research R5).
-
-The two immediate notices, registration and result, are sent in the background.
-One message takes seconds to reach the mail relay, and the person who added
-fifteen people to a roster should not wait for fifteen of them. The record is
-committed first, as always; the message follows a moment later.
+The notification row is saved before the email is sent, so failed emails can be
+retried. `create` returns None if the row already exists (unique constraint).
+Registration and result emails are sent in a background thread.
 """
 
 from __future__ import annotations
@@ -35,12 +24,9 @@ from app.services import email_service
 
 _EMAILS = Path(__file__).resolve().parents[1] / "templates" / "emails"
 
-#: Two workers, so a burst of registrations sends a couple at a time rather
-#: than opening one connection per person at once.
 _SENDER = ThreadPoolExecutor(max_workers=2, thread_name_prefix="mail")
 
-#: Tests switch this off. Their rows live inside a transaction that is rolled
-#: back, which the worker's own database session could never see.
+# Disabled in tests (the worker can't see rows in the test transaction).
 SEND_IN_BACKGROUND = True
 
 
@@ -48,12 +34,7 @@ SEND_IN_BACKGROUND = True
 
 
 def notify_registered(db: DbSession, person: User, module: Module) -> None:
-    """Told at the moment it happens, individually.
-
-    Both of the events in this section already happen inside a request, so the
-    daily job has nothing to add: a registration notice sent tomorrow morning is
-    not a registration notice (FR-015, FR-018, research R4).
-    """
+    """Notify a user that they were registered on a module."""
     row = create(
         db,
         user_id=person.id,
@@ -72,7 +53,7 @@ def notify_registered(db: DbSession, person: User, module: Module) -> None:
 
 
 def notify_result(db: DbSession, person: User, module: Module, test, attempt) -> None:
-    """Told when their result becomes available, which is when it is scored."""
+    """Notify a user of their test result."""
     outcome = "Passed" if attempt.passed else "Not passed"
     score = f"{attempt.score_percent}%" if attempt.score_percent is not None else "not scored"
 
@@ -109,11 +90,9 @@ def create(
     body: str | None = None,
     due_date: date | None = None,
 ) -> Notification | None:
-    """One record per person per module per event, or None if it already exists.
+    """Create a notification, or return None if it already exists.
 
-    The insert runs inside a savepoint so that a refused duplicate rolls back
-    only itself. Without that, one collision would poison the transaction and
-    take every other notification in the run down with it.
+    Uses a savepoint so a duplicate doesn't roll back the whole transaction.
     """
     row = Notification(
         user_id=user_id,
@@ -129,10 +108,7 @@ def create(
             db.add(row)
             db.flush()
     except IntegrityError:
-        # Somebody has already been told this exact thing. That is the whole of
-        # FR-022, and it is what a second run of the job hits. Rolling the
-        # savepoint back has already discarded the pending row, so there is
-        # nothing here to clean up.
+        # Already exists.
         return None
 
     db.commit()
@@ -141,15 +117,9 @@ def create(
 
 
 def deliver(db: DbSession, to: str, subject: str, body: str, rows: list[Notification]) -> bool:
-    """Send one message and stamp every record it covered.
+    """Send one email and mark all the given rows as emailed.
 
-    One message may cover several records: somebody overdue on three modules
-    gets one email and three stamped rows, and still sees three entries in their
-    list (FR-019, FR-023, FR-034).
-
-    A failure leaves them all unstamped, which is the entire implementation of
-    FR-025: the next run finds them again and tries once more, without creating
-    a second record.
+    On failure the rows stay unmarked and are retried on the next run.
     """
     try:
         email_service.send_email_now(to, subject, body)
@@ -166,12 +136,7 @@ def deliver(db: DbSession, to: str, subject: str, body: str, rows: list[Notifica
 
 
 def deliver_soon(db: DbSession, to: str, subject: str, body: str, rows: list[Notification]) -> None:
-    """`deliver`, without making the request wait for the mail relay.
-
-    The worker has no request and no session, so it carries the row ids and
-    stamps them through a session of its own. A failure leaves them unstamped,
-    exactly as `deliver` would.
-    """
+    """Like `deliver`, but sends in a background thread."""
     if not SEND_IN_BACKGROUND:
         deliver(db, to, subject, body, rows)
         return
@@ -204,11 +169,7 @@ def _stamp_sent(ids: list[int]) -> None:
 
 
 def list_for(db: DbSession, user: User) -> list[NotificationRead]:
-    """The caller's own, newest first (FR-029).
-
-    Scoped to `user.id` here rather than by an argument a route could supply,
-    so there is nothing for a route to get wrong (FR-033).
-    """
+    """The user's notifications, newest first."""
     rows = db.exec(
         select(Notification)
         .where(Notification.user_id == user.id)
@@ -242,7 +203,7 @@ def list_for(db: DbSession, user: User) -> list[NotificationRead]:
 
 
 def unread_count(db: DbSession, user: User) -> int:
-    """What the shell indicator shows (FR-030)."""
+    """Number of unread notifications."""
     return len(
         db.exec(
             select(Notification).where(
@@ -253,12 +214,7 @@ def unread_count(db: DbSession, user: User) -> int:
 
 
 def mark_seen(db: DbSession, user: User) -> int:
-    """Opening the list marks everything in it seen (FR-031).
-
-    On open rather than per entry: there is no dismiss action anywhere, and an
-    indicator that never clears is worse than one that clears too eagerly
-    (research R8).
-    """
+    """Mark all of the user's notifications as read."""
     rows = db.exec(
         select(Notification).where(
             Notification.user_id == user.id, Notification.read_at.is_(None)

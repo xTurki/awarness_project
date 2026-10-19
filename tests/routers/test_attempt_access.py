@@ -1,8 +1,4 @@
-"""Who may reach what, over HTTP.
-
-Also the one Phase 1 requirement this phase is asked to keep honest: reading a
-module's pages is never a precondition for starting its test (FR-039).
-"""
+"""Access rules for attempts over HTTP."""
 
 from __future__ import annotations
 
@@ -102,8 +98,7 @@ def test_exhausting_the_attempts_is_refused_and_says_how_many(
 def test_reading_the_pages_is_not_a_precondition_for_the_test(
     client, db, sign_in, trainee, live_test, csrf
 ):
-    """Phase 1 FR-035 and this phase's FR-039: content and assessment are always
-    both reachable, and nothing tracks which pages anyone opened."""
+    """The test can be started without reading the pages first."""
     sign_in(trainee)
 
     response = client.post(
@@ -126,7 +121,7 @@ def test_a_trainee_cannot_open_another_persons_attempt(
 
 
 def test_no_route_names_a_person_for_their_attempts():
-    """FR-032 holds because there is nothing to guard: no path takes a user id."""
+    """No attempt route takes a user id."""
     from app.main import app
 
     attempt_paths = {r.path for r in app.routes if "attempt" in r.path}
@@ -174,7 +169,7 @@ def test_opening_a_submitted_attempt_shows_the_review(client, db, sign_in, train
 def test_a_trainee_taking_a_test_is_never_told_which_option_is_correct(
     client, db, sign_in, trainee, live_test
 ):
-    """QuestionRead carries no is_correct. This is the page that proves it."""
+    """Correct answers are not sent while taking a test."""
     row = attempt_service.start(db, trainee, live_test.id)
     sign_in(trainee)
 

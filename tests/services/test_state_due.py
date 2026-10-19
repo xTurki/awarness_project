@@ -1,8 +1,6 @@
-"""The two states Phase 4 added, on top of Phase 3's five.
+"""The due and overdue states.
 
-These are pure: a test, some attempts, and a date in, a state out. The date
-itself is `due.py`'s job and is tested in `test_due.py`; what is checked here is
-only what the state function does with one.
+The due date itself is tested in test_due.py.
 """
 
 from __future__ import annotations
@@ -48,8 +46,7 @@ def test_a_due_date_inside_the_warning_period_is_due():
 
 
 def test_a_due_date_today_is_due_not_overdue():
-    """It has been reached, not passed. Trainee E from the quickstart is here:
-    they lost currency today, so they are due today and overdue tomorrow."""
+    """A due date of today is "due"; it becomes "overdue" tomorrow."""
     assert state_for(_test(), [_attempt(1, passed=False)], TODAY) is State.DUE
 
 
@@ -67,21 +64,19 @@ def test_the_last_day_of_the_warning_period_still_counts():
 
 
 def test_no_due_date_leaves_the_five_states_untouched():
-    """Which is every test in the platform until somebody sets a schedule."""
+    """No due date keeps the normal states."""
     assert state_for(_test(), [_attempt(1, passed=True)]) is State.PASSED
     assert state_for(_test(), [_attempt(1, passed=False)]) is State.FAILED
     assert state_for(_test(), []) is State.NOT_STARTED
 
 
 def test_a_newcomer_registered_today_is_neither_due_nor_overdue():
-    """Their first cycle is a full interval away, so nothing is outstanding on
-    the morning after they are added (SC-018, FR-008)."""
+    """Someone registered today is not due."""
     assert state_for(_test(), [], TODAY + timedelta(days=90)) is State.NOT_STARTED
 
 
 def test_an_attempt_in_progress_wins_over_any_date():
-    """They are sitting it now. Telling them it is overdue while they take it is
-    noise, not information."""
+    """An attempt in progress shows as in progress, not overdue."""
     running = _attempt(9, passed=None, submitted=False)
     assert state_for(_test(), [running], TODAY - timedelta(days=30)) is State.IN_PROGRESS
 
@@ -91,8 +86,7 @@ def test_an_unpublished_test_is_still_no_test():
 
 
 def test_passing_clears_both():
-    """FR-011: passing stops them being due, and their next date is a full
-    interval away, which is what makes the state settle back to passed."""
+    """Passing again clears due and overdue."""
     fresh = [_attempt(2, passed=True, days_ago=0)]
     assert state_for(_test(), fresh, TODAY + timedelta(days=90)) is State.PASSED
 
@@ -109,8 +103,8 @@ def test_overdue_sorts_above_everything():
     assert order.index(State.DUE) < order.index(State.PASSED)
 
 
-def test_phase_threes_order_is_unchanged():
-    """The five Phase 3 shipped still sort as they did (Phase 3 FR-007)."""
+def test_basic_state_order_is_unchanged():
+    """The original five states keep their sort order."""
     order = sorted(
         [State.PASSED, State.NO_TEST, State.FAILED, State.IN_PROGRESS, State.NOT_STARTED],
         key=rank,

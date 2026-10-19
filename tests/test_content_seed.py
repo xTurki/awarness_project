@@ -1,4 +1,4 @@
-"""The four training modules loaded at startup from the Word document's content."""
+"""Training content loaded at startup."""
 
 from __future__ import annotations
 

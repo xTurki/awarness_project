@@ -1,8 +1,6 @@
-"""A person who can sign in.
+"""User accounts.
 
-This is a `table=True` model carrying two secrets. It is never returned from an
-endpoint and never passed into a template (done-gate 5); templates receive a
-`UserRead` built in the service layer.
+Contains password and code hashes, so templates get a `UserRead` instead.
 """
 
 from __future__ import annotations
@@ -21,7 +19,7 @@ class User(SQLModel, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
 
-    # Stored lowercased, so Ahmad@x.com and ahmad@x.com are one account.
+    # Stored in lowercase.
     email: str = Field(max_length=255, unique=True, index=True, nullable=False)
     full_name: str = Field(max_length=255, nullable=False)
     password_hash: str = Field(max_length=255, nullable=False)
@@ -30,7 +28,7 @@ class User(SQLModel, table=True):
     is_active: bool = Field(default=True, nullable=False)
     must_set_password: bool = Field(default=False, nullable=False)
 
-    # Written together and cleared together. Both null means no sign-in is in progress.
+    # Pending login code (both null when no login is in progress).
     login_code_hash: str | None = Field(default=None, max_length=255, nullable=True)
     login_code_expires_at: datetime | None = Field(default=None, nullable=True)
 

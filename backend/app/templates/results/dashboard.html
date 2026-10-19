@@ -2,8 +2,7 @@
 {% block title %}Your training{% endblock %}
 
 {% block content %}
-{# A trainee's dashboard is their results page. One route, one template, one
-   list. There is no second page listing the same modules (FR-001). #}
+{# Trainee dashboard: their modules and results. #}
 {% set passed = rows|selectattr("state", "equalto", "passed")|list|length %}
 {% set overdue = rows|selectattr("state", "equalto", "overdue")|list|length %}
 {% set to_do = rows|selectattr("state", "in", ["not started", "in progress", "due", "failed"])|list|length %}
@@ -85,7 +84,7 @@
     {% endfor %}
   </div>
 {% else %}
-  {# A statement, not an empty frame (FR-024). #}
+  {# Empty state #}
   <div class="panel">
     <div class="nothing">
       <span class="nothing-mark"><i class="bi bi-inbox" aria-hidden="true"></i></span>

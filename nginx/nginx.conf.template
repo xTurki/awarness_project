@@ -1,6 +1,5 @@
-# Rendered at container start by the official image's envsubst step, which
-# writes the result to /etc/nginx/conf.d/. Only variables present in the
-# environment are substituted, so nginx's own $host and $scheme survive.
+# Template rendered by envsubst when the container starts.
+# Only environment variables are replaced, so $host etc. are kept.
 
 upstream backend {
     server backend:8000;
@@ -11,40 +10,30 @@ server {
     server_name _;
     server_tokens off;
 
-    # Derived from UPLOAD_MAX_MB with one megabyte added for multipart
-    # overhead. When this is lower than the application's own limit an
-    # oversized upload dies here with a generic 413 that the application never
-    # sees and therefore cannot explain (research R4).
+    # UPLOAD_MAX_MB + 1 MB, so the app (not nginx) reports oversized uploads.
     client_max_body_size ${UPLOAD_MAX_PLUS_MARGIN}m;
 
-    # Static assets are served here, never by the Python process (research R10).
-    # The volume is mounted read-only: nginx can read it, nothing can write it.
+    # Static files (read-only mount).
     location /static/ {
         alias /srv/static/;
         access_log off;
         expires 1h;
     }
 
-    # Instructor image uploads, served as static files under generated names.
+    # Uploaded images.
     location /uploads/ {
         alias /srv/uploads/;
         access_log off;
         expires 1h;
     }
 
-    # A restart of the application takes a few seconds, and for those seconds
-    # nginx is up while nothing is behind it. Without this the visitor gets a
-    # raw gateway error, which reads as a broken platform rather than a busy one.
-    #
-    # Mapped to 503 rather than kept as 502: this is temporary and says so, so
-    # a cache in front does not treat it as the site being down.
+    # Show a maintenance page (503) while the backend is restarting.
     error_page 502 503 504 =503 /maintenance.html;
 
     location = /maintenance.html {
         root /usr/share/nginx/html;
         internal;
-        # Never cached. The whole point is that the next request gets the real
-        # page back.
+        # Don't cache the maintenance page.
         add_header Cache-Control "no-store" always;
     }
 
@@ -55,7 +44,7 @@ server {
         proxy_set_header Host              $host;
         proxy_set_header X-Real-IP         $remote_addr;
         proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
-        # The application decides the Secure cookie flag from this header.
+        # Used by the app to set the Secure cookie flag.
         proxy_set_header X-Forwarded-Proto $scheme;
 
         proxy_read_timeout 30s;

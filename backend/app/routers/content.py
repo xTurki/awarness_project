@@ -1,8 +1,4 @@
-"""Content pages and image uploads.
-
-The upload route reads the file off the request here and hands **bytes** to the
-service. No file handling lives in this module (Principle I, Principle II).
-"""
+"""Content pages and image uploads."""
 
 from __future__ import annotations
 
@@ -242,8 +238,7 @@ def read_page(
             "module": ModuleRead.of(module),
             "page": page,
             "pages": pages,
-            # The test closes the module, so it sits at the end of the same
-            # list of pages rather than somewhere else entirely.
+            # The test is shown as the last item in the page list.
             "final_test": results_service.current_test_row(db, module_id),
         },
     )
@@ -259,9 +254,7 @@ async def upload_image(
     db: Db = Depends(get_session),
     account=Depends(require_password_set),
 ):
-    """Reads the upload here, hands bytes to the service, returns the URL the
-    editor inserts. A rejection says why, naming the limit or the accepted
-    types, rather than failing blankly (FR-021)."""
+    """Upload an image and return its URL for the editor."""
     _module_for_write(db, module_id, account)
 
     content = await file.read()

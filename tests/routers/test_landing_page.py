@@ -1,10 +1,4 @@
-"""The one page a visitor may see, and the line it draws.
-
-`GET /` is the landing page to somebody with no session and the dashboard to
-anybody with one. It is a single route on purpose: registering `GET /` twice
-shadows the second silently, with no error to find, which is what Phase 3 moved
-the route to prevent.
-"""
+"""`GET /`: landing page for visitors, dashboard for signed-in users."""
 
 from __future__ import annotations
 
@@ -43,16 +37,14 @@ def test_the_page_offers_a_way_in(client):
 
 
 def test_the_page_says_there_is_no_sign_up(client):
-    """A visitor with no account needs to know that is the design, not a
-    missing button. Nobody creates their own account (Phase 0 FR-002)."""
+    """The landing page explains that accounts are created by an administrator."""
     page = client.get("/")
 
     assert "no sign-up" in page.text.lower()
 
 
 def test_a_visitor_sees_no_navigation(client):
-    """There is nowhere to go from here except in, and the shell belongs to
-    people who are signed in."""
+    """Visitors don't see the app navigation."""
     page = client.get("/")
 
     assert "Notifications" not in page.text
@@ -60,7 +52,7 @@ def test_a_visitor_sees_no_navigation(client):
 
 
 def test_nothing_behind_it_opened_up(client):
-    """The landing page is the only thing a visitor may reach."""
+    """Other pages redirect visitors to login."""
     for path in ("/modules", "/notifications", "/admin/accounts"):
         response = client.get(path)
         assert response.status_code == 303, path
@@ -92,8 +84,7 @@ def test_a_signed_in_administrator_gets_the_module_dashboard(
 def test_a_dead_cookie_shows_the_landing_page_rather_than_looping(
     client, db, sign_in, make_user
 ):
-    """The bug the stale-cookie test guards, seen from the other side: a browser
-    holding an expired cookie lands on a page, and the row is still deleted."""
+    """An expired cookie shows the landing page and the session is deleted."""
     user = make_user(email="a@example.com")
     token_id = sign_in(user)
 
@@ -110,9 +101,7 @@ def test_a_dead_cookie_shows_the_landing_page_rather_than_looping(
 
 
 def test_choosing_a_password_still_comes_first(client, sign_in, make_user):
-    """`optional_account` does not enforce it, so the route does. Without that
-    check the dashboard would be the one page reachable before the password is
-    set (Phase 0 FR-011)."""
+    """Users who must set a password are redirected from the dashboard."""
     user = make_user(email="new@example.com", must_set_password=True)
     sign_in(user)
 

@@ -1,7 +1,6 @@
-"""Modules: the list, the administrator's forms, and the module home page.
+"""Module list, admin forms and module home page.
 
-There is **no permanent-delete route**. Removal here is reversible; permanent
-removal is a database operation, documented in the README (FR-010).
+Deleting a module is a soft delete; there is no permanent delete route.
 """
 
 from __future__ import annotations
@@ -31,7 +30,7 @@ router = APIRouter(tags=["modules"])
 
 
 def _not_found() -> HTTPException:
-    """A module the caller may not see does not exist, as far as they are told."""
+    """Get a module or 404 (also 404 if the user can't see it)."""
     return HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No such module.")
 
 
@@ -56,16 +55,9 @@ def new_form(request: Request, account=Depends(require_role("administrator"))):
 
 
 async def _picture(file: UploadFile | str | None) -> bytes | None:
-    """The bytes of a chosen file, or `None` when the field was left empty.
+    """Return the uploaded file's bytes, or None if no file was chosen.
 
-    A file input nobody touched still posts a part, and what that part looks
-    like depends on the client. A browser sends it with an empty filename,
-    which arrives here as an `UploadFile` with nothing in it. Other clients
-    leave the filename out altogether, and then the part is not a file at all
-    but an empty string.
-
-    Both mean the same thing, and both have to mean it, or every save that did
-    not attach a picture is refused as malformed.
+    An empty file field can arrive as an empty UploadFile or as an empty string.
     """
     if file is None or isinstance(file, str):
         return None
@@ -93,8 +85,7 @@ async def create(
                 "account": UserRead.of(account),
                 "title": title,
                 "description": description,
-                # Carried back, so a missing title does not also discard the
-                # colour they picked.
+                # Keep the chosen colour when re-showing the form.
                 "art_colour": art_colour,
                 "message": message,
             },
@@ -110,8 +101,7 @@ async def create(
     except ValidationError:
         return refused("A module needs a title.")
 
-    # Checked before the module is made, so a refused picture does not leave a
-    # module behind that nobody asked for.
+    # Validate the image before creating the module.
     picture = await _picture(cover)
     if picture is not None:
         try:
@@ -140,7 +130,7 @@ def home(
     db: Db = Depends(get_session),
     account=Depends(require_password_set),
 ):
-    """Module home: description, readable pages in order, module navigation."""
+    """Module home page."""
     try:
         module = module_service.get_for(db, module_id, account)
         pages = content_service.list_readable(db, account, module_id)
@@ -200,8 +190,7 @@ async def update(
     db: Db = Depends(get_session),
     account=Depends(require_role("administrator")),
 ):
-    """One form and one Save. The picture is part of the module, so it is saved
-    with the rest of it rather than by a button of its own."""
+    """Save module details, including the cover image."""
     try:
         current = ModuleRead.of(module_service.get_for(db, module_id, account))
     except module_service.NotFound:
@@ -216,8 +205,7 @@ async def update(
                 "module": current,
                 "title": title,
                 "description": description,
-                # Carried back, so a missing title does not also discard the
-                # cover they picked.
+                # Keep the chosen cover when re-showing the form.
                 "art_image": current.art_image,
                 "message": message,
             },
@@ -247,9 +235,8 @@ async def update(
     except module_service.NotFound:
         raise _not_found() from None
 
-    # After the rest of the save, so a rejected title does not take the
-    # picture with it. A new file replaces whatever was there; ticking remove
-    # takes the picture off and the module goes back to its colour.
+    # Handle the cover after the other fields. A new file replaces the old one;
+    # "remove" goes back to the colour.
     if picture is not None:
         content_service.set_cover(
             db,

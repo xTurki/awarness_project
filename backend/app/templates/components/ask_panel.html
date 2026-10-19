@@ -1,17 +1,6 @@
-{# The study assistant, under the page it is about.
-
-   Rendered two ways from one template: included in the page on first load, and
-   returned on its own by the ask route, which htmx swaps back into this same
-   element. One template, so an answer, a refusal and a failure cannot drift
-   into looking like three different things.
-
-   The thread rides in hidden fields and posts back with the next question.
-   That is the whole of "it remembers": nothing is stored, and closing the page
-   ends it.
-
-   Absent entirely where no API key is configured, so the platform runs exactly
-   as it did before this existed.
-#}
+{# Study assistant panel. Included in the page and also returned by the ask
+   route (htmx swaps it in). The conversation is kept in hidden fields. Not
+   shown when no API key is set. #}
 {% if assistant_available %}
 <div class="panel mt-4" id="ask-panel">
   <div class="panel-head">
@@ -49,8 +38,7 @@
           hx-indicator="#ask-waiting">
       <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token }}">
 
-      {# Posted back so the assistant can follow "why?" and "what about the
-         second one?". Paired by position on the far side. #}
+      {# Previous questions and answers, sent with the next question. #}
       {% for asked, answered in thread %}
         <input type="hidden" name="asked" value="{{ asked }}">
         <input type="hidden" name="answered" value="{{ answered }}">

@@ -1,8 +1,4 @@
-"""The two-step flow end to end, and the forced password change.
-
-FR-011 and SC-012: an account whose password an administrator set cannot reach
-any part of the platform beyond the choose-a-password step.
-"""
+"""Two-step login and the forced password change on first login."""
 
 from __future__ import annotations
 
@@ -46,7 +42,7 @@ def test_password_then_code_reaches_the_dashboard(client, make_user, csrf, sent)
 
     landed = client.get("/")
     assert landed.status_code == 200
-    # A trainee lands on their results page, which is their dashboard (Phase 3).
+    # Trainees land on their dashboard.
     assert "Your training" in landed.text
 
 

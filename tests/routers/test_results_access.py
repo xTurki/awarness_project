@@ -1,9 +1,4 @@
-"""The results pages over HTTP.
-
-Two structural facts are asserted here rather than behaviours: `GET /` is
-registered exactly once, and no route in this phase names a person except the
-instructor's per-person history, which is behind `module:write`.
-"""
+"""Results pages over HTTP."""
 
 from __future__ import annotations
 
@@ -63,8 +58,7 @@ def live_test(db, owner, module):
 
 
 def test_the_root_is_registered_exactly_once():
-    """Two registrations of `GET /` do not error: the second is shadowed, and
-    the page simply never appears. This is what T011 moved to prevent."""
+    """`GET /` is registered only once."""
     roots = [route for route in app.routes if route.path == "/"]
     assert len(roots) == 1, f"GET / is registered {len(roots)} times"
 
@@ -77,8 +71,7 @@ def test_no_dashboard_router_remains():
 
 
 def test_no_view_spans_more_than_one_module():
-    """Every results path names a module or an attempt, never a bare list
-    across them (FR-021, SC-013)."""
+    """Results routes are scoped to a module or attempt."""
     results_paths = {r.path for r in app.routes if "results" in r.path}
     assert results_paths == {
         "/results/modules/{module_id}",
@@ -87,8 +80,8 @@ def test_no_view_spans_more_than_one_module():
     }
 
 
-def test_this_phase_adds_no_post():
-    """Nothing here enters, adjusts, or weights a score (FR-026)."""
+def test_results_routes_have_no_post():
+    """Results routes are read-only (no POST)."""
     for route in app.routes:
         if "results" in route.path:
             assert "POST" not in getattr(route, "methods", set()), route.path
@@ -123,7 +116,7 @@ def test_a_trainee_with_nothing_is_told_so(client, sign_in, make_user):
 
 
 def test_the_state_word_appears_not_only_a_colour(client, sign_in, trainee, live_test):
-    """Legible without colour, and without a legend (FR-023)."""
+    """States are shown as text labels."""
     sign_in(trainee)
     page = client.get("/")
 
@@ -134,8 +127,7 @@ def test_the_state_word_appears_not_only_a_colour(client, sign_in, trainee, live
 
 
 def test_no_route_reaches_another_persons_dashboard(client, sign_in, trainee):
-    """There is no path parameter for a person on the dashboard, so there is
-    nothing to guard: the route simply does not exist (FR-013)."""
+    """There is no route to view another user's dashboard."""
     sign_in(trainee)
 
     assert client.get("/results/modules/999999").status_code == 404
@@ -199,8 +191,7 @@ def test_an_unfinished_attempt_is_reachable_from_the_dashboard(
 
 
 def test_an_attempt_that_ran_out_reads_as_finished(client, db, sign_in, trainee, live_test):
-    """Reading the dashboard triggers Phase 2's expire-on-read, so a lapsed
-    attempt shows its outcome rather than sitting as in progress."""
+    """Expired attempts are submitted when the dashboard loads."""
     from datetime import timedelta
 
     from app.database import utcnow

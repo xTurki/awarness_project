@@ -1,8 +1,4 @@
-"""Who may author, and what a draft looks like from outside.
-
-403 for an instructor on somebody else's module; 404 for a trainee asking after
-a draft (FR-018, SC-005, SC-007).
-"""
+"""Content access: 403 for other instructors, 404 for trainees on drafts."""
 
 from __future__ import annotations
 
@@ -57,7 +53,7 @@ def test_an_instructor_on_another_module_is_refused(
     client, make_user, sign_in, module, suffix
 ):
     sign_in(make_user(email="other@example.com", role="instructor"))
-    # They cannot see the module at all, so it does not exist as far as they know.
+    # Can't see the module, so 404.
     assert client.get(f"/modules/{module.id}{suffix}").status_code == 404
 
 

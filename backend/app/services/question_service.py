@@ -1,7 +1,6 @@
-"""The question bank.
+"""Question bank: creating, editing and deleting questions.
 
-Validation happens on save, because neither rule is recoverable once a trainee
-is mid-attempt: at least two options, at least one of them correct (FR-003).
+Each question needs at least two options and at least one correct option.
 """
 
 from __future__ import annotations
@@ -22,16 +21,11 @@ class QuestionNotFound(Exception):
 
 
 class QuestionFrozen(Exception):
-    """The question sits in a test somebody has already attempted."""
+    """The question is in a test that has attempts."""
 
 
 def assert_question_not_attempted(db: DbSession, question_id: int) -> None:
-    """A question inside an **attempted** test is frozen too.
-
-    `test_service.assert_not_attempted` cannot see this from here: it is keyed
-    on a test, and a question does not know which tests hold it. One query
-    joining `test_question` to `attempt` answers it (FR-013, SC-011).
-    """
+    """Raise if the question is used in any test that has attempts."""
     used_in = db.exec(
         select(TestQuestion.test_id).where(TestQuestion.question_id == question_id)
     ).all()
@@ -172,7 +166,7 @@ def _review(db: DbSession, row: Question) -> QuestionReview:
 
 
 def taking_view(db: DbSession, row: Question) -> tuple[list[OptionRead], bool]:
-    """Options as a trainee sees them while answering: no `is_correct`."""
+    """Options for taking a test (without `is_correct`)."""
     options = options_for(db, row.id)
     return (
         [OptionRead(id=o.id, text=o.text, position=o.position) for o in options],

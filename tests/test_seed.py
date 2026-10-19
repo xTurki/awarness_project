@@ -1,8 +1,4 @@
-"""The starting set of accounts (FR-004).
-
-One administrator, one instructor, five trainees, all exempt from the
-first-sign-in password change, and running it twice creates nothing.
-"""
+"""Demo account seeding: 1 admin, 1 instructor, 5 trainees; safe to run twice."""
 
 from __future__ import annotations
 

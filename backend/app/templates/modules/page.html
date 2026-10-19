@@ -8,9 +8,7 @@
   </div>
 
   <div class="col-12 col-lg-9">
-    {# By id, not by object: the page being read and the one in the sidebar list
-       are built by different calls, so comparing the models themselves finds no
-       match and every page silently becomes the last one. #}
+    {# Compare by id (the objects come from different queries). #}
     {% set ids = pages | map(attribute="id") | list %}
     {% set index = ids.index(page.id) if page.id in ids else -1 %}
 
@@ -28,14 +26,11 @@
     </div>
 
     <div class="panel"><div class="panel-body p-lg-5">
-      {# The stored column is already sanitised, which is why this is rendered
-         directly and carries no filter of its own. Adding one here would suggest
-         the column might hold something unsafe, and it cannot (research R2). #}
+      {# Body is sanitised before saving, so it is rendered as-is. #}
       <article class="content-body rich-text">{{ page.body|safe }}</article>
     </div></div>
 
-    {# Reading forward has to arrive somewhere. From any page but the last, that
-       is the next page; from the last, it is the test that closes the module. #}
+    {# Next link: the next page, or the test after the last page. #}
     <div class="d-flex flex-wrap gap-2 justify-content-between mt-4">
       {% if index > 0 %}
         <a class="btn btn-outline-secondary btn-prev"
@@ -54,7 +49,6 @@
       {% endif %}
     </div>
 
-    {# Under the material, because the question is about what is above it. #}
     {% with thread = [] %}{% include "components/ask_panel.html" %}{% endwith %}
   </div>
 </div>

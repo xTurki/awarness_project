@@ -1,20 +1,6 @@
-"""Nobody administers their own account.
+"""Administrators can't change their own account.
 
-This file exists because the platform was once locked shut: the only
-administrator deactivated themselves, and there was no way back through any
-page, because reactivating an account and promoting one both require an
-administrator and by then there was none. It took a shell on the server to undo.
-
-The first fix counted "the last administrator", which meant distinguishing
-active from inactive and deactivating from demoting, and getting each right.
-This rule replaced it and needs no counting at all:
-
-    removing an administrator requires an acting administrator,
-    and the acting one is the account that cannot be touched,
-
-so two administrators floor at one, and one floors at one. Zero is unreachable,
-and the tests at the end of this file prove that directly rather than by
-asserting a count.
+This guarantees there is always at least one active administrator.
 """
 
 from __future__ import annotations
@@ -45,7 +31,7 @@ def _edit(person, role=None):
 
 
 def test_you_cannot_deactivate_yourself(db, admin):
-    """The action that locked the platform."""
+    """An admin can't deactivate themselves."""
     with pytest.raises(admin_service.CannotAdministerSelf):
         admin_service.set_active(db, admin, admin.id, False)
 
@@ -60,8 +46,7 @@ def test_you_cannot_demote_yourself(db, admin):
 
 
 def test_you_cannot_rename_yourself_either(db, admin):
-    """Not only the dangerous fields. The rule is the whole account, which is
-    what keeps it a rule rather than a list of exceptions."""
+    """An admin can't edit any field of their own account."""
     with pytest.raises(admin_service.CannotAdministerSelf):
         admin_service.update_account(
             db, admin, admin.id,
@@ -72,14 +57,13 @@ def test_you_cannot_rename_yourself_either(db, admin):
 
 
 def test_you_cannot_reset_your_own_password(db, admin):
-    """Another administrator does it, which is what the sign-in page already
-    tells everybody: there is no self-service reset."""
+    """An admin can't reset their own password here."""
     with pytest.raises(admin_service.CannotAdministerSelf):
         admin_service.reset_password(db, admin, admin.id, "a-new-password")
 
 
 def test_you_cannot_even_read_your_own_row(db, admin):
-    """So the edit form cannot be reached by typing its address."""
+    """Getting your own account for editing is refused."""
     with pytest.raises(admin_service.CannotAdministerSelf):
         admin_service.get_account(db, admin, admin.id)
 
@@ -88,7 +72,7 @@ def test_the_refusal_says_who_can(db, admin):
     with pytest.raises(admin_service.CannotAdministerSelf) as refused:
         admin_service.set_active(db, admin, admin.id, False)
 
-    # A refusal that does not say how to proceed is an obstacle, not a guard.
+    # The error message explains what to do.
     assert "another administrator" in str(refused.value).lower()
 
 
@@ -105,7 +89,7 @@ def test_your_own_account_is_absent_from_the_list(db, admin, make_user):
 
 
 def test_another_administrator_still_sees_you(db, admin, make_user):
-    """The row is hidden from its owner, not from the platform."""
+    """Other admins still see the account."""
     second = make_user(email="second@example.com", role="administrator")
 
     listed = {row.email for row in admin_service.list_accounts(db, second)}
@@ -157,7 +141,7 @@ def test_creating_an_account_is_untouched(db, admin):
 
 
 def test_one_administrator_cannot_reach_zero(db, admin):
-    """Every route out of being an administrator, tried against yourself."""
+    """A single admin can't remove their own admin access in any way."""
     for attempt in (
         lambda: admin_service.set_active(db, admin, admin.id, False),
         lambda: admin_service.update_account(db, admin, admin.id, _edit(admin, role="trainee")),
@@ -171,8 +155,7 @@ def test_one_administrator_cannot_reach_zero(db, admin):
 
 
 def test_two_administrators_floor_at_one(db, admin, make_user):
-    """A removes B, and then cannot remove themselves. One always remains, and
-    nothing counted anything to arrange that."""
+    """With two admins, one can remove the other but not themselves."""
     other = make_user(email="second@example.com", role="administrator")
 
     admin_service.update_account(db, admin, other.id, _edit(other, role="trainee"))
@@ -189,7 +172,6 @@ def test_two_administrators_floor_at_one(db, admin, make_user):
 
 
 def test_the_retired_guard_is_gone(db):
-    """The counting guard it replaced, and everything it needed, removed rather
-    than left alongside as a second rule that could disagree."""
+    """The old "last administrator" check no longer exists."""
     assert not hasattr(admin_service, "LastAdministrator")
     assert not hasattr(admin_service, "sole_administrator_id")

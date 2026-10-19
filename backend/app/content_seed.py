@@ -1,9 +1,7 @@
-"""Loads the four training modules into the database at startup.
+"""Loads the training modules from seed_content/training_content.json at startup.
 
-The material comes from `seed_content/training_content.json`, generated from
-the Word document "Cybersecurity Awareness training Content v2.docx". A module
-whose title already exists is left alone, deleted ones included, so a restart
-never duplicates content and never undoes an administrator's edit or deletion.
+Modules whose title already exists are skipped, so restarts don't duplicate
+content or overwrite admin edits.
 """
 
 from __future__ import annotations

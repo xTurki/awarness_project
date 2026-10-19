@@ -1,9 +1,4 @@
-"""The sanitiser.
-
-The only test in this phase whose failure would be silent in production: a hole
-here produces no error, no crash, and no complaint, just content that executes
-in every trainee's browser.
-"""
+"""HTML sanitiser: what is removed and what is kept."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""The list, the indicator, and what marks them seen."""
+"""Notification list, unread count and marking as read."""
 
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ def module(db):
 
 @pytest.fixture()
 def told(db, module):
-    """Write notifications directly: this module is about reading them."""
+    """Create notifications directly in the database."""
 
     def _told(person, title: str, minutes_ago: int = 0, kind: str = "overdue", due_date=None):
         row = Notification(
@@ -68,8 +68,7 @@ def test_each_entry_names_its_module_and_links_to_it(db, make_user, told, module
 
 
 def test_a_person_with_none_gets_an_empty_list_and_the_page_says_so(db, make_user):
-    """The service returns nothing; the template turns that into a sentence
-    rather than an empty frame."""
+    """An empty list shows a message on the page."""
     assert notification_service.list_for(db, make_user(email="none@example.com")) == []
 
 

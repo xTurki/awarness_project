@@ -1,10 +1,4 @@
-"""Every module carries a cover, and it is the same cover everywhere.
-
-Nothing is drawn. A module wears a picture its administrator uploaded, or a
-colour: the one picked for it, or one derived from its id when nobody picked.
-What is worth asserting is exactly that: a module always has a cover, the same
-one on every page, and modules nobody chose for do not look alike.
-"""
+"""Module covers: every module has one, and it is the same on every page."""
 
 from __future__ import annotations
 
@@ -38,7 +32,7 @@ def modules(db):
 
 
 def _covers(html: str) -> list[str]:
-    """Every cover rendered on the page, as its colour class."""
+    """Colour classes of all covers on the page."""
     return re.findall(r"module-art module-art-([a-z]+)", html)
 
 
@@ -62,8 +56,7 @@ def test_the_module_page_carries_it_too(client, sign_in, admin, modules):
 
 
 def test_a_module_looks_the_same_on_every_page(client, sign_in, admin, modules):
-    """A cover that changed between the list and the page would be decoration
-    rather than identity."""
+    """The list and the module page show the same cover."""
     sign_in(admin)
 
     listed = client.get("/modules").text
@@ -86,7 +79,7 @@ def test_it_survives_a_reload(client, sign_in, admin, modules):
 
 
 def test_neighbouring_modules_do_not_look_alike(client, sign_in, admin, modules):
-    """Seven modules with nothing chosen, falling back on their ids."""
+    """Modules without a chosen colour get different default colours."""
     sign_in(admin)
     covers = _covers(client.get("/modules").text)
 
@@ -121,8 +114,7 @@ def test_a_trainee_sees_it_on_their_own_dashboard(client, db, sign_in, make_user
 
 
 def test_a_module_without_a_picture_requests_no_file(client, sign_in, admin, modules):
-    """A colour costs no request. A module with no uploaded picture must not
-    leave a broken image box behind, and nothing is fetched from a CDN."""
+    """No <img> is rendered for a colour cover."""
     sign_in(admin)
     page = client.get("/modules")
 
@@ -131,15 +123,13 @@ def test_a_module_without_a_picture_requests_no_file(client, sign_in, admin, mod
 
 
 def test_the_module_table_gained_exactly_one_column(engine):
-    """The whole cover in one nullable column, holding an uploaded file name
-    or nothing at all."""
+    """The cover is stored in the nullable `art` column."""
     from sqlmodel import inspect
 
     columns = {c["name"] for c in inspect(engine).get_columns("module")}
     assert columns == {
         "id", "title", "description", "is_published", "created_at", "deleted_at",
-        # One nullable column holds the whole cover. The colour is not in it:
-        # it comes from the id, so the two can never disagree.
+        # No colour stored; the default comes from the id.
         "art",
     }
 
@@ -148,17 +138,14 @@ def test_the_module_table_gained_exactly_one_column(engine):
 
 
 def test_the_stylesheet_url_carries_a_version(client):
-    """Without this, a cache in front of the platform serves the previous
-    stylesheet until its TTL expires. On the live deployment that is four
-    hours, which looks exactly like a change that failed to deploy."""
+    """Asset URLs include a version for cache busting."""
     page = client.get("/login")
 
     assert "/static/css/app.css?v=" in page.text
 
 
 def test_the_version_changes_with_the_stylesheet(tmp_path, monkeypatch):
-    """A digest of the files, so an unchanged deploy keeps the cached copy and
-    a changed one cannot be served from it."""
+    """The version is a hash of the asset files."""
     from app import rendering
 
     before = rendering._asset_version()
@@ -183,8 +170,7 @@ def test_the_form_offers_every_colour(client, sign_in, admin):
 
 
 def test_the_picker_shows_the_colours_themselves(client, sign_in, admin):
-    """Not a dropdown of words: "violet" in a list tells you nothing about what
-    the card will look like."""
+    """The colour picker shows swatches, not a dropdown."""
     from app import art
 
     sign_in(admin)
@@ -212,8 +198,7 @@ def test_a_picked_colour_is_stored_and_shown(client, db, sign_in, admin, csrf):
 
 
 def test_a_module_created_without_picking_stores_nothing(client, db, sign_in, admin, csrf):
-    """The id decides instead, and storing a derived colour would let the two
-    disagree the moment either changed."""
+    """No colour is stored when none is picked."""
     sign_in(admin)
 
     client.post(
@@ -240,8 +225,7 @@ def test_the_edit_form_comes_back_with_the_current_colour(client, db, sign_in, a
 
 
 def test_a_crafted_colour_is_refused(client, db, sign_in, admin, csrf):
-    """The picker offers eight, and the service refuses anything else rather
-    than trusting that the form was the only way in."""
+    """Unknown colours are rejected."""
     sign_in(admin)
 
     response = client.post(

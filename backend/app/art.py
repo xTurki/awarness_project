@@ -1,29 +1,14 @@
-"""A module's cover: an uploaded picture, or a colour.
+"""Module cover helpers: an uploaded image or a colour.
 
-A module wears a picture its administrator uploaded, and until one is uploaded
-it wears a colour, which the stylesheet paints as a gradient with a dot grid.
-A list of modules stays legible without anybody having to choose anything.
-
-An administrator picks the colour when they make the module. One that was
-never picked is derived from the module id instead, so a module always has a
-colour and nobody is forced to choose one to get past the form.
-
-So the column `module.art` holds `teal`, or `upload.9f2c....png`, or nothing at
-all. A row holding something older, from when covers were drawn patterns, means
-the same as nothing: neither a colour nor an upload, so the colour comes from
-the id.
-
-Nothing here touches the database or the request. It is one list of colours
-and five small functions, so the service and the template agree on what a
-valid cover is without either of them defining it a second time.
+`module.art` holds a colour name (e.g. `teal`), an upload (`upload.<name>.png`),
+or nothing. When no colour is set, one is derived from the module id.
 """
 
 from __future__ import annotations
 
 import re
 
-#: Each name has a light and a dark gradient in app.css (`.module-art-<name>`).
-#: No text sits on a cover, so none of them is held to a contrast ratio.
+# Each colour has a matching `.module-art-<name>` class in app.css.
 COLOURS: tuple[str, ...] = (
     "indigo",
     "sky",
@@ -37,61 +22,37 @@ COLOURS: tuple[str, ...] = (
 
 SEPARATOR = "."
 
-#: What an uploaded cover is written as: `upload.9f2c....png`. The prefix is
-#: what tells a stored value apart from anything the column held before.
 UPLOAD = "upload"
 
-#: A stored name as `content_service` generates it: `uuid4().hex` and an
-#: extension. Matched rather than trusted, so nothing that reached this column
-#: can name a path, a parent directory, or a file outside the uploads volume.
+# Stored file name: uuid4 hex + extension. Validated so it can't be a path.
 _STORED_NAME = re.compile(r"^[0-9a-f]{32}\.[a-z0-9]{1,8}$")
 
 
 class InvalidArt(Exception):
-    """A cover value outside the vocabulary above."""
+    """Raised for an invalid cover value."""
 
 
 def colour_for(module_id: int) -> str:
-    """The colour a module wears when nobody picked one, from its id alone.
-
-    Total: every id has one, including `None` and zero, so no module can reach
-    a template without a colour and no template has to decide what to do about
-    its absence.
-    """
+    """Default colour for a module, based on its id (works for None too)."""
     return COLOURS[(module_id or 0) % len(COLOURS)]
 
 
 def parse_colour(value: str | None, module_id: int) -> str:
-    """The colour to paint, always.
-
-    A stored colour wins. Anything else falls through to the id: no value at
-    all, an uploaded picture (whose own colour nobody needed to pick), or a
-    leftover from when covers were drawn patterns. All three mean the same
-    thing here, which is why none of them is a special case.
-    """
+    """Return the stored colour, or the default colour for the module id."""
     if value in COLOURS:
         return value
     return colour_for(module_id)
 
 
 def format_colour(colour: str) -> str:
-    """The stored value for a picked colour, refusing anything else.
-
-    Validated here rather than at the form, so a crafted request is refused on
-    the same rule the picker is built from.
-    """
+    """Validate a colour name and return the value to store."""
     if colour not in COLOURS:
         raise InvalidArt(f"Unknown colour: {colour}")
     return colour
 
 
 def uploaded(value: str | None) -> str | None:
-    """The stored file name when the cover is an uploaded picture, else `None`.
-
-    `None` covers three different cases on purpose, because they all render the
-    same way: no cover was ever set, the cover was removed, or the column still
-    holds a drawn pattern from before drawn patterns were taken out.
-    """
+    """Return the uploaded file name if the cover is an upload, else None."""
     if not value:
         return None
 
@@ -103,11 +64,7 @@ def uploaded(value: str | None) -> str | None:
 
 
 def format_upload(stored_name: str) -> str:
-    """The stored value for an uploaded cover, refusing any other shape.
-
-    Validated here rather than at the caller, so one definition of a valid
-    cover serves the route, the service and the template.
-    """
+    """Validate an uploaded file name and return the value to store."""
     if not _STORED_NAME.match(stored_name or ""):
         raise InvalidArt(f"Not a stored image name: {stored_name}")
     return f"{UPLOAD}{SEPARATOR}{stored_name}"

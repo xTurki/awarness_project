@@ -56,8 +56,7 @@
               {% endif %}
             </td>
             <td class="text-nowrap">
-              {# In progress leads back into the attempt, not to a review of
-                 something unfinished (FR-011). #}
+              {# In-progress attempts link back to the attempt. #}
               <a class="btn btn-sm btn-outline-secondary" href="{{ row.link }}">
                 {{ "Resume" if not row.is_submitted else "Review" }}
               </a>

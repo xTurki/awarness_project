@@ -1,8 +1,4 @@
-"""Image uploads.
-
-The stored name is generated. That is not extra hardening: it is what stops a
-filename deciding where the file lands (research R3, FR-019, FR-021).
-"""
+"""Image uploads. Stored file names are generated, not taken from the upload."""
 
 from __future__ import annotations
 
@@ -82,8 +78,7 @@ def test_a_traversing_filename_cannot_decide_where_the_file_lands(
 
 
 def test_a_renamed_executable_is_accepted(db, instructor, module):
-    """The recorded decision, not a defect: checking is by extension only, and
-    the file lands in a directory nginx serves as static content."""
+    """Only the extension is checked (files are served as static, never run)."""
     image = content_service.save_image(
         db, instructor, module.id, b"MZ\x90\x00" * 32, "payload.png"
     )
@@ -121,7 +116,7 @@ def test_a_file_at_exactly_the_limit_is_accepted(db, instructor, module):
 
 
 def test_a_trainee_cannot_upload_anything(db, make_user, module):
-    """No route reaches this for a trainee, and the service refuses anyway."""
+    """Trainees can't upload images."""
     from app.services import module_service
 
     trainee = make_user(email="t@example.com", role="trainee")

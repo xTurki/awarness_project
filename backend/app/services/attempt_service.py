@@ -1,15 +1,9 @@
-"""Taking a test, and everything that keeps an attempt safe.
+"""Starting, answering, submitting and reviewing test attempts.
 
-Four rules carry this module:
-
-1. **Each answer is its own write**, an upsert made the moment it is given, so a
-   dropped connection loses at most the click in flight.
-2. **`ends_at` and `question_order` are fixed when the attempt starts** and are
-   never recomputed, which is what makes an instructor's later edit harmless.
-3. **The server owns the clock.** Every write checks it; the countdown a browser
-   shows decides nothing.
-4. **An expired attempt is submitted the next time anyone reads it.** No
-   scheduled sweep exists in this phase.
+- Each answer is saved immediately (upsert).
+- `ends_at` and `question_order` are fixed when the attempt starts.
+- Time limits are checked on the server, not the browser.
+- Expired attempts are submitted automatically the next time they are loaded.
 """
 
 from __future__ import annotations
@@ -59,19 +53,17 @@ class NoAttemptsLeft(Exception):
 
 
 class AttemptClosed(Exception):
-    """Its ending moment has passed, so nothing more can be recorded."""
+    """The attempt's time is up."""
 
 
 class NotSubmitted(Exception):
-    """A score cannot be overridden on an attempt still in progress (FR-036)."""
+    """Can't override the score of an attempt still in progress."""
 
 
 class CannotStart(NamedTuple):
-    """Why somebody may not sit a test, and the moment involved if there is one.
+    """Reason a user can't start a test.
 
-    The moment travels separately rather than baked into the sentence, because
-    the page renders it in the reader's own zone and cannot do that to a string
-    it has already been handed.
+    `moment` is kept separate so the page can show it in the user's local time.
     """
 
     text: str
@@ -82,11 +74,7 @@ class CannotStart(NamedTuple):
 
 
 def start(db: DbSession, actor: User, test_id: int) -> Attempt:
-    """Begin an attempt, or resume the one already open.
-
-    A person has at most one attempt in progress per test: opening it on a
-    second device continues the same attempt rather than starting another.
-    """
+    """Start a new attempt, or resume the one in progress (max one per test)."""
     test = db.get(Test, test_id)
     if test is None:
         raise AttemptNotFound()
@@ -94,7 +82,7 @@ def start(db: DbSession, actor: User, test_id: int) -> Attempt:
     try:
         module_service.get_for(db, test.module_id, actor)
     except module_service.NotFound:
-        # A module they cannot see does not exist, and neither does its test.
+        # 404 if the user can't see the module.
         raise AttemptNotFound() from None
 
     if not test.is_published:
@@ -132,7 +120,6 @@ def start(db: DbSession, actor: User, test_id: int) -> Attempt:
     row = Attempt(
         test_id=test_id,
         user_id=actor.id,
-        # Derived here, never taken from the request.
         attempt_number=taken + 1,
         started_at=now,
         ends_at=_ending_moment(now, test),
@@ -147,16 +134,9 @@ def start(db: DbSession, actor: User, test_id: int) -> Attempt:
 def why_not_startable(
     db: DbSession, actor: User, test: Test | None
 ) -> CannotStart | None:
-    """None if this person may start this test, otherwise the reason in words.
+    """Return None if the user can start the test, otherwise the reason.
 
-    The page asks this so it can offer the button only to somebody who can use
-    it, and say what is in the way when it cannot. Every refusal `start` can
-    raise has a sentence here, in the same order, and a test pins the two
-    together: if this returns None, `start` must succeed, and if it returns a
-    reason, `start` must refuse.
-
-    Offering the button regardless and letting the service refuse was the old
-    behaviour, and it produced a Start button that answered "Not found".
+    Must stay in sync with the checks in `start` (a test checks this).
     """
     if test is None or not test.is_published:
         return CannotStart("This test is not published yet.")
@@ -167,8 +147,7 @@ def why_not_startable(
             "Ask whoever runs it to add you."
         )
 
-    # An attempt already open is resumable whatever the window says: the window
-    # governs when an attempt may *start*, and theirs already did.
+    # An attempt in progress can always be resumed, even outside the window.
     open_attempt = db.exec(
         select(Attempt).where(
             Attempt.test_id == test.id,
@@ -193,18 +172,14 @@ def why_not_startable(
 
 
 def _ending_moment(started_at, test: Test):
-    """min(started_at + limit, closes_at), decided once and stored.
-
-    Computing this on each request instead would let an instructor's later edit
-    move the deadline of an attempt already running, which FR-016 forbids.
-    """
+    """min(started_at + time limit, closes_at). Calculated once at start."""
     candidates = []
     if test.time_limit_minutes:
         candidates.append(started_at + timedelta(minutes=test.time_limit_minutes))
     if test.closes_at:
         candidates.append(test.closes_at)
     if not candidates:
-        # Untimed and never closing: far enough away to mean "no deadline".
+        # No time limit and no close date.
         return started_at + timedelta(days=365)
     return min(candidates)
 
@@ -220,7 +195,7 @@ def get_own(db: DbSession, actor: User, attempt_id: int) -> Attempt:
 
 
 def get_viewable(db: DbSession, actor: User, attempt_id: int) -> Attempt:
-    """The owner, or an instructor on the module the test belongs to."""
+    """Get an attempt if the user owns it or instructs the module."""
     row = db.get(Attempt, attempt_id)
     if row is None:
         raise AttemptNotFound()
@@ -237,15 +212,14 @@ def get_viewable(db: DbSession, actor: User, attempt_id: int) -> Attempt:
 
 
 def expire_if_due(db: DbSession, row: Attempt) -> Attempt:
-    """An attempt past its ending moment becomes submitted the next time anyone
-    looks at it. There is no background process (research R8, FR-022)."""
+    """Submit the attempt if its time has run out."""
     if not row.is_submitted and row.ends_at <= utcnow():
         return submit(db, row, at=row.ends_at)
     return row
 
 
 def questions_for(db: DbSession, row: Attempt) -> list[QuestionRead]:
-    """In the attempt's fixed order, with no `is_correct` anywhere."""
+    """Questions in the attempt's order, without correct answers."""
     by_id = {q.id: q for q in db.exec(select(Question)).all()}
     ordered: list[QuestionRead] = []
 
@@ -284,11 +258,7 @@ def remaining_seconds(row: Attempt) -> int:
 def save_answer(
     db: DbSession, actor: User, attempt_id: int, question_id: int, option_ids: list[int]
 ) -> None:
-    """An upsert on (attempt_id, question_id).
-
-    An answer changed five times leaves one row, and two devices on the same
-    attempt both write to it: the last one wins.
-    """
+    """Save an answer (upsert on attempt_id + question_id; last write wins)."""
     row = db.get(Attempt, attempt_id)
     if row is None or row.user_id != actor.id:
         raise AttemptNotFound()
@@ -296,7 +266,7 @@ def save_answer(
     if row.is_submitted:
         raise AttemptClosed("This attempt has already been submitted.")
 
-    # The server clock decides, always (FR-020, FR-021).
+    # Check time on the server.
     if row.ends_at <= utcnow():
         submit(db, row, at=row.ends_at)
         raise AttemptClosed("Time is up. The attempt was submitted with what you had.")
@@ -330,7 +300,7 @@ def save_answer(
 
 
 def submit(db: DbSession, row: Attempt, at=None) -> Attempt:
-    """Score it. A second submission is a no-op returning the same result."""
+    """Score and submit the attempt. Submitting again does nothing."""
     if row.is_submitted:
         return row
 
@@ -354,8 +324,7 @@ def submit(db: DbSession, row: Attempt, at=None) -> Attempt:
     row.submitted_at = at or utcnow()
     db.add(row)
 
-    # Mark each answer, so the review can show what was right without scoring
-    # anything a second time.
+    # Store per-answer results for the review page.
     for stored in db.exec(
         select(AttemptAnswer).where(AttemptAnswer.attempt_id == row.id)
     ).all():
@@ -373,10 +342,7 @@ def submit(db: DbSession, row: Attempt, at=None) -> Attempt:
     db.commit()
     db.refresh(row)
 
-    # The result exists as of this moment, so the person is told as of this
-    # moment (FR-016, FR-018). This runs on the timed path too: an attempt whose
-    # time ran out is submitted the next time anyone reads it, and that is when
-    # its result became available.
+    # Notify the user of the result (also runs for auto-submitted attempts).
     person = db.get(User, row.user_id)
     module = db.get(Module, test.module_id)
     if person is not None and module is not None:
@@ -396,11 +362,7 @@ def submit_own(db: DbSession, actor: User, attempt_id: int) -> Attempt:
 
 
 def review(db: DbSession, row: Attempt) -> list[tuple[QuestionReview, list[int], bool | None]]:
-    """Each question, what was chosen, and whether it was right.
-
-    The correct answer travels with it: a trainee is meant to learn what they
-    got wrong (FR-031).
-    """
+    """Each question with the chosen and correct answers."""
     stored = {
         answer.question_id: answer
         for answer in db.exec(
@@ -438,7 +400,7 @@ def review(db: DbSession, row: Attempt) -> list[tuple[QuestionReview, list[int],
 
 
 def history_for(db: DbSession, actor: User, test_id: int) -> list[AttemptRead]:
-    """This person's own attempts at one test, newest first (FR-030)."""
+    """The user's attempts on a test, newest first."""
     rows = db.exec(
         select(Attempt)
         .where(Attempt.test_id == test_id, Attempt.user_id == actor.id)
@@ -481,11 +443,7 @@ def list_attempts_for_test(db: DbSession, actor: User, test_id: int) -> list[Coh
 def override_score(
     db: DbSession, actor: User, attempt_id: int, data: ScoreOverride
 ) -> AttemptRead:
-    """Replace the automatic score. Pass or fail follows the new number.
-
-    An automatically scored test with no human override is a test whose
-    mistakes cannot be undone (FR-035).
-    """
+    """Override the score (pass/fail is recalculated)."""
     row = db.get(Attempt, attempt_id)
     if row is None:
         raise AttemptNotFound()
@@ -518,12 +476,9 @@ def _registration(db: DbSession, module_id: int, user_id: int) -> Registration |
 
 
 def _limit_reached(db: DbSession, test: Test, user_id: int) -> str | None:
-    """The sentence that refuses another attempt, or None if one is allowed.
+    """Return a message if no attempts are left, else None.
 
-    `allowed_attempts` of 0 means unlimited. On a recurring test the limit is
-    per cycle: only attempts submitted after the person last passed count, so
-    passing starts a fresh allowance and a test that recurs for years is never
-    used up by the attempts of earlier years.
+    0 means unlimited. For recurring tests only attempts since the last pass count.
     """
     limit = test.allowed_attempts
     if not limit:

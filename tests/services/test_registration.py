@@ -1,8 +1,4 @@
-"""Registration: several at once, no duplicates, and removal.
-
-The unique constraint is what makes "no duplicates" a database guarantee rather
-than a check somebody could forget (FR-025, FR-027).
-"""
+"""Registering users on modules: bulk add, duplicates, removal and roles."""
 
 from __future__ import annotations
 
@@ -57,8 +53,7 @@ def test_all_five_then_see_the_module(db, admin, module, five):
 
 
 def test_someone_already_registered_is_skipped_silently(db, admin, module, five):
-    """No duplicate row, and no error raised: the person selecting fifteen names
-    does not care that two were already there."""
+    """Already registered users are skipped without an error."""
     registration_service.register_many(db, admin, module.id, RosterAdd(user_ids=[five[0].id]))
 
     added = registration_service.register_many(
@@ -137,7 +132,7 @@ def test_candidates_excludes_people_already_on_the_module(db, admin, module, fiv
 
 
 def test_a_registration_carries_no_status(db, admin, module, five):
-    """It exists, or the person is not on the module (FR-030)."""
+    """Registrations have no status column."""
     registration_service.register_many(db, admin, module.id, RosterAdd(user_ids=[five[0].id]))
     row = db.get(Registration, registration_service.roster(db, admin, module.id)[0].id)
 
@@ -151,9 +146,7 @@ def test_a_registration_carries_no_status(db, admin, module, five):
 def test_an_administrator_assigns_an_instructor_to_a_module(
     db, admin, module, make_user
 ):
-    """FR-004. Until this was wired up there was no way to do it at all: the
-    form had no role field and the route never read one, so everybody added
-    through the roster became a trainee."""
+    """An admin can register someone as instructor."""
     person = make_user(email="iris@example.com", role="instructor")
 
     registration_service.register_many(
@@ -171,8 +164,7 @@ def test_an_administrator_assigns_an_instructor_to_a_module(
 def test_the_assigned_instructor_can_then_write_to_the_module(
     db, admin, module, make_user
 ):
-    """The point of assigning them: `module:write` follows the registration,
-    not the platform role (FR-007, FR-026)."""
+    """An assigned instructor can edit the module."""
     person = make_user(email="iris@example.com", role="instructor")
 
     with pytest.raises((module_service.NotFound, module_service.NotPermitted)):
@@ -186,8 +178,7 @@ def test_the_assigned_instructor_can_then_write_to_the_module(
 
 
 def test_an_instructor_cannot_assign_another_instructor(db, module, make_user):
-    """FR-005 with FR-024: a module's owner may add trainees, and may not hand
-    somebody else the same authority over it."""
+    """Instructors can add trainees but not other instructors."""
     owner = make_user(email="owner@example.com", role="instructor")
     db.add(
         Registration(user_id=owner.id, module_id=module.id, role_in_module="instructor")

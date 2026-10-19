@@ -1,8 +1,4 @@
-"""The three cross-cutting primitives: hashing, CSRF, and rate limiting.
-
-Kept together so they are not scattered, and kept out of `services/` because
-the CSRF dependency touches `Request` and Principle II forbids that there.
-"""
+"""Security helpers: hashing, CSRF protection and rate limiting."""
 
 from __future__ import annotations
 
@@ -16,7 +12,7 @@ from fastapi import HTTPException, Request, status
 
 from app.config import settings
 
-# One hasher for passwords and for codes: one configuration, one thing to get right.
+# Argon2 hasher used for both passwords and login codes.
 _hasher = PasswordHasher()
 
 MIN_PASSWORD_LENGTH = 8
@@ -41,8 +37,7 @@ def verify_secret(hashed: str | None, raw: str) -> bool:
 
 
 def generate_code() -> str:
-    """Six digits, zero-padded. `secrets` rather than `random`: the latter is
-    predictable from observed output, which for a login code matters."""
+    """Random 6-digit code (uses `secrets`, not `random`)."""
     return f"{secrets.randbelow(1_000_000):06d}"
 
 
@@ -54,10 +49,9 @@ def new_session_id() -> str:
 
 
 def issue_csrf_token(request: Request) -> str:
-    """Reuse the token already on this browser, or mint one.
+    """Return the browser's existing CSRF token or create a new one.
 
-    The caller is responsible for setting it as a cookie on the response; the
-    template puts the same value in a hidden field (double submit, research R3).
+    Double-submit pattern: the same value goes in a cookie and a hidden field.
     """
     existing = request.cookies.get(CSRF_COOKIE)
     if existing:
@@ -66,11 +60,7 @@ def issue_csrf_token(request: Request) -> str:
 
 
 async def csrf_protect(request: Request) -> None:
-    """A FastAPI dependency for every state-changing post.
-
-    Works identically before and after sign-in, which matters because the login
-    form is the one form with no session behind it.
-    """
+    """Dependency for POST routes: the form token must match the cookie."""
     cookie_token = request.cookies.get(CSRF_COOKIE)
     form = await request.form()
     form_token = form.get(CSRF_FIELD)
@@ -96,8 +86,7 @@ def set_csrf_cookie(response, token: str, secure: bool) -> None:
 
 # ---------------------------------------------------------------- rate limiting
 
-# Process-local. The platform is single-instance by design, so this is not a
-# correctness problem; counters reset on restart, which is accepted (research R2).
+# In-memory counters (single instance). They reset on restart.
 _attempts: dict[str, list[float]] = defaultdict(list)
 
 
@@ -106,11 +95,9 @@ def _window_seconds() -> int:
 
 
 def rate_limit_exceeded(key: str, limit: int | None = None) -> bool:
-    """Fixed window, five attempts per key per five minutes by default.
+    """Record an attempt and return True if the key is over the limit.
 
-    `limit` overrides that for callers whose sensible ceiling is not a sign-in
-    ceiling: asking a tutor twenty questions while reading is ordinary, while
-    twenty sign-in attempts is not.
+    Defaults to the login limit; `limit` overrides it (e.g. for the tutor).
     """
     now = time.monotonic()
     cutoff = now - _window_seconds()
@@ -127,13 +114,13 @@ def rate_limit_exceeded(key: str, limit: int | None = None) -> bool:
 
 
 def _prune(cutoff: float) -> None:
-    """Drop keys whose attempts have all aged out, so the dict cannot grow forever."""
+    """Remove keys with no recent attempts."""
     for key in [k for k, stamps in _attempts.items() if not any(s > cutoff for s in stamps)]:
         del _attempts[key]
 
 
 def reset_rate_limits() -> None:
-    """Used by tests. Nothing in the application calls this."""
+    """Clear all counters (used by tests)."""
     _attempts.clear()
 
 
@@ -145,5 +132,5 @@ def client_key(request: Request) -> str:
 
 
 def is_secure_request(request: Request) -> bool:
-    """Nginx tells us the scheme; cookies follow it."""
+    """True if the original request was HTTPS (from nginx's header)."""
     return request.headers.get("x-forwarded-proto", request.url.scheme) == "https"

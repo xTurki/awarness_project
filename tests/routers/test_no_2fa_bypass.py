@@ -1,8 +1,4 @@
-"""There is no way past the second factor (FR-014).
-
-An absence test: it asserts that nothing exists, which is the only way a
-requirement phrased as "MUST NOT provide any way" can be checked at all.
-"""
+"""The emailed code step can't be skipped."""
 
 from __future__ import annotations
 
@@ -35,16 +31,14 @@ def test_a_correct_password_alone_reaches_nothing(client, make_user, csrf, sent)
         data={"email": "a@example.com", "password": "demo-password", "csrf_token": token},
     )
 
-    # A code was issued, but no session cookie was set and no page is reachable.
-    # `/modules` rather than `/`, because `/` is the landing page and answers a
-    # visitor by design. Everything behind it still refuses.
+    # No session yet. (`/` is the public landing page, so check /modules.)
     assert client.cookies.get("session") is None
     assert client.get("/modules").status_code == 303
     assert client.get("/modules").headers["location"] == "/login"
 
 
 def test_no_route_issues_a_session_without_the_code(client):
-    """Only POST /login/verify creates a session. Nothing else may."""
+    """Only POST /login/verify creates a session."""
     paths = {route.path for route in app.routes}
     assert "/login/verify" in paths
 
@@ -59,7 +53,7 @@ def test_no_route_issues_a_session_without_the_code(client):
 def test_seeded_accounts_are_exempt_from_the_password_change_not_from_the_code(
     db, client, csrf, sent
 ):
-    """The one documented exemption is narrow, and this pins its edges."""
+    """Seeded accounts skip the password change but still need the emailed code."""
     from seed import seed
 
     seed(db)
@@ -71,8 +65,7 @@ def test_seeded_accounts_are_exempt_from_the_password_change_not_from_the_code(
         data={"email": admin_email, "password": SEED_PASSWORD, "csrf_token": token},
     )
 
-    # Step one succeeded, so the account is not required to change its password
-    # first, but it still landed on the code page, not on the dashboard.
+    # Goes to the code page, not the dashboard.
     assert response.status_code == 303
     assert response.headers["location"].startswith("/login/verify")
     assert client.cookies.get("session") is None

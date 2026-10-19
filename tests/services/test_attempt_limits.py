@@ -1,9 +1,4 @@
-"""How many attempts a person may make.
-
-`allowed_attempts` of 0 is unlimited. Any other number is respected, and on a
-recurring test it is per cycle: the count starts again after each pass, so the
-attempts of earlier cycles never use up a test that recurs for years.
-"""
+"""Attempt limits. 0 = unlimited; on recurring tests the count resets after a pass."""
 
 from __future__ import annotations
 
@@ -86,7 +81,7 @@ def test_a_number_is_respected_on_a_one_off_test(db, owner, module, question, tr
 
 
 def test_a_number_is_respected_on_a_recurring_test(db, owner, module, question, trainee):
-    """The limit used to be ignored entirely once a retake interval was set."""
+    """The limit also applies to recurring tests."""
     test = _test(db, owner, module, question, allowed_attempts=2, retake_interval_days=90)
 
     for _ in range(2):
@@ -105,7 +100,7 @@ def test_a_pass_starts_a_fresh_allowance_on_a_recurring_test(
     passed = _sit(db, trainee, test, question, passing=True)
     assert passed.passed is True
 
-    # Two attempts are already behind them, but the pass began a new cycle.
+    # They passed, so a new cycle has started.
     for _ in range(2):
         _sit(db, trainee, test, question, passing=False)
 

@@ -1,8 +1,4 @@
-"""Refusal at the point of request, not a hidden button (FR-027).
-
-quickstart Scenario 2: a trainee requesting /admin/accounts gets 403, not a page
-with the controls removed.
-"""
+"""Role checks: e.g. a trainee requesting /admin/accounts gets 403."""
 
 from __future__ import annotations
 
@@ -39,8 +35,7 @@ def test_administrative_navigation_is_present_for_an_administrator(client, make_
 
 
 def test_each_role_sees_its_own_heading(client, make_user, sign_in):
-    """Phase 1 replaced the placeholder panels with the module list, so the
-    role-specific wording moved with it."""
+    """Each role sees the right wording on the module list."""
     headings = {
         "instructor": "Modules you run",
         "trainee": "Your training",

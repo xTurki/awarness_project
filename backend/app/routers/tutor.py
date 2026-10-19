@@ -1,12 +1,7 @@
-"""Asking about the page you are reading.
+"""Study assistant: ask a question about the current page.
 
-One route. It answers with a fragment of a page rather than a page, because
-htmx swaps it into the panel in place: the trainee keeps their scroll position
-and the page they were reading stays where it was.
-
-The thread is carried in the fragment as hidden fields and posted back with the
-next question. That is the whole of "it remembers": nothing is stored on the
-server, and closing the page ends it.
+Returns an HTML fragment for htmx. The conversation is kept in hidden form
+fields, not on the server.
 """
 
 from __future__ import annotations
@@ -35,15 +30,13 @@ def ask(
     module_id: int,
     page_id: int,
     question: str = Form(""),
-    # The thread so far, as it was rendered into the last fragment. Paired by
-    # position: the nth question goes with the nth answer.
+    # Previous questions and answers (matched by position).
     asked: list[str] = Form(default=[]),
     answered: list[str] = Form(default=[]),
     db: Db = Depends(get_session),
     account=Depends(require_password_set),
 ):
-    # The page is fetched through the same service every other reader uses, so
-    # somebody cannot ask about a page they could not open (FR-018, Phase 1).
+    # Uses the normal page access check.
     try:
         module = module_service.get_for(db, module_id, account)
         page = content_service.get_page(db, account, module_id, page_id)
@@ -70,19 +63,14 @@ def ask(
             history=history,
         )
     except tutor_service.AssistantUnavailable as exc:
-        # The question stays in the box, so a failure costs them nothing but the
-        # wait. Nothing here reaches the error page: this is a fragment.
+        # Keep the question in the box so the user can retry.
         return _panel(request, module, page, history, error=str(exc), keep=asking)
 
     return _panel(request, module, page, history + [(asking, answer)])
 
 
 def _panel(request, module, page, history, *, error=None, keep=""):
-    """The panel, rendered whole, thread and form together.
-
-    One template for every outcome, so an answer, a refusal and a failure cannot
-    drift into looking like three different features.
-    """
+    """Render the assistant panel (conversation and form)."""
     return render(
         request,
         "components/ask_panel.html",

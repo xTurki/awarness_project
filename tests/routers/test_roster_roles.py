@@ -1,10 +1,4 @@
-"""Assigning a capacity through the roster form.
-
-This file exists because the requirement had a model, a validated schema, and a
-service that all supported it, and no way to reach any of them: the form had no
-role field and the route never read one, so every person added became a trainee
-(FR-004, FR-005, FR-024).
-"""
+"""Choosing instructor or trainee when adding users to a module roster."""
 
 from __future__ import annotations
 
@@ -63,8 +57,7 @@ def test_an_administrator_is_offered_the_choice(client, sign_in, admin, module, 
 
 
 def test_an_instructor_is_not_offered_it(client, sign_in, owner, module, make_user):
-    """Absent rather than shown and refused: a control nobody may use is not a
-    control (FR-005)."""
+    """Instructors don't see the role field."""
     make_user(email="candidate@example.com", role="instructor")
     sign_in(owner)
 
@@ -115,8 +108,7 @@ def test_the_default_is_still_a_trainee(
 def test_an_instructor_posting_the_field_by_hand_is_refused(
     client, db, sign_in, csrf, owner, module, make_user
 ):
-    """The field is absent from their page, so reaching this needs a crafted
-    request. It is refused in the service, not by the template hiding it."""
+    """Instructors can't add instructors, even with a crafted request."""
     person = make_user(email="other@example.com", role="instructor")
     sign_in(owner)
 
@@ -137,7 +129,7 @@ def test_an_instructor_posting_the_field_by_hand_is_refused(
 def test_the_roster_shows_each_persons_capacity(
     client, db, sign_in, admin, module, make_user
 ):
-    """FR-029: everyone on it, and in what capacity."""
+    """The roster shows each user's role."""
     iris = make_user(email="iris@example.com", full_name="Iris Instructor")
     tess = make_user(email="tess@example.com", full_name="Tess Trainee")
     db.add(Registration(user_id=iris.id, module_id=module.id, role_in_module="instructor"))

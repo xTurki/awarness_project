@@ -5,20 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>The platform is restarting</title>
 
-  <!--
-    Served by nginx when the application behind it does not answer, which
-    happens for a few seconds whenever the backend is rebuilt or restarted.
-    Without it those seconds show a raw gateway error, which reads like the
-    platform is broken rather than busy.
-
-    Deliberately self-contained: no stylesheet, no font, no script. The one
-    thing that is certainly running when this renders is nginx, so this page
-    depends on nothing else. It carries its own colours in both themes rather
-    than borrowing the design system it cannot reach.
-
-    It refreshes itself every ten seconds, so a restart resolves without
-    anybody pressing anything.
-  -->
+  <!-- Shown by nginx while the backend is restarting. Self-contained (no external
+       files) and refreshes every 10 seconds. -->
   <meta http-equiv="refresh" content="10">
 
   <style>

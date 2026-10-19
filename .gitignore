@@ -15,7 +15,7 @@ venv/
 .coverage
 htmlcov/
 
-# Uploaded content (instructor images, Phase 1). Lives in a Docker volume, not here.
+# Uploaded images live in a Docker volume, not here.
 backend/app/uploads/
 
 # iCloud and OS clutter — this project lives in an iCloud folder

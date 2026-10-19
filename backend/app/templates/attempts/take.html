@@ -2,9 +2,7 @@
 {% block title %}{{ test.title }}{% endblock %}
 
 {% block content %}
-{# One scrolling page. Every question at once, in the attempt's fixed order,
-   with submit at the end. There is no per-question navigation: a trainee checks
-   what they left blank by scrolling (spec Clarifications). #}
+{# All questions on one page, with submit at the end. #}
 
 <div class="panel mb-4 sticky-top" style="top: 4.25rem">
   <div class="panel-head">
@@ -13,7 +11,7 @@
       <span class="small text-body-secondary fw-normal">Attempt {{ attempt.attempt_number }}</span>
     </div>
 
-    {# Decoration. The server decides when time is up, and every write checks. #}
+    {# Display only; the server enforces the time limit. #}
     <div id="countdown" class="badge text-bg-secondary fs-6" data-remaining="{{ remaining }}"></div>
   </div>
 </div>
@@ -32,8 +30,7 @@
         </span>
       </div>
 
-      {# One form per question. Any change posts the whole group, so a
-         multi-answer question arrives complete rather than one box at a time. #}
+      {# One form per question; any change posts all selected options. #}
       <form hx-post="/attempts/{{ attempt.id }}/answer"
             hx-trigger="change"
             hx-target="#saved{{ question.id }}"
@@ -43,8 +40,7 @@
 
         {% set chosen = answers.get(question.id, []) %}
         {% for option in question.options %}
-          {# The label is the whole row, so the tap target is the row and not
-             the small control beside it (FR-038). #}
+          {# The whole row is clickable. #}
           <label class="pick">
             <input class="form-check-input me-2"
                    type="{{ 'checkbox' if question.multiple else 'radio' }}"

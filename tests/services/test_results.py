@@ -1,8 +1,4 @@
-"""The results pages, against real rows.
-
-Everything asserted here is derived. Nothing this phase adds writes, which is
-what `test_no_new_storage` at the end exists to keep true.
-"""
+"""Results service: dashboard, module history and instructor view."""
 
 from __future__ import annotations
 
@@ -93,7 +89,7 @@ def test_the_list_holds_exactly_their_trainee_registrations(
 
 
 def test_a_module_they_only_instruct_is_not_training_they_owe(db, make_module, owner):
-    """FR-015. It appears in their module list, not in what they must complete."""
+    """Modules the user instructs don't appear on their trainee dashboard."""
     module = make_module("Phishing")
     _enrol(db, owner, module, role="instructor")
 
@@ -162,7 +158,7 @@ def test_outstanding_modules_come_first(db, make_module, make_user, owner):
 
 
 def test_an_in_progress_module_links_into_the_attempt(db, make_module, make_user, owner):
-    """Not to a review of something unfinished (FR-011)."""
+    """An in-progress module links to the open attempt."""
     trainee = make_user(email="t@example.com", role="trainee")
     module = make_module("Phishing")
     _enrol(db, owner, module, role="instructor")
@@ -223,7 +219,7 @@ def test_publishing_a_replacement_resets_everyone(db, make_module, make_user, ow
 
 
 def test_the_old_attempts_stay_in_the_history(db, make_module, make_user, owner):
-    """They no longer decide the state; they are still visible (FR-008)."""
+    """Attempts at a replaced test still show in the history."""
     trainee = make_user(email="t@example.com", role="trainee")
     module = make_module("Phishing")
     _enrol(db, owner, module, role="instructor")
@@ -256,7 +252,7 @@ def test_the_count_warned_about_is_the_number_that_changes(db, make_module, make
     _enrol(db, failer, module)
     _sit(db, failer, live.id, questions, right=0)
 
-    # Three passed, one failed. Only the passers lose something.
+    # Three passed, one failed.
     assert results_service.count_affected_by_replacement(db, module.id) == 3
 
 
@@ -390,27 +386,21 @@ def test_somebody_not_on_the_module_is_not_a_subject(db, make_module, make_user,
     assert results_service.subject_on_module(db, module.id, stranger.id) is None
 
 
-# ------------------------------------------------------------ the phase's claim
+# ------------------------------------------------------------ no extra tables
 
 
-def test_this_phase_adds_no_table(engine):
-    """Its headline claim: everything on these pages is derived (FR-025, SC-010).
-
-    Phase 4 added `notification`, which is a record of what somebody was told
-    and not a results table: no figure on any results page reads it. The
-    assertion is written as "the twelve, and nothing but the one Phase 4 named"
-    so that a summary or cache table appearing later still fails here.
-    """
+def test_results_use_no_extra_table(engine):
+    """Results are calculated, not stored: no results or cache table exists."""
     from sqlmodel import inspect
 
     tables = set(inspect(engine).get_table_names())
-    through_phase_three = {
+    core_tables = {
         "user", "session",
         "module", "page", "content_image", "registration",
         "question", "answer_option", "test", "test_question",
         "attempt", "attempt_answer",
     }
 
-    assert tables - through_phase_three == {"notification"}, (
-        "Phase 3 adds no table of its own, and Phase 4 adds exactly one"
+    assert tables - core_tables == {"notification"}, (
+        "There should be no results or cache table"
     )

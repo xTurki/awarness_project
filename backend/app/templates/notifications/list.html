@@ -11,8 +11,7 @@
 </div>
 
 {% if rows %}
-  {# One entry per module, even where several were combined into one email:
-     somebody overdue on three modules sees three of these (FR-034). #}
+  {# One entry per notification, even if several were sent in one email. #}
   <div class="panel">
     <div class="list-group list-group-flush">
       {% for row in rows %}
@@ -38,7 +37,7 @@
     </div>
   </div>
 {% else %}
-  {# A statement, not an empty frame. #}
+  {# Empty state #}
   <div class="panel">
     <div class="nothing">
       <span class="nothing-mark"><i class="bi bi-bell-slash" aria-hidden="true"></i></span>

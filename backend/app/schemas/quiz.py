@@ -1,7 +1,6 @@
-"""Non-table models at every boundary for the assessment phase.
+"""Read and input models for questions, tests and attempts.
 
-`QuestionRead` deliberately carries no `is_correct`. A trainee taking a test
-receives options through it, and the answer must not travel with them.
+`QuestionRead` has no `is_correct` so answers aren't sent to trainees during a test.
 """
 
 from __future__ import annotations
@@ -15,7 +14,7 @@ from pydantic import BaseModel, field_validator
 
 
 class OptionRead(BaseModel):
-    """What a trainee sees while taking a test. No `is_correct` anywhere."""
+    """Option shown while taking a test (no `is_correct`)."""
 
     id: int
     text: str
@@ -23,7 +22,7 @@ class OptionRead(BaseModel):
 
 
 class OptionReview(BaseModel):
-    """What a trainee sees afterwards, and what an instructor always sees."""
+    """Option with the correct answer, for reviews and instructors."""
 
     id: int
     text: str
@@ -37,8 +36,7 @@ class QuestionRead(BaseModel):
     points: int
     position: int
     options: list[OptionRead]
-    # Counted from the options, never chosen by the instructor: one correct
-    # option renders radio buttons, several renders checkboxes (FR-005).
+    # True if more than one option is correct (checkboxes instead of radios).
     multiple: bool
 
 
@@ -65,7 +63,7 @@ class TestRead(BaseModel):
     allowed_attempts: int
     shuffle_questions: bool
     passing_score: int | None
-    # Phase 4. Null on both means this test never falls due for anyone.
+    # Both null = the test is never due.
     retake_interval_days: int | None = None
     completion_deadline_days: int | None = None
     question_count: int = 0
@@ -94,7 +92,7 @@ class AttemptAnswerRead(BaseModel):
 
 
 class CohortRow(BaseModel):
-    """One person's attempts on a test, for the instructor's list."""
+    """A user's attempts on a test (instructor view)."""
 
     user_id: int
     full_name: str
@@ -142,7 +140,7 @@ class QuestionWrite(BaseModel):
 
 
 class TestWrite(BaseModel):
-    # pytest collects classes beginning with Test unless told otherwise.
+    # Stop pytest from collecting this class.
     __test__ = False
 
     title: str
@@ -153,15 +151,12 @@ class TestWrite(BaseModel):
     allowed_attempts: int = 1
     shuffle_questions: bool = False
     passing_score: int | None = None
-    # Phase 4's only input. Both optional, and the form offers one or the other:
-    # if both arrive, the interval wins. The rules that need a pass mark or the
-    # warning period to compare against live in `test_service`, because they are
-    # cross-field and one of them reads a setting.
+    # Use one or the other; if both are set the interval wins.
+    # Cross-field checks are in test_service.
     retake_interval_days: int | None = None
     completion_deadline_days: int | None = None
     question_ids: list[int] = []
-    # When set, the service draws this many at random from the module's bank
-    # and `question_ids` is ignored.
+    # If set, pick this many random questions instead of `question_ids`.
     question_count: int | None = None
 
     @field_validator("retake_interval_days", "completion_deadline_days")
@@ -181,7 +176,7 @@ class TestWrite(BaseModel):
     @field_validator("allowed_attempts")
     @classmethod
     def _attempts_positive(cls, value: int) -> int:
-        """0 means unlimited; anything below it is not a number of attempts."""
+        """0 means unlimited."""
         if value < 0:
             raise ValueError("Enter how many attempts are allowed, or tick Unlimited attempts.")
         return value

@@ -1,7 +1,6 @@
-"""Taking a test, reviewing it, and the instructor's view of both.
+"""Taking and reviewing test attempts.
 
-`POST /attempts/{id}/answer` is the only high-traffic route in the platform. It
-does one upsert and returns a fragment; anything more belongs elsewhere.
+`POST /attempts/{id}/answer` is called on every answer click, so keep it light.
 """
 
 from __future__ import annotations
@@ -41,7 +40,7 @@ def start(
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from None
 
     if row.is_submitted:
-        # It expired while they were away, so there is nothing to return to.
+        # Attempt expired.
         return RedirectResponse(
             f"/attempts/{row.id}/review", status_code=status.HTTP_303_SEE_OTHER
         )
@@ -55,7 +54,7 @@ def take(
     db: Db = Depends(get_session),
     account=Depends(require_password_set),
 ):
-    """One scrolling page: every question at once, submit at the end."""
+    """Show all questions on one page."""
     try:
         row = attempt_service.get_own(db, account, attempt_id)
     except attempt_service.AttemptNotFound:
@@ -92,7 +91,7 @@ def answer(
     db: Db = Depends(get_session),
     account=Depends(require_password_set),
 ):
-    """One upsert, one small fragment back. Hit on every click."""
+    """Save one answer and return a small HTML fragment."""
     try:
         attempt_service.save_answer(db, account, attempt_id, question_id, option_ids)
     except attempt_service.AttemptNotFound:
@@ -112,7 +111,7 @@ def submit(
     db: Db = Depends(get_session),
     account=Depends(require_password_set),
 ):
-    """A second submission returns the same result rather than a second one."""
+    """Submit the attempt. Submitting twice returns the same result."""
     try:
         attempt_service.submit_own(db, account, attempt_id)
     except attempt_service.AttemptNotFound:
@@ -136,7 +135,6 @@ def review(
         raise _not_found() from None
 
     if not row.is_submitted:
-        # Back into the attempt rather than a partial result.
         return RedirectResponse(f"/attempts/{row.id}", status_code=status.HTTP_303_SEE_OTHER)
 
     test = test_service.get_test(db, account, row.test_id)
@@ -162,7 +160,7 @@ def cohort(
     db: Db = Depends(get_session),
     account=Depends(require_password_set),
 ):
-    """Every attempt on the test, for the instructor who runs the module."""
+    """All attempts on a test (instructor view)."""
     try:
         rows = attempt_service.list_attempts_for_test(db, account, test_id)
         test = test_service.get_test(db, account, test_id)

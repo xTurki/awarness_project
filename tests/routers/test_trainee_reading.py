@@ -1,9 +1,4 @@
-"""Finding and reading your training.
-
-The dashboard lists exactly the modules the trainee is registered on, and this
-is the same page Phase 3 extends with a state. There is no second list
-(FR-031, FR-014, SC-005, SC-006).
-"""
+"""Trainees see and read the modules they are registered on."""
 
 from __future__ import annotations
 
@@ -125,8 +120,7 @@ def test_a_trainee_with_no_registrations_is_told_so(client, make_user, sign_in):
 
 
 def test_the_dashboard_is_the_only_list_of_a_trainees_modules(client, sign_in, trainee):
-    """Phase 3 extends this page rather than adding a second one, so /modules and
-    the dashboard must agree rather than diverge."""
+    """/modules and the dashboard list the same modules."""
     sign_in(trainee)
 
     dashboard = client.get("/")

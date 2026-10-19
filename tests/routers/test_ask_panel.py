@@ -1,9 +1,4 @@
-"""The assistant panel over HTTP.
-
-The route answers with a fragment rather than a page, because htmx swaps it in
-place. So these tests check a fragment: no doctype, no navigation, just the
-panel with the thread in it.
-"""
+"""Study assistant panel routes (returns HTML fragments for htmx)."""
 
 from __future__ import annotations
 
@@ -88,8 +83,7 @@ def test_the_panel_is_under_the_page(client, sign_in, trainee, module, page, key
 
 
 def test_it_is_absent_with_no_key(client, monkeypatch, sign_in, trainee, module, page):
-    """No key, no feature: the page renders exactly as it did before this
-    existed."""
+    """Without an API key the panel is not shown."""
     monkeypatch.setattr(settings, "gemini_api_key", "")
     sign_in(trainee)
 
@@ -101,8 +95,7 @@ def test_it_is_absent_with_no_key(client, monkeypatch, sign_in, trainee, module,
 def test_it_is_only_on_pages_with_material_to_ask_about(
     client, sign_in, trainee, module, page, key
 ):
-    """Not on the module overview, and not on the test: an assistant that
-    answers during a test answers the test."""
+    """The panel is not shown on the module overview or on tests."""
     sign_in(trainee)
 
     assert "Ask about this page" not in client.get(f"/modules/{module.id}").text
@@ -126,8 +119,7 @@ def test_a_question_comes_back_with_its_answer(
 def test_the_reply_is_a_fragment_not_a_page(
     client, sign_in, trainee, module, page, csrf, answers
 ):
-    """htmx swaps it into the panel, so a whole document would nest one page
-    inside another."""
+    """The response is a fragment, not a full page."""
     sign_in(trainee)
 
     response = _ask(client, csrf, module, page, "q")
@@ -217,8 +209,7 @@ def test_too_many_questions_are_slowed_rather_than_refused_outright(
 def test_nobody_can_ask_about_a_page_they_cannot_open(
     client, sign_in, make_user, module, page, csrf, answers
 ):
-    """The page is fetched through the same service every other reader uses,
-    so the assistant cannot become a way to read somebody else's module."""
+    """Users can't ask about pages they don't have access to."""
     sign_in(make_user(email="stranger@example.com", role="trainee"))
 
     response = _ask(client, csrf, module, page, "q")

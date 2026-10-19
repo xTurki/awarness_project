@@ -1,8 +1,4 @@
-"""Ending access, immediately.
-
-Revocation is the entire reason sessions live on the server rather than in a
-token (FR-003, FR-022, FR-023, FR-024, SC-010).
-"""
+"""Session expiry, logout and deactivation."""
 
 from __future__ import annotations
 
@@ -21,8 +17,7 @@ def test_signing_out_ends_the_session(client, make_user, sign_in, csrf):
     assert response.status_code == 303
     assert response.headers["location"] == "/login"
 
-    # `/modules`, not `/`: the landing page is meant to answer a visitor, and
-    # asserting against it would test nothing.
+    # Use /modules since / is public.
     assert client.get("/modules").status_code == 303, "protected pages must be unreachable"
     assert token_id is not None
 
@@ -52,10 +47,7 @@ def test_an_expired_session_is_refused_and_deleted(client, db, make_user, sign_i
 
 
 def test_a_stale_cookie_does_not_loop_between_login_and_dashboard(client, db, make_user, sign_in):
-    """The bug this test exists for: `/login` redirected to `/` whenever a
-    session cookie was present, and `/` redirected back when it was not valid.
-    A browser holding a dead cookie bounced between the two forever.
-    """
+    """An expired cookie doesn't cause a redirect loop between /login and /."""
     user = make_user(email="a@example.com")
     token_id = sign_in(user)
 
@@ -79,7 +71,7 @@ def test_a_valid_session_still_skips_the_sign_in_page(client, make_user, sign_in
 def test_deactivation_refuses_an_existing_session_on_the_next_request(
     client, db, make_user, sign_in
 ):
-    """Not at expiry, on the very next request (SC-010)."""
+    """Deactivation takes effect on the next request."""
     user = make_user(email="a@example.com")
     sign_in(user)
     assert client.get("/modules").status_code == 200
@@ -88,8 +80,7 @@ def test_deactivation_refuses_an_existing_session_on_the_next_request(
     db.add(user)
     db.commit()
 
-    # `/modules`, not `/`: a deactivated account is turned away from the
-    # platform, and `/` answers a visitor with the landing page by design.
+    # Use /modules since / is public.
     response = client.get("/modules")
     assert response.status_code == 303
     assert response.headers["location"] == "/login"

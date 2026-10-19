@@ -1,20 +1,8 @@
-"""The one thing this platform does without being asked.
+"""Daily job: create due-soon/overdue notifications and send unsent emails.
 
-`run_daily` is an ordinary function taking a session and a date. The scheduler
-calls it; a test calls it directly for any day it likes. Nothing about it
-requires a scheduler to be running, which is why the hard parts of this phase
-are testable at all.
-
-**It is a full sweep, not a delta.** It asks who is due *now*, never what
-changed since last time, and there is no `last_run` record anywhere. A stored
-last-run is wrong after a restart, wrong if the clock moves, and wrong if a run
-half-completed; a missed day, a manual run, and a run repeated for the same date
-all have to be safe, and a full sweep makes them so for free (research R5, R7,
-FR-027).
-
-Running it twice creates nothing the second time. That comes from the unique
-constraint on `notification` and from sending only unstamped rows, not from this
-module remembering anything.
+It checks everyone each time (no "last run" state), so it is safe to run late,
+twice, or manually. Duplicates are prevented by the unique constraint on
+`notification`.
 """
 
 from __future__ import annotations
@@ -40,7 +28,7 @@ _DIGEST = Path(__file__).resolve().parents[1] / "templates" / "emails" / "digest
 
 @dataclass
 class RunSummary:
-    """What one run did. Printed to the log, and asserted on in tests."""
+    """Counts from one run (logged and used in tests)."""
 
     considered: int = 0
     created: int = 0
@@ -55,34 +43,20 @@ class RunSummary:
 
 
 def run_now() -> RunSummary | None:
-    """What the scheduler calls: its own session, and today's date.
+    """Entry point for the scheduler: runs the job for today.
 
-    Building the session lives here rather than in `main.py`, where the name
-    `Session` already belongs to the session *table* and `Session(engine)`
-    quietly constructs a row instead of a database session. That was a real
-    failure, and no test caught it because every test calls `run_daily` with a
-    session already in hand. It cannot come back now: `main.py` names no session
-    type at all.
-
-    A failure is logged and swallowed. The scheduler must survive it, and the
-    job is a full sweep, so a run that never completed costs nobody anything
-    (FR-027).
+    Errors are logged and not re-raised so the scheduler keeps running.
     """
     try:
         with DbSession(engine) as db:
             return run_daily(db, utcnow().date())
-    except Exception as exc:  # noqa: BLE001 - a failed run must not stop the scheduler
+    except Exception as exc:  # noqa: BLE001
         print(f"[daily job] run failed: {exc}", flush=True)
         return None
 
 
 def run_daily(db: DbSession, today: date) -> RunSummary:
-    """Find who is due, record it, and tell them once.
-
-    The date is a parameter rather than read from the clock, so a test can run
-    it for any day, and so a run repeated for the same date is genuinely the
-    same run rather than one that has quietly moved on.
-    """
+    """Run the job for the given date (a parameter so tests can pick the day)."""
     summary = RunSummary()
 
     _record_who_is_due(db, today, summary)
@@ -96,12 +70,7 @@ def run_daily(db: DbSession, today: date) -> RunSummary:
 
 
 def _record_who_is_due(db: DbSession, today: date, summary: RunSummary) -> None:
-    """Compute every due date and insert what has become due.
-
-    Insertions refused by the unique constraint are skipped, and that refusal is
-    the whole of FR-024: on a second run for the same date every insert is
-    refused and nothing happens.
-    """
+    """Create due-soon and overdue notifications. Existing ones are skipped."""
     horizon = today + timedelta(days=settings.due_soon_lead_days)
 
     registrations = db.exec(
@@ -117,15 +86,12 @@ def _record_who_is_due(db: DbSession, today: date, summary: RunSummary) -> None:
         if module is None or module.deleted_at is not None:
             continue
 
-        # State follows the module's currently published test, so a due date
-        # does too. Attempts at anything it replaced decide nothing, which is
-        # what makes a replacement test make the whole cohort due again with no
-        # grace period and no suppression (FR-020).
+        # Only attempts at the current test count.
         test = results_service.current_test(db, module_id)
         if test is None:
             continue
         if not test.retake_interval_days and not test.completion_deadline_days:
-            continue  # nobody is ever chased about this test (FR-039)
+            continue  # test has no schedule
 
         attempts_by_user: dict[int, list[Attempt]] = {}
         for row in db.exec(select(Attempt).where(Attempt.test_id == test.id)).all():
@@ -154,7 +120,7 @@ def _record_who_is_due(db: DbSession, today: date, summary: RunSummary) -> None:
                     f"{due_date.isoformat()}."
                 )
             else:
-                continue  # not yet worth saying anything about
+                continue  # not due soon yet
 
             created = notification_service.create(
                 db,
@@ -173,11 +139,9 @@ def _record_who_is_due(db: DbSession, today: date, summary: RunSummary) -> None:
 
 
 def _send_what_has_not_been_sent(db: DbSession, summary: RunSummary) -> None:
-    """One message per person, covering every unsent row they have.
+    """Send one email per user covering all their unsent notifications.
 
-    Deliberately not limited to rows created by this run. A send that failed
-    last time left its rows unstamped, and this is where they are picked up
-    again, without a second record being created (FR-025).
+    Includes rows from earlier failed sends, so they are retried.
     """
     pending = db.exec(
         select(Notification)

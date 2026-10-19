@@ -1,11 +1,7 @@
-"""Building a test, drawing its questions, and the freeze that protects what
-people have already sat.
+"""Creating, editing and publishing tests.
 
-`assert_not_attempted` guards every change to an existing test's content. One
-helper, one rule, checked by asking whether an attempt exists rather than by
-reading a flag that could drift from reality (research R6, FR-013). Creating a
-test needs no guard, and publishing deliberately has none: unpublishing is how
-a frozen test is stopped.
+A test can't be edited once it has attempts (`assert_not_attempted`), but it
+can still be unpublished.
 """
 
 from __future__ import annotations
@@ -30,23 +26,19 @@ class TestNotFound(Exception):
 
 
 class TestFrozen(Exception):
-    """Somebody has attempted it. The message explains itself (FR-014)."""
+    """The test has attempts and can't be edited."""
 
 
 class CannotPublish(Exception):
-    """No questions, or a pass mark that could not be reached."""
+    """No questions, or the pass mark can't be reached."""
 
 
 class InvalidQuestionCount(Exception):
-    """More questions asked for than the bank holds, or fewer than one."""
+    """Question count is below 1 or more than the bank has."""
 
 
 class InvalidSchedule(Exception):
-    """A retake interval or completion period that cannot mean anything.
-
-    The message is what the form shows, so it says what to do rather than what
-    went wrong.
-    """
+    """Invalid retake interval or completion period."""
 
 
 FROZEN_MESSAGE = (
@@ -68,7 +60,7 @@ def is_attempted(db: DbSession, test_id: int) -> bool:
 
 
 def list_for_module(db: DbSession, actor: User, module_id: int) -> list[TestRead]:
-    """Instructors see all; trainees see published ones inside their window."""
+    """Instructors see all tests; trainees see published, open ones."""
     module_service.get_for(db, module_id, actor)
     rows = db.exec(select(Test).where(Test.module_id == module_id).order_by(Test.id)).all()
 
@@ -95,8 +87,7 @@ def get_test(db: DbSession, actor: User, test_id: int) -> TestRead:
 
 
 def questions_of(db: DbSession, test_id: int) -> list[Question]:
-    """In the order stored in `test_question`, which for a drawn test is the
-    order the questions sit in the bank."""
+    """The test's questions in order."""
     pairs = db.exec(
         select(TestQuestion)
         .where(TestQuestion.test_id == test_id)
@@ -165,8 +156,7 @@ def update(db: DbSession, actor: User, test_id: int, data: TestWrite) -> TestRea
 
 
 def set_published(db: DbSession, actor: User, test_id: int, published: bool) -> TestRead:
-    """Permitted even when frozen: unpublishing is how an instructor stops
-    further attempts on a test they can no longer edit (FR-014)."""
+    """Publish or unpublish a test (allowed even if it has attempts)."""
     row = _test(db, test_id)
     module_service.get_for_write(db, row.module_id, actor)
 
@@ -184,13 +174,10 @@ def set_published(db: DbSession, actor: User, test_id: int, published: bool) -> 
 
 
 def _check_schedule(data: TestWrite) -> None:
-    """Both settings need a pass mark, and an interval needs room to warn in.
+    """Validate schedule fields.
 
-    A cycle that restarts on passing must know what passing means, so neither is
-    accepted on a test with no pass mark (FR-003, FR-038). And an interval
-    shorter than the warning period would fire the warning before the person had
-    taken the test, which is a reminder about something they cannot yet have
-    missed (FR-004).
+    Both need a pass mark, and the retake interval must be at least the
+    due-soon warning period.
     """
     if data.retake_interval_days is None and data.completion_deadline_days is None:
         return
@@ -212,10 +199,9 @@ def _check_schedule(data: TestWrite) -> None:
 def _with_drawn_questions(
     db: DbSession, module_id: int, data: TestWrite, current: list[int]
 ) -> TestWrite:
-    """Draw `question_count` questions at random from the bank.
+    """Pick `question_count` random questions from the bank.
 
-    An edit that keeps the same count keeps the questions already drawn, so
-    changing the title does not quietly swap the test's content.
+    If the count hasn't changed, the existing questions are kept.
     """
     if data.question_count is None:
         return data
@@ -239,8 +225,7 @@ def _with_drawn_questions(
 
 
 def _check_pass_mark(db: DbSession, module_id: int, data: TestWrite) -> None:
-    """A pass mark is a percentage, so it is reachable by definition, unless the
-    test carries no points at all to earn it with (FR-012)."""
+    """Raise if a pass mark is set but the test has no points."""
     if data.passing_score is None or not data.question_ids:
         return
 
@@ -260,7 +245,7 @@ def _set_questions(db: DbSession, test_id: int, module_id: int, question_ids: li
     for position, question_id in enumerate(question_ids, start=1):
         question = db.get(Question, question_id)
         if question is None or question.module_id != module_id:
-            continue  # a question from another module is not part of this test
+            continue  # skip questions from other modules
         db.add(
             TestQuestion(test_id=test_id, question_id=question_id, position=position)
         )
@@ -268,9 +253,7 @@ def _set_questions(db: DbSession, test_id: int, module_id: int, question_ids: li
 
 
 def row_of(db: DbSession, test_id: int) -> Test | None:
-    """The table row, for the few callers that need the columns a read model
-    does not carry. Authorisation is the caller's, which is why this is only
-    used beside a `get_test` that has already done it."""
+    """The raw Test row. No access check, so call `get_test` first."""
     return db.get(Test, test_id)
 
 

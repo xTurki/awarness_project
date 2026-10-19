@@ -1,9 +1,4 @@
-"""The read model for the notification list.
-
-The new table never reaches a template (done-gate 5). This phase adds no input
-model of its own: its only input is the two schedule fields, which are validated
-through Phase 2's `TestWrite`.
-"""
+"""Read model for the notification list."""
 
 from __future__ import annotations
 
@@ -13,7 +8,7 @@ from pydantic import BaseModel
 
 
 class NotificationRead(BaseModel):
-    """One entry in a person's list."""
+    """One notification in a user's list."""
 
     id: int
     module_id: int
@@ -24,5 +19,5 @@ class NotificationRead(BaseModel):
     body: str | None
     created_at: datetime
     is_seen: bool
-    #: Straight to the module it concerns (FR-032).
+    # Link to the related module.
     link: str

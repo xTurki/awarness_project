@@ -1,25 +1,13 @@
-"""One allowlist and one function.
+"""HTML sanitising for page content (allowlist based).
 
-Kept out of `content_service` deliberately, so the thing every trainee's browser
-depends on is one small file with its own test module rather than a helper
-buried among page CRUD.
-
-**This runs before the body is written, never at render time.** Content written
-once is read by every trainee on the module. Sanitising on display would mean
-every future template that forgets a filter is a hole; sanitising before storage
-means the column cannot hold anything unsafe in the first place (FR-016).
-
-An allowlist rather than a blocklist, because blocklists are a losing game: the
-interesting cases are always the encoding nobody thought of.
+Content is sanitised before it is saved, so the database never holds unsafe HTML.
 """
 
 from __future__ import annotations
 
 import nh3
 
-# What the editor can produce and a trainee needs to read. Everything absent
-# from this set is removed, including style, every on* handler, script, iframe,
-# object, embed, and form.
+# Anything not listed (script, iframe, style, on* handlers, ...) is removed.
 ALLOWED_TAGS: set[str] = {
     "p", "br",
     "h2", "h3", "h4",
@@ -36,8 +24,7 @@ ALLOWED_ATTRIBUTES: dict[str, set[str]] = {
     "img": {"src", "alt", "title", "width"},
 }
 
-# A link may only go somewhere a link should go. javascript: is absent, and so
-# is data:.
+# No javascript: or data: links.
 ALLOWED_URL_SCHEMES: set[str] = {"http", "https", "mailto"}
 
 

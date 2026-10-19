@@ -2,9 +2,7 @@
 {% block title %}{{ heading }}{% endblock %}
 
 {% block content %}
-{# Anything refused that was not caught by the page that offered it lands here.
-   Before this existed every refusal rendered as raw JSON, which tells somebody
-   using the platform nothing and looks like a crash. #}
+{# Generic error page for HTTP errors. #}
 <div class="form-narrow">
   <div class="page-head text-center">
     <span class="nothing-mark mb-3">!</span>

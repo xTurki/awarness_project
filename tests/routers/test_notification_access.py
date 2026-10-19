@@ -1,9 +1,4 @@
-"""The notification routes over HTTP.
-
-The structural assertion is the important one: **no route takes a person**.
-There is no parameter to tamper with, so FR-033 is not a guard that could be
-forgotten, it is the absence of a way to ask.
-"""
+"""Notification routes. No route takes a user id."""
 
 from __future__ import annotations
 
@@ -42,7 +37,7 @@ def told(db, module):
 
 
 def test_no_route_names_a_person():
-    """Every notification path is the caller's own (FR-033)."""
+    """Notification routes have no user id parameter."""
     paths = {route.path for route in app.routes if "notification" in route.path}
 
     assert paths == {"/notifications", "/notifications/read"}
@@ -50,7 +45,7 @@ def test_no_route_names_a_person():
         assert "{" not in path, f"{path} takes a parameter"
 
 
-def test_this_phase_adds_exactly_one_post():
+def test_notifications_have_exactly_one_post():
     posts = {
         route.path
         for route in app.routes

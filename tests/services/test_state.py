@@ -1,9 +1,4 @@
-"""The state rule, across every combination.
-
-Two cases here catch real mistakes rather than typos: most recent rather than
-best, and attempts at a replaced test not counting. Both are the kind of error
-that produces a plausible wrong answer and no complaint.
-"""
+"""Module state calculation (`state.state_for`)."""
 
 from __future__ import annotations
 
@@ -39,7 +34,7 @@ def test_no_test_on_the_module():
 
 
 def test_an_unpublished_test_is_the_same_as_none():
-    """Distinct from "not started": there is nothing to complete (FR-006)."""
+    """An unpublished test is treated like no test."""
     assert state_for(_test(published=False), []) is State.NO_TEST
 
 
@@ -52,7 +47,7 @@ def test_an_unsubmitted_attempt_is_in_progress():
 
 
 def test_in_progress_wins_over_an_earlier_submitted_attempt():
-    """Somebody retaking is in progress, whatever they scored last time."""
+    """An open attempt means in progress, even after earlier attempts."""
     rows = [_attempt(1, score=100, passed=True, minutes_ago=60), _attempt(2, submitted=False)]
     assert state_for(_test(), rows) is State.IN_PROGRESS
 
@@ -65,12 +60,11 @@ def test_a_failing_attempt_is_failed():
     assert state_for(_test(), [_attempt(1, score=40, passed=False)]) is State.FAILED
 
 
-# ------------------------------------------------- most recent, not the best
+# ------------------------------------------------- latest attempt counts
 
 
 def test_forty_then_ninety_then_seventy_is_failed_at_seventy():
-    """The case the specification names. If this returns passed, the rule has
-    quietly become "best attempt" (FR-005)."""
+    """The latest attempt decides, not the best one."""
     rows = [
         _attempt(1, score=40, passed=False, minutes_ago=30),
         _attempt(2, score=90, passed=True, minutes_ago=20),
@@ -82,8 +76,7 @@ def test_forty_then_ninety_then_seventy_is_failed_at_seventy():
 
 
 def test_the_id_breaks_a_tie_when_two_land_in_the_same_second():
-    """submitted_at is a DATETIME with second precision, so without the id the
-    ordering is arbitrary."""
+    """Attempts in the same second are ordered by id."""
     rows = [
         _attempt(1, score=100, passed=True, minutes_ago=0),
         _attempt(2, score=20, passed=False, minutes_ago=0),
@@ -110,7 +103,7 @@ def test_no_deciding_attempt_shows_no_score():
 
 
 def test_an_overridden_score_is_simply_the_score():
-    """Phase 2 stores an override in the same column, so nothing here knows."""
+    """Overrides are stored in score_percent, so they are used directly."""
     assert score_for([_attempt(1, score=90, passed=True)]) == 90
 
 
@@ -118,8 +111,7 @@ def test_an_overridden_score_is_simply_the_score():
 
 
 def test_attempts_at_a_replaced_test_are_excluded_by_the_caller():
-    """The filtering happens in the query. Given only the current test's
-    attempts, which is none, the state is not started (FR-008)."""
+    """With no attempts at the current test, the state is not started."""
     replacement = _test()
     assert state_for(replacement, []) is State.NOT_STARTED
 
@@ -141,22 +133,17 @@ def test_outstanding_things_rank_before_completed_ones():
     ]
 
 
-# --------------------------------------------------- the argument Phase 4 uses
+# ----------------------------------------------------------- due_date
 
 
 def test_no_due_date_leaves_these_five_exactly_as_they_were():
-    """The reservation worked: Phase 4 added two states without changing a
-    single caller, and a test with no schedule still reads as it always did.
-
-    What the argument does when it carries a date belongs to Phase 4 and is
-    tested in `test_state_due.py`.
-    """
+    """Without a due date the basic states are unchanged (see test_state_due.py)."""
     rows = [_attempt(1, score=90, passed=True)]
     assert state_for(_test(), rows) is State.PASSED
     assert state_for(_test(), rows, due_date=None) is State.PASSED
 
 
-def test_the_enum_already_names_the_two_states_phase_four_adds():
+def test_the_enum_includes_due_and_overdue():
     assert State.DUE.value == "due"
     assert State.OVERDUE.value == "overdue"
 

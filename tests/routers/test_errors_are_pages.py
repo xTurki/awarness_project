@@ -1,13 +1,6 @@
-"""A refusal reaches a person as a page, never as JSON.
+"""Errors are shown as HTML pages, not JSON.
 
-Before this, a rejected form showed the browser a line of
-`{"detail": "A retake interval must be at least 14 days..."}`. The sentence was
-right and the delivery was wrong: it tells somebody using the platform nothing,
-looks like a crash, and loses everything they had typed.
-
-Two separate fixes are covered here. Forms re-render themselves with the reason
-above them, the way the sign-in page reports a wrong password. Everything else
-falls through to an error page, so no refusal anywhere can arrive as JSON.
+Forms are re-shown with the error message; other errors use the error page.
 """
 
 from __future__ import annotations
@@ -72,14 +65,13 @@ def _save(client, csrf, module_id, test_id, **overrides):
     return client.post(f"/modules/{module_id}/tests/{test_id}", data=data)
 
 
-# ------------------------------------------------- the one that was reported
+# ------------------------------------------------------ test form errors
 
 
 def test_a_short_retake_interval_comes_back_as_a_page(
     client, sign_in, owner, module, a_test, csrf
 ):
-    """Seven days against a fourteen-day warning period: the warning would fire
-    before the person had taken the test."""
+    """A 7-day interval is rejected when the warning period is 14 days."""
     sign_in(owner)
 
     response = _save(client, csrf, module.id, a_test.id, retake_interval_days="7")
@@ -98,13 +90,12 @@ def test_the_reason_is_shown_above_the_form(
 
     assert 'class="alert' in response.text
     assert "at least 14 days" in response.text
-    # And the form is still there to correct, not an error page to go back from.
+    # The form is shown again.
     assert 'name="retake_interval_days"' in response.text
 
 
 def test_what_was_typed_is_still_there(client, sign_in, owner, module, a_test, csrf):
-    """Somebody who has just filled in eight fields should not have to fill them
-    in again to read why one was refused."""
+    """Entered values are kept when the form is re-shown."""
     sign_in(owner)
 
     response = _save(
@@ -182,8 +173,7 @@ def test_a_missing_page_is_named_as_such(client, sign_in, make_user):
 
 
 def test_a_guard_redirect_is_not_rendered_as_a_failure(client):
-    """The route guards raise redirects as exceptions too. Treating a 303 as a
-    refusal would break every sign-in on the platform."""
+    """Redirects raised as exceptions still work."""
     response = client.get("/modules")
 
     assert response.status_code == 303

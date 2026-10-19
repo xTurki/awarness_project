@@ -11,10 +11,7 @@
     </a>
   </div>
 
-  {# development-only block. `development_code` is None whenever
-     SHOW_LOGIN_CODE is off, so this disappears in production without the page
-     knowing why. To remove the feature for good, delete this block and follow
-     the list in app/development.py. #}
+  {# development-only block (see app/development.py). Hidden when SHOW_LOGIN_CODE is off. #}
   {% if development_code %}
     <div class="alert alert-warning" role="alert">
       <div class="fw-semibold">Development build</div>
@@ -42,7 +39,7 @@
 
         <div class="mb-4">
           <label for="code" class="form-label">Six-digit code</label>
-          {# autocomplete + inputmode so a phone offers the code from the notification #}
+          {# Lets phones autofill the code. #}
           <input type="text" class="form-control form-control-lg text-center code-entry"
                  id="code" name="code"
                  inputmode="numeric" pattern="[0-9]*" maxlength="6"

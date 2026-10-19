@@ -1,11 +1,4 @@
-"""The attempt: starting it, answering, submitting, and surviving an interruption.
-
-Three tests here carry more weight than the rest:
-
-- the deadline does not move when the instructor edits the time limit
-- a resumed attempt keeps its answers and its question order
-- an expired attempt is submitted on read, scored on what it holds
-"""
+"""Attempts: starting, answering, submitting, resuming and expiring."""
 
 from __future__ import annotations
 
@@ -98,7 +91,7 @@ def test_starting_fixes_the_deadline_and_the_order(db, trainee, live_test, bank)
 
 
 def test_starting_again_resumes_the_open_attempt(db, trainee, live_test):
-    """One attempt in progress per test. A second device continues the same one."""
+    """Starting again resumes the attempt in progress."""
     first = attempt_service.start(db, trainee, live_test.id)
     second = attempt_service.start(db, trainee, live_test.id)
 
@@ -206,7 +199,7 @@ def test_a_partly_correct_multi_answer_earns_nothing(db, trainee, live_test, ban
     row = attempt_service.start(db, trainee, live_test.id)
     attempt_service.save_answer(db, trainee, row.id, bank[0].id, _correct_ids(bank[0]))
     attempt_service.save_answer(db, trainee, row.id, bank[1].id, _correct_ids(bank[1]))
-    # Only one of the two correct options on the multi-answer question.
+    # Only one of the two correct options.
     attempt_service.save_answer(db, trainee, row.id, bank[2].id, [_correct_ids(bank[2])[0]])
 
     submitted = attempt_service.submit(db, row)
@@ -255,7 +248,7 @@ def test_a_resumed_attempt_keeps_every_answer(db, trainee, live_test, bank):
     attempt_service.save_answer(db, trainee, row.id, bank[0].id, _correct_ids(bank[0]))
     attempt_service.save_answer(db, trainee, row.id, bank[1].id, _correct_ids(bank[1]))
 
-    # As if the browser died and came back.
+    # Simulate reopening the attempt.
     resumed = attempt_service.get_own(db, trainee, row.id)
 
     assert attempt_service.answers_for(db, resumed.id) == {
@@ -274,11 +267,7 @@ def test_a_resumed_attempt_keeps_the_same_question_order(db, trainee, live_test)
 
 
 def test_editing_the_time_limit_does_not_move_a_running_deadline(db, owner, trainee, live_test):
-    """The test that proves `ends_at` is stored rather than recomputed (FR-016).
-
-    If this fails, an instructor's edit reaches into an attempt somebody is
-    sitting, which is the failure the whole design is shaped to prevent.
-    """
+    """Changing the time limit doesn't affect an attempt already running."""
     row = attempt_service.start(db, trainee, live_test.id)
     deadline = row.ends_at
 
@@ -292,7 +281,7 @@ def test_editing_the_time_limit_does_not_move_a_running_deadline(db, owner, trai
 
 
 def test_the_deadline_is_the_earlier_of_the_limit_and_the_closing_time(db, owner, trainee, module, bank):
-    """The other branch of min(): the window closes before the time limit runs out."""
+    """If the test closes before the time limit ends, the close time is the deadline."""
     created = test_service.create(
         db, owner, module.id,
         TestWrite(
@@ -370,11 +359,7 @@ def test_the_review_shows_the_answer_given_and_the_correct_one(db, trainee, live
 
 
 def test_three_attempts_each_score_on_their_own_answers(db, trainee, live_test, bank):
-    """Nothing carries over between attempts: an empty one scores nothing even
-    after a perfect one.
-
-    Which of the three then represents the person is decided by `state` and
-    `due`, on the list rather than by a query, and is tested there."""
+    """Each attempt is scored only on its own answers."""
     scores = []
     for selection in ([], [q for q in bank], [bank[0], bank[1]]):
         row = attempt_service.start(db, trainee, live_test.id)

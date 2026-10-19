@@ -1,13 +1,5 @@
-"""Told once, retried until delivered, and stopped when they leave.
-
-Three separate guarantees, and each of them is one line of mechanism:
-
-* the unique constraint, so an overdue notice is created once (FR-014);
-* `emailed_at` left null on a failed send, so the next run retries it without
-  creating a second record (FR-025);
-* the derivation reading a registration, so removing one stops the chasing
-  while leaving what was already said in place (FR-012).
-"""
+"""Overdue notices are created once, failed emails are retried, and removed
+users stop getting notices."""
 
 from __future__ import annotations
 
@@ -28,7 +20,7 @@ TODAY = date(2027, 3, 15)
 
 @pytest.fixture()
 def setup(db, make_user):
-    """One module on a 90-day interval, and one person long overdue on it."""
+    """A module with a 90-day interval and one overdue trainee."""
     owner = make_user(email="owner@example.com", role="instructor")
     module = Module(title="Phishing Awareness", is_published=True)
     db.add(module)
@@ -100,8 +92,7 @@ def _rows(db, user_id) -> list[Notification]:
 
 
 def test_an_overdue_notice_is_created_once_and_never_repeated(db, mail, setup):
-    """Run it on five separate days. The due date has not moved, so the key has
-    not moved, so there is nothing to insert after the first time (FR-014)."""
+    """Running the job on five days creates only one overdue notice."""
     for offset in (0, 1, 2, 30, 365):
         daily_job.run_daily(db, TODAY + timedelta(days=offset))
 
@@ -111,7 +102,7 @@ def test_an_overdue_notice_is_created_once_and_never_repeated(db, mail, setup):
 
 
 def test_create_returns_none_for_a_duplicate(db, setup):
-    """The refusal comes from the database, not from a check in Python."""
+    """`create` returns None when the unique constraint is hit."""
     first = notification_service.create(
         db,
         user_id=setup["person"].id,
@@ -134,8 +125,7 @@ def test_create_returns_none_for_a_duplicate(db, setup):
 
 
 def test_a_refused_duplicate_does_not_take_the_next_one_down_with_it(db, setup):
-    """The insert runs in a savepoint. Without one, a collision would poison the
-    transaction and every notification after it in the run would be lost."""
+    """A duplicate doesn't stop the next notification being created."""
     notification_service.create(
         db, user_id=setup["person"].id, module_id=setup["module"].id,
         kind="overdue", title="Overdue", due_date=TODAY,
@@ -153,8 +143,7 @@ def test_a_refused_duplicate_does_not_take_the_next_one_down_with_it(db, setup):
 
 
 def test_the_next_cycle_is_a_different_row(db, setup):
-    """`due_date` is in the key so that next cycle's notice is a new event
-    rather than a duplicate of this one."""
+    """A new due date creates a new notification."""
     notification_service.create(
         db, user_id=setup["person"].id, module_id=setup["module"].id,
         kind="overdue", title="Overdue", due_date=TODAY,
@@ -171,8 +160,7 @@ def test_the_next_cycle_is_a_different_row(db, setup):
 
 
 def test_a_failed_send_leaves_the_record_unstamped(db, failing_mail, setup):
-    """The in-app notification exists, and no message went. That difference is
-    the whole point of writing the record first (FR-021, FR-025)."""
+    """A failed email leaves `emailed_at` empty."""
     summary = daily_job.run_daily(db, TODAY)
 
     assert summary.created == 1
@@ -187,8 +175,7 @@ def test_a_failed_send_leaves_the_record_unstamped(db, failing_mail, setup):
 def test_the_next_run_retries_without_creating_a_second_record(
     db, monkeypatch, setup
 ):
-    """Mail was broken, then fixed. The row that never went is picked up again,
-    and there is still only one of it (FR-025, SC-007)."""
+    """The next run resends failed emails without duplicating the row."""
     from app.services.email_service import EmailDeliveryFailed
 
     def refuse(to, subject, body):
@@ -224,8 +211,7 @@ def test_a_delivered_row_is_not_sent_again(db, mail, setup):
 
 
 def test_removing_a_registration_stops_the_chasing(db, mail, setup):
-    """Nothing is migrated and nothing is cleaned up: the row the derivation
-    counts from is gone, so there is no due date to be past (FR-012)."""
+    """Removing the registration stops overdue notices."""
     db.delete(setup["registration"])
     db.commit()
 
@@ -237,7 +223,7 @@ def test_removing_a_registration_stops_the_chasing(db, mail, setup):
 
 
 def test_what_they_were_already_told_stays_in_their_list(db, mail, setup):
-    """Their history does not evaporate because they left."""
+    """Existing notifications are kept after removal."""
     daily_job.run_daily(db, TODAY)
     assert len(_rows(db, setup["person"].id)) == 1
 

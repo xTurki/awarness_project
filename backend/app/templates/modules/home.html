@@ -9,8 +9,6 @@
 
   <div class="col-12 col-lg-9">
 
-    {# A band rather than a panel here: it introduces the page without pushing
-       the content below the fold on a phone. #}
     {% with art_tall = true %}{% include "components/module_art.html" %}{% endwith %}
 
     <div class="page-head d-flex flex-wrap gap-3 justify-content-between align-items-start mt-3">
@@ -21,8 +19,7 @@
           {% if not module.is_published %}
             <span class="badge text-bg-secondary">Unpublished</span>
           {% endif %}
-          {# The caller's own state, on a page that already exists rather than a
-             new route (Phase 3 contracts). #}
+          {# The current user's state on this module. #}
           {% if my_state %}
             {% with state = my_state %}{% include "components/state_badge.html" %}{% endwith %}
           {% endif %}
@@ -35,14 +32,7 @@
           <a class="btn btn-sm btn-outline-secondary" href="/modules/{{ module.id }}/tests"><i class="bi bi-ui-checks" aria-hidden="true"></i> Tests</a>
           <a class="btn btn-sm btn-outline-secondary" href="/modules/{{ module.id }}/roster"><i class="bi bi-people" aria-hidden="true"></i> Roster</a>
 
-          {# Publishing is an administrator's act (FR-005), and it belongs on
-             this page rather than behind Settings: the badge that says whether
-             anybody can see this module is a few centimetres away, and the
-             route already returns here afterwards.
-
-             Primary while the module is unpublished, because that is the next
-             thing somebody building one wants to do. Outlined once it is live,
-             because unpublishing is a step back rather than the obvious move. #}
+          {# Publish button (admins only). Solid when unpublished, outlined when live. #}
           {% if account.role == "administrator" %}
             <form method="post" action="/modules/{{ module.id }}/publish" class="m-0">
               <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token }}">
@@ -77,7 +67,6 @@
                 Start reading <i class="bi bi-arrow-right" aria-hidden="true"></i>
               </a>
             {% else %}
-              {# An empty module is not an error. It is a module with nothing in it yet. #}
               <p class="text-body-secondary mb-0">
                 This module has no readable pages yet.
                 {% if can_write %} Add one from <a href="/modules/{{ module.id }}/pages">Pages</a>.{% endif %}

@@ -1,11 +1,6 @@
-"""Non-table models at every boundary.
+"""User read and input models.
 
-Read models exist because `User` carries `password_hash` and `login_code_hash`
-and must never reach a template or a response (done-gate 5).
-
-Input models exist because SQLModel does not validate table classes: every form
-post is parsed into one of these first, so validation happens in one place
-rather than in each router.
+`UserRead` is used in templates so password/code hashes are never exposed.
 """
 
 from __future__ import annotations
@@ -67,8 +62,7 @@ class UserUpdate(BaseModel):
 
 
 class PasswordSet(BaseModel):
-    """Used both by an administrator resetting a password and by a person choosing
-    their own. The rule is the same in both places (FR-005)."""
+    """New password, set by an admin or by the user."""
 
     password: str
 

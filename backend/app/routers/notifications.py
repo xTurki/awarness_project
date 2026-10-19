@@ -1,11 +1,6 @@
-"""What a person has been told, inside the platform.
+"""In-app notifications for the current user.
 
-Two routes, and **neither takes a person**. There is no path parameter for
-somebody else, so there is no route to guard and nothing to get wrong: the
-service scopes every read to the caller (FR-033).
-
-Opening the list marks everything in it seen, so the shell indicator clears by
-reading rather than by a dismiss control nobody asked for (FR-031).
+Opening the list marks all notifications as read.
 """
 
 from __future__ import annotations
@@ -30,8 +25,7 @@ def listing(
     account=Depends(require_password_set),
 ):
     rows = notification_service.list_for(db, account)
-    # Read before marking, so this page still shows what was new when it was
-    # opened. The indicator is gone from the next page onwards.
+    # Load before marking as read, so new items are still highlighted on this page.
     notification_service.mark_seen(db, account)
 
     return render(
@@ -46,6 +40,6 @@ def mark_read(
     db: Db = Depends(get_session),
     account=Depends(require_password_set),
 ):
-    """For clearing the indicator without opening the list."""
+    """Mark all as read without opening the list."""
     notification_service.mark_seen(db, account)
     return RedirectResponse("/notifications", status_code=status.HTTP_303_SEE_OTHER)

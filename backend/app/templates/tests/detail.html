@@ -2,9 +2,7 @@
 {% block title %}{{ test.title }}{% endblock %}
 
 {% block content %}
-{# The test is the last page of the module, so it is laid out as one: the same
-   sidebar, the same column, arrived at by reading forward rather than by going
-   somewhere else to look for it. #}
+{# Uses the same layout and sidebar as module pages. #}
 <div class="row g-4">
   <div class="col-12 col-lg-3">
     {% with on_test = true %}{% include "components/module_nav.html" %}{% endwith %}
@@ -44,14 +42,12 @@
       </div>
       <div class="panel-body">
 
-        {# The instructions the instructor wrote come first: they are the point
-           of arriving here, and the terms below are the small print. #}
         {% if test.instructions %}
           <p>{{ test.instructions }}</p>
           <hr>
         {% endif %}
 
-        {# Shown before starting, always (FR-009). #}
+        {# Test details, shown before starting. #}
         <div class="facts mb-3">
           <div class="fact">
             <i class="bi bi-question-circle" aria-hidden="true"></i>
@@ -76,8 +72,6 @@
 
         <ul class="list-unstyled mb-0 small text-body-secondary">
 
-          {# Shown to the people registered on it, not only to whoever set it
-             (Phase 4 FR-006). #}
           {% if test.retake_interval_days %}
             <li><strong>Repeats:</strong> every {{ test.retake_interval_days }} days</li>
           {% elif test.completion_deadline_days %}
@@ -85,8 +79,7 @@
               {{ test.completion_deadline_days }} days of joining the module</li>
           {% endif %}
 
-          {# Rendered in the reader's own zone. The UTC text is what shows with
-             no JavaScript, which is what the page said before. #}
+          {# Converted to local time by JS; shows UTC without JS. #}
           {% if test.opens_at or test.closes_at %}
             <li><strong>Open:</strong>
               {% if test.opens_at %}
@@ -108,9 +101,7 @@
       </div>
     </div>
 
-    {# The button appears only for somebody who can actually use it. Offering it
-       regardless and letting the service refuse is what produced a Start button
-       that answered "Not found". #}
+    {# Only show Start if the user can start the test. #}
     {% if not cannot_start %}
       <form method="post" action="/tests/{{ test.id }}/attempts" class="mb-3">
         <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token }}">
@@ -134,8 +125,7 @@
     {% endif %}
 
     {% if attempts %}
-      {# Phase 3 replaced the per-test list with one page per module, covering
-         every test the module has had. #}
+      {# Attempt history is on the module results page. #}
       <a class="btn btn-outline-secondary btn-sm" href="/results/modules/{{ module.id }}">
         Your attempts ({{ attempts|length }})
       </a>

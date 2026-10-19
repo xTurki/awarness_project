@@ -60,14 +60,7 @@
       <form method="post" action="/modules/{{ module.id }}/roster">
         <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token }}">
 
-        {# Asked before the names, not after. A dropdown sitting below a
-           filled-in list is easy to walk past, and walking past it registers
-           people in the wrong capacity without saying so.
-
-           Assigning an instructor is an administrator's act, so the choice is
-           absent for anybody else rather than shown and refused (FR-004,
-           FR-005). With the field absent the route registers trainees, which is
-           the whole of what an instructor may do on their own module (FR-024). #}
+        {# Role choice, admins only. Without it users are added as trainees. #}
         {% if account.role == "administrator" %}
           <div class="mb-3" style="max-width: 32rem">
             <label for="role_in_module" class="form-label">1. Register them as</label>

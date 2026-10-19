@@ -6,134 +6,91 @@
 |---|---|
 | Course | COMP6900 Major Project, University of Newcastle |
 | Group | 5 |
-| Document | System analysis and design |
-| Date | 12 October 2026 |
-| System under description | 13 tables, 65 routes, 177 functional requirements, 645 automated tests |
+| Date | 20 October 2026 |
+| Status | Under development and testing |
 
 ---
 
 ## Contents
 
-1. [Introduction and scope](#1-introduction-and-scope)
-2. [Requirements analysis](#2-requirements-analysis) (waterfall stage 1)
-3. [System design: architecture](#3-system-design-architecture) (stage 2)
-4. [System design: data](#4-system-design-data) (stage 2)
-5. [System design: processes](#5-system-design-processes) (stage 2)
-6. [System design: interface](#6-system-design-interface) (stage 2)
-7. [Implementation](#7-implementation) (stage 3)
-8. [Testing](#8-testing) (stage 4)
-9. [Deployment and maintenance](#9-deployment-and-maintenance) (stage 5)
-10. [Evaluation and limitations](#10-evaluation-and-limitations)
+1. [Introduction](#1-introduction)
+2. [Requirements](#2-requirements)
+3. [Architecture](#3-architecture)
+4. [Data design](#4-data-design)
+5. [Process design](#5-process-design)
+6. [Interface design](#6-interface-design)
+7. [Implementation](#7-implementation)
+8. [Testing](#8-testing)
 
 ---
 
-## 1. Introduction and scope
+## 1. Introduction
 
-### 1.1 The problem
+### 1.1 Problem
 
-Small and medium enterprises are obliged to train staff in cybersecurity
-awareness and are the least equipped to do it. Commercial platforms are priced
-and shaped for organisations with a compliance department. The common substitute
-is a slide deck emailed round once a year, which records nothing, proves nothing,
-and lapses silently.
-
-Three things are actually needed, and only the third is difficult:
-
-1. Somewhere to put the material.
-2. A way to check that it was understood.
-3. **A record of who is current and who is not, that stays true without anybody
-   maintaining it.**
+Small and medium enterprises need to train staff in cybersecurity awareness and
+keep a record of who has completed the training and who needs to retake it.
 
 ### 1.2 What the system does
 
-An administrator creates accounts and modules and assigns instructors. An
-instructor writes the module's pages, builds a question bank, and creates a test
-by saying how many questions it should have; the platform draws that many from
-the bank at random.
-A trainee reads the pages in order, sits the test at the end, and sees where they
-stand. From then on the platform works out who is due, tells them before their
-training lapses and once it has, and keeps doing so with nobody signed in.
+- An **administrator** creates accounts and modules and assigns instructors.
+- An **instructor** writes module pages, builds a question bank and creates a
+  test by choosing how many questions it has; the questions are drawn at random
+  from the bank.
+- A **trainee** reads the pages, takes the test and sees their results.
+- A **daily job** works out who is due for retraining and notifies them.
 
-### 1.3 Scope boundaries
+### 1.3 Out of scope
 
-The project defends its non-goals as firmly as its goals, because an awareness
-platform that drifts into being a general learning management system is a project
-that never finishes. Excluded by decision, not by omission:
-
-| Excluded | Reason |
-|---|---|
-| Self-registration of any kind | Training is assigned, not chosen. An administrator creates accounts; an administrator or the module's instructor puts people on modules |
-| Assignment submission and marking | The assessment here is an automatically scored test, not coursework |
-| Discussion forums, messaging, calendars | Not what an awareness platform is for |
-| SCORM or xAPI import | The content is authored in the platform |
-| Notification preferences and unsubscribe | Mandatory training is not opt-out |
-| Multiple organisations in one instance | One deployment serves one SME |
-| Certificates, badges, gamification | A pass is a record, not a prize |
+- Self-registration
+- Assignments, forums, messaging and calendars
+- SCORM / xAPI import
+- Notification preferences
+- Multiple organisations in one installation
+- Certificates and badges
 
 ### 1.4 Development model
 
-The project follows the **waterfall model**. The work moves through five stages
-in a fixed order. Each stage is completed and its output reviewed before the
-next begins, and each stage works only from the output of the stage before it:
-design from the requirements, implementation from the design, testing against
-the requirements and the design.
+The project follows the **waterfall model**:
 
 ```mermaid
 flowchart LR
-    R["1. Requirements<br/>project specification<br/>177 functional requirements"]
-    D["2. Design<br/>architecture, data,<br/>processes, interface"]
-    I["3. Implementation<br/>models, services,<br/>routers, templates"]
-    T["4. Testing<br/>645 automated tests<br/>against MySQL 8"]
-    M["5. Deployment and<br/>maintenance<br/>three containers"]
-    R --> D --> I --> T --> M
+    R["1. Requirements"] --> D["2. Design"] --> I["3. Implementation"] --> T["4. Testing"]
 ```
 
-| Stage | Output | In this document |
+| Stage | Output | Section |
 |---|---|---|
-| 1. Requirements | The project specification: a constitution of eight principles, the scope boundaries, and 177 functional requirements in five groups | §1.3, §2 |
-| 2. Design | The architecture, the data model, the process designs and the interface design | §3 to §6 |
-| 3. Implementation | The application, built to the design | §7 |
-| 4. Testing | The automated suite, run against the requirements, and the defects it found | §8 |
-| 5. Deployment and maintenance | The running platform, and every change made to it after deployment | §9 |
+| 1. Requirements | Actors, use cases, functional and non-functional requirements | §2 |
+| 2. Design | Architecture, data, processes, interface | §3 to §6 |
+| 3. Implementation | The application | §7 |
+| 4. Testing | Automated test suite | §8 |
 
-The requirements are organised in five groups. A requirement is identified by
-its number and its group, so FR-018 (P1) is requirement 18 of group P1. The
-groups also fix the order in which the implementation stage builds the system
-(§7.2), because each group depends on the ones before it.
+Requirements are grouped and built in this order:
 
-| Group | Covers | FRs |
-|---|---|---|
-| P0 Foundation | Identity, two-step sign-in, sessions, roles, the application shell | 36 |
-| P1 Modules and content | Modules, ordered pages, rich text, images, registration | 35 |
-| P2 Tests | Question bank, tests, attempts, automatic scoring | 39 |
-| P3 Results | Derived state, dashboards, cohort views | 27 |
-| P4 Scheduling | Retake intervals, the daily sweep, notifications | 40 |
-| | **Total** | **177** |
+| Group | Covers |
+|---|---|
+| P0 Foundation | Accounts, two-step login, sessions, roles |
+| P1 Modules and content | Modules, pages, images, registration |
+| P2 Tests | Question bank, tests, attempts, scoring |
+| P3 Results | Progress state, dashboards, cohort view |
+| P4 Scheduling | Retake intervals, daily job, notifications |
 
 ---
 
-## 2. Requirements analysis
-
-*Waterfall stage 1. The output of this stage is the project specification; every
-later stage works from it.*
+## 2. Requirements
 
 ### 2.1 Actors
 
-The platform has three platform-wide roles, and one distinction that is
-frequently missed and matters throughout the design.
-
 | Actor | Description |
 |---|---|
-| **Administrator** | Owns the platform. The only actor who creates accounts, creates and publishes modules, and assigns instructors |
-| **Instructor** | Authors and runs the modules they are assigned to. Sees no module they are not assigned to, published or otherwise |
-| **Trainee** | Reads material and sits tests. Cannot put themselves on anything |
-| **Scheduler** | Not a person. The daily process that finds who is due and notifies them, running with nobody signed in |
+| Administrator | Creates accounts and modules, publishes modules, assigns instructors |
+| Instructor | Manages the modules they are assigned to |
+| Trainee | Reads content and takes tests |
+| Scheduler | Automatic daily process that sends due and overdue notices |
 
-**The distinction.** A platform role is not a capacity on a module.
-`registration.role_in_module` is independent of `user.role`, so the same person
-may instruct one module and train on another (FR-026, group P1). Authorisation
-asks the registration, never the platform role. This is why the roster form asks
-"register them as" before it asks "who".
+A user's role on a module (`registration.role_in_module`) is separate from their
+platform role, so one person can be an instructor on one module and a trainee on
+another.
 
 ### 2.2 Use case diagram
 
@@ -146,142 +103,101 @@ flowchart LR
 
     subgraph Identity
         UC1(Sign in with password and code)
-        UC2(Choose own password)
+        UC2(Set own password)
     end
 
     subgraph Administration
-        UC3(Create and edit accounts)
+        UC3(Manage accounts)
         UC4(Reset a password)
         UC5(Deactivate an account)
-        UC6(Create a module)
-        UC7(Publish a module)
-        UC8(Assign an instructor)
+        UC6(Create and publish a module)
+        UC7(Assign an instructor)
     end
 
     subgraph Authoring
-        UC9(Write and order pages)
-        UC10(Upload an image)
-        UC11(Build the question bank)
-        UC12(Assemble and publish a test)
-        UC13(Set a retake schedule)
+        UC8(Write and order pages)
+        UC9(Upload images)
+        UC10(Build the question bank)
+        UC11(Create and publish a test)
+        UC12(Set a retake schedule)
     end
 
     subgraph Participation
-        UC14(Register trainees)
-        UC15(Read module pages)
-        UC16(Ask the study assistant)
-        UC17(Sit a test)
-        UC18(Review a finished attempt)
+        UC13(Register trainees)
+        UC14(Read module pages)
+        UC15(Ask the study assistant)
+        UC16(Take a test)
+        UC17(Review an attempt)
     end
 
-    subgraph Oversight
-        UC19(See own state and history)
-        UC20(See the cohort)
-        UC21(Correct a score)
-        UC22(Read notifications)
+    subgraph Results
+        UC18(View own progress)
+        UC19(View the cohort)
+        UC20(Override a score)
+        UC21(Read notifications)
     end
 
     subgraph Automatic
-        UC23(Find who is due)
-        UC24(Send one digest per person)
+        UC22(Find who is due)
+        UC23(Send email digest)
     end
 
-    ADMIN --> UC1 & UC3 & UC4 & UC5 & UC6 & UC7 & UC8 & UC14
-    INST --> UC1 & UC9 & UC10 & UC11 & UC12 & UC13 & UC14 & UC20 & UC21
-    TRAIN --> UC1 & UC2 & UC15 & UC16 & UC17 & UC18 & UC19 & UC22
-    SCHED --> UC23 --> UC24
+    ADMIN --> UC1 & UC3 & UC4 & UC5 & UC6 & UC7 & UC13
+    INST --> UC1 & UC8 & UC9 & UC10 & UC11 & UC12 & UC13 & UC19 & UC20
+    TRAIN --> UC1 & UC2 & UC14 & UC15 & UC16 & UC17 & UC18 & UC21
+    SCHED --> UC22 --> UC23
 ```
 
-**Reading the diagram.** Every actor passes through UC1: there is no route into
-the platform that does not require a password and a six-digit code. UC2 appears
-only for the trainee because an administrator-created account cannot reach any
-other page until its owner has chosen a password of their own, and administrators
-and instructors reach that state by the same path.
+### 2.3 Key functional requirements
 
-### 2.3 Functional requirements
+**Access**
+- Accounts are created only by an administrator.
+- Login needs a password and a 6-digit code sent by email.
+- A new account must set its own password before using the platform.
+- Deactivating an account takes effect on the next request.
 
-177 requirements across five groups. Rather than restate them, this section names
-the ones that shaped the architecture, because those are the ones a reader needs
-in order to understand why the system is built as it is.
+**Content and tests**
+- Only assigned instructors can edit a module's content.
+- A test cannot be edited once it has attempts.
+- The time limit is enforced on the server.
+- An expired attempt is submitted automatically the next time it is loaded.
 
-**Identity and access.**
-
-| Id | Requirement |
-|---|---|
-| FR-002 (P0) | No self-registration. Accounts are created by an administrator |
-| FR-011 (P0) | An account whose password an administrator set reaches nothing until its owner chooses one |
-| FR-018 (P0) | A fresh sign-in invalidates any outstanding code |
-| FR-022 (P0) | Deactivation takes effect on that account's very next request, not at expiry |
-| FR-026 (P1) | Capacity on a module is independent of the platform role |
-
-**Content and assessment.**
-
-| Id | Requirement |
-|---|---|
-| FR-018 (P1) | Authoring is restricted to instructors assigned to that module |
-| FR-013 (P2) | A test that anybody has attempted is frozen: nothing in it may change |
-| FR-016 (P2) | An instructor's later edit must not move the deadline of an attempt already running |
-| FR-020 (P2) | The server owns the clock. The countdown a browser shows decides nothing |
-| FR-022 (P2) | An expired attempt is submitted and scored the next time anyone reads it |
-
-**State and scheduling.**
-
-| Id | Requirement |
-|---|---|
-| FR-005 (P3) | The **most recent** attempt represents a person, not the best one |
-| FR-008 (P3) | Attempts at a replaced test remain visible in history but decide nothing |
-| FR-025 (P3) | State is derived at read time, never stored |
-| FR-007 (P4) | Due dates are derived, so changing an interval re-dates everyone at once |
-| FR-008 (P4) | Somebody who has never passed gets a full first cycle from their registration |
-| FR-009 (P4) | The interval runs from the most recent attempt, and only if it passed |
-| FR-014 (P4) | An overdue test is announced once. What persists is the state, not the messaging |
-| FR-024 (P4) | Running the scheduled process twice for the same day produces no duplicate record and no second message |
+**Results and scheduling**
+- The most recent attempt decides a trainee's result.
+- Results and due dates are calculated, not stored.
+- A new trainee gets a full interval from their registration date.
+- An overdue notice is sent once.
+- Running the daily job twice on the same day creates no duplicates.
 
 ### 2.4 Non-functional requirements
 
-| Attribute | Requirement | How it is met |
-|---|---|---|
-| Deployability | One command on one machine | `docker compose up`, three containers |
-| Portability | No managed cloud service | MySQL, nginx, a Python process. Verified on x86 Windows and arm64 macOS |
-| Offline operation | No CDN, no externally hosted font | Bootstrap, Bootstrap Icons, the Inter typeface, htmx and Quill are vendored into the repository |
-| Response time | Server-rendered pages in tens of milliseconds | No client framework, no build step |
-| Accessibility | WCAG AA contrast | Measured, not asserted. Lowest measured text pair 5.47:1 against a 4.5:1 requirement |
-| Responsiveness | Usable at phone, tablet and desktop widths | One layout rule outranks the rest: nothing may push the page sideways |
-| Correctness | Every user-facing behaviour covered | 645 automated tests against a real MySQL instance |
-| Data integrity | Guarantees in the database, not in application code | Unique constraints on email, registration, answer and notification |
+| Attribute | Requirement |
+|---|---|
+| Deployment | Runs with `docker compose up` (three containers) |
+| Offline assets | Bootstrap, icons, fonts, htmx and Quill are served locally |
+| Accessibility | WCAG AA text contrast |
+| Responsive | Works on phone, tablet and desktop |
+| Data integrity | Unique constraints enforced by the database |
 
 ---
 
-## 3. System design: architecture
+## 3. Architecture
 
-*Waterfall stage 2. Sections 3 to 6 are the output of the design stage: the
-architecture, the data model, the processes and the interface, each derived
-from the requirements in §2. The implementation in §7 is built to them.*
+### 3.1 Layers
 
-### 3.1 Architectural style
+A server-rendered web application in three tiers (browser, application,
+database). The application is split into layers:
 
-A three-tier, server-rendered web application with a strictly layered
-application tier. The layering is not conventional politeness; it is enforced by
-the project constitution and checked mechanically by tests.
+| Layer | Responsibility |
+|---|---|
+| Routers | Read the request, call a service, render a template |
+| Services | Business logic and access checks |
+| Models | Database tables (SQLModel) |
+| Schemas | Read models for templates and input validation |
 
-| Layer | Responsibility | Rule |
-|---|---|---|
-| **Routers** | Parse the request, call one service, render a template | May not contain a query. No module under `routers/` contains the token `Session` or `select`, and a test asserts it |
-| **Services** | All business logic and all authorisation | Take plain arguments and return plain values. Know nothing of HTTP |
-| **Models** | The schema itself | `SQLModel.metadata.create_all()` is the single schema authority. No migration tool |
-| **Schemas** | Read and write models at every boundary | No `table=True` instance reaches a template or a response, and a test asserts it by rendering every page and inspecting the context |
+Modules a user cannot access return **404**.
 
-**Why authorisation lives in the service layer.** A guard on a route protects
-that route. A guard in the service protects every caller, including the daily
-job, a future command line tool, and the route somebody adds next year and
-forgets to decorate. Every module-scoped service function performs its own check;
-the router guard is a second line, never the enforcement.
-
-The consequence appears throughout: the platform answers **404 rather than 403**
-for a module somebody may not see, because the existence of a module they cannot
-reach is itself information they have no claim to.
-
-### 3.2 Deployment architecture
+### 3.2 Deployment diagram
 
 ```mermaid
 flowchart TB
@@ -289,36 +205,27 @@ flowchart TB
 
     subgraph Internet
         GEM[Google Gemini API]
-        SMTP["Brevo SMTP relay"]
+        SMTP["Brevo SMTP"]
     end
 
-    subgraph HOST["Host machine, one Docker network"]
-        NG["nginx<br/>1.27-alpine<br/>the only published port"]
-        BE["backend<br/>FastAPI + uvicorn<br/>APScheduler in-process"]
-        DB[("db<br/>MySQL 8<br/>InnoDB, utf8mb4")]
+    subgraph HOST["Docker host"]
+        NG["nginx<br/>port 80"]
+        BE["backend<br/>FastAPI + APScheduler"]
+        DB[("MySQL 8")]
         VOL[("volumes<br/>db_data, uploads")]
     end
 
-    USER -->|"http, local network"| NG
-    NG -->|"static files"| VOL
-    NG -->|"proxy /"| BE
+    USER --> NG
+    NG -->|"static files, uploads"| VOL
+    NG -->|"proxy"| BE
     BE --> DB
     BE --> VOL
     BE -->|"page text + question"| GEM
-    BE -->|"sign-in codes, digests"| SMTP
-    DB --- VOL
+    BE -->|"login codes, notices"| SMTP
 ```
 
-**Three containers, one published port.** Only nginx publishes a port. The
-application and the database are reachable only from inside the compose network.
-Browsers on the local network reach nginx on port 80.
-
-**The scheduler runs in-process.** The constitution permits scheduled work inside
-the backend and forbids a broker, a worker container or a separate cron
-container. APScheduler starts in the application lifespan and stops with it. This
-assumes exactly one backend instance; two would run two schedulers, which the
-design survives because the daily job is idempotent, but it is a single-instance
-platform by intent.
+Only nginx exposes a port. The backend and database are reachable only inside
+the Docker network. The daily scheduler runs inside the backend process.
 
 ### 3.3 Class diagram
 
@@ -328,15 +235,12 @@ classDiagram
 
     class User {
         +int id
-        +str email UNIQUE
+        +str email
         +str full_name
         +str role
-        +str password_hash
         +bool is_active
         +bool must_set_password
-        +str login_code_hash
     }
-
     class Module {
         +int id
         +str title
@@ -345,59 +249,42 @@ classDiagram
         +str art
         +datetime deleted_at
     }
-
     class Registration {
-        +int id
         +int user_id
         +int module_id
         +str role_in_module
         +datetime registered_at
     }
-
     class Page {
-        +int id
         +int module_id
         +str title
         +str body
         +int position
         +bool is_published
     }
-
     class Test {
-        +int id
         +int module_id
         +str title
-        +bool is_published
-        +datetime opens_at
-        +datetime closes_at
         +int time_limit_minutes
         +int allowed_attempts
         +int passing_score
         +int retake_interval_days
         +int completion_deadline_days
     }
-
     class Question {
-        +int id
         +int module_id
         +str prompt
         +int points
     }
-
     class Attempt {
-        +int id
         +int test_id
         +int user_id
-        +int attempt_number
         +datetime ends_at
         +list question_order
         +int score_percent
         +bool passed
-        +bool score_overridden
     }
-
     class Notification {
-        +int id
         +int user_id
         +int module_id
         +str kind
@@ -415,70 +302,53 @@ classDiagram
     User "1" --> "0..*" Attempt
     Test "0..*" -- "0..*" Question : test_question
     User "1" --> "0..*" Notification
-    Module "1" --> "0..*" Notification
 ```
 
-### 3.4 Service layer
+### 3.4 Services
 
-Sixteen services. Three of them are pure functions with no database access at
-all, and `app/art.py` beside them is a fourth pure module. That is the design's
-most deliberate structural choice: the rules that are easiest to get subtly
-wrong are the ones isolated where they can be tested exhaustively against a
-table of cases.
-
-| Service | Pure | Responsibility |
-|---|---|---|
-| `scoring` | **yes** | Points earned, percentage, pass or fail |
-| `state` | **yes** | Which of seven states a person is in on a module |
-| `due` | **yes** | When somebody's training next falls due |
-| `email_service` | | Sending one message over SMTP, off the event loop |
-| `auth_service` | | Password, code issue and verification, sessions |
-| `admin_service` | | Accounts. Nobody administers their own |
-| `module_service` | | Modules, and the `get_for` / `get_for_write` chokepoint |
-| `content_service` | | Pages, ordering, image storage |
-| `question_service` | | The question bank |
-| `test_service` | | Building a test, drawing its questions at random from the bank, and the freeze once attempted |
-| `attempt_service` | | Taking, saving, submitting and reviewing |
-| `registration_service` | | Putting people on modules and taking them off |
-| `results_service` | | Everything derived. Nothing here writes |
-| `notification_service` | | Records first, messages second |
-| `daily_job` | | The scheduled sweep, as one ordinary function |
-| `tutor_service` | | The study assistant |
-
-**The chokepoint.** Every read of a module passes through `module_service.get_for`
-or `get_for_write`. Neither ever answers "found but forbidden" for a module the
-caller may not see, so the distinction between "does not exist" and "exists but
-is not yours" is never leaked by a status code.
-
-`art.py` sits outside `services/` because it touches neither the database nor
-the request: it decides which colour a module's cover carries, and whether a
-picture was uploaded for it. `content_seed.py` sits there too, as the one
-module that writes rows at startup (§4.5).
+| Service | Responsibility |
+|---|---|
+| `auth_service` | Login, codes, sessions |
+| `admin_service` | Accounts |
+| `module_service` | Modules and module access checks |
+| `content_service` | Pages, ordering, images |
+| `registration_service` | Adding and removing users on modules |
+| `question_service` | Question bank |
+| `test_service` | Tests and random question selection |
+| `attempt_service` | Taking, submitting and reviewing attempts |
+| `scoring` | Score, percentage, pass/fail |
+| `state` | A trainee's state on a module |
+| `due` | Due date calculation |
+| `results_service` | Dashboards and cohort views |
+| `notification_service` | Creating and sending notifications |
+| `email_service` | Sending email |
+| `daily_job` | The daily scheduled run |
+| `tutor_service` | Study assistant (Gemini) |
 
 ---
 
-## 4. System design: data
+## 4. Data design
 
 ### 4.1 Entity relationship diagram
 
 ```mermaid
 erDiagram
-    USER ||--o{ SESSION : "signs in with"
-    USER ||--o{ REGISTRATION : "is on"
-    MODULE ||--o{ REGISTRATION : "has"
-    MODULE ||--o{ PAGE : "contains"
-    MODULE ||--o{ TEST : "is assessed by"
-    MODULE ||--o{ QUESTION : "owns a bank of"
-    MODULE ||--o{ CONTENT_IMAGE : "holds"
-    QUESTION ||--o{ ANSWER_OPTION : "offers"
-    TEST ||--o{ TEST_QUESTION : "is made of"
-    QUESTION ||--o{ TEST_QUESTION : "appears in"
-    TEST ||--o{ ATTEMPT : "is sat as"
-    USER ||--o{ ATTEMPT : "makes"
-    ATTEMPT ||--o{ ATTEMPT_ANSWER : "records"
-    QUESTION ||--o{ ATTEMPT_ANSWER : "is answered by"
-    USER ||--o{ NOTIFICATION : "is told"
-    MODULE ||--o{ NOTIFICATION : "concerns"
+    USER ||--o{ SESSION : has
+    USER ||--o{ REGISTRATION : has
+    MODULE ||--o{ REGISTRATION : has
+    MODULE ||--o{ PAGE : contains
+    MODULE ||--o{ TEST : has
+    MODULE ||--o{ QUESTION : has
+    MODULE ||--o{ CONTENT_IMAGE : has
+    QUESTION ||--o{ ANSWER_OPTION : has
+    TEST ||--o{ TEST_QUESTION : includes
+    QUESTION ||--o{ TEST_QUESTION : "used in"
+    TEST ||--o{ ATTEMPT : has
+    USER ||--o{ ATTEMPT : makes
+    ATTEMPT ||--o{ ATTEMPT_ANSWER : contains
+    QUESTION ||--o{ ATTEMPT_ANSWER : "answered in"
+    USER ||--o{ NOTIFICATION : receives
+    MODULE ||--o{ NOTIFICATION : about
 
     USER {
         int id PK
@@ -604,803 +474,276 @@ erDiagram
     }
 ```
 
-### 4.2 Table inventory
+### 4.2 Tables
 
-Thirteen tables. Five carry a unique constraint, and each of those constraints
-is load-bearing: it makes a guarantee true in the database rather than in
-application code that somebody could forget to call.
+13 tables. Unique constraints:
 
-| Table | Columns | Unique constraint | What the constraint guarantees |
-|---|---|---|---|
-| `user` | 10 | `email` | One account per address |
-| `session` | 4 | | |
-| `module` | 7 | | |
-| `registration` | 5 | `(user_id, module_id)` | Nobody is on a module twice |
-| `page` | 8 | `(module_id, position)` | Page order is unambiguous |
-| `content_image` | 4 | | |
-| `question` | 6 | | |
-| `answer_option` | 5 | | |
-| `test` | 14 | | |
-| `test_question` | 3 | composite PK | A question appears once per test |
-| `attempt` | 14 | | |
-| `attempt_answer` | 6 | `(attempt_id, question_id)` | One answer per question, however many times they change their mind |
-| `notification` | 10 | `(user_id, kind, module_id, due_date)` | **The daily job is safe to run twice** |
-
-### 4.3 What is deliberately not stored
-
-The most consequential data decisions in this system are absences. Each removes
-an entire class of defect rather than mitigating it.
-
-| Not stored | Derived from | Defect it removes |
-|---|---|---|
-| A person's state on a module | Registration, current test, their attempts | A cached state that disagrees with the attempts it came from |
-| A due date | The test's interval and the deciding attempt | A backfill whenever an instructor changes an interval (FR-007) |
-| "Test is frozen" | Whether any attempt row exists | A flag that says unfrozen while attempts exist |
-| "Last run" for the scheduler | Nothing. The job is a full sweep | A stored timestamp that is wrong after a restart, a clock change, or a half-completed run |
-| A results or summary table | The attempts themselves | Two sources of truth for one number |
-
-**The cost is accepted and named.** Deriving state means the dashboard runs
-queries a stored column would not. At the scale this platform targets, tens of
-people across tens of modules, that cost is invisible, and the correctness it
-buys is permanent.
-
-### 4.4 Schema management
-
-There is no migration tool. `SQLModel.metadata.create_all()` runs at startup and
-is the single schema authority. `create_all` creates a missing table but never
-alters an existing one, so a new table appears on restart while a new **column**
-requires the database to be recreated.
-
-This is a time-limited principle, recorded as such in the constitution. The
-changes made to a live database after deployment, each by hand, are recorded
-with the rest of the maintenance work in §9.3.
-
-### 4.5 Initial content
-
-The four training modules are part of the platform, not something an
-administrator types in. Their text and question banks are kept in
-`backend/app/seed_content/training_content.json`, generated from the training
-content document, and `content_seed.run()` loads them in the application
-lifespan straight after `create_all`.
-
-| Loaded per module | Count |
+| Table | Unique constraint |
 |---|---|
-| Published pages | 6 |
-| Questions in the bank | 20 |
-| Published test | 1, "End-of-module quiz", the document's 10 questions, pass mark 70%, two attempts |
+| `user` | `email` |
+| `registration` | `(user_id, module_id)` |
+| `page` | `(module_id, position)` |
+| `test_question` | `(test_id, question_id)` (primary key) |
+| `attempt_answer` | `(attempt_id, question_id)` |
+| `notification` | `(user_id, kind, module_id, due_date)` |
 
-A module whose title already exists is skipped, soft-deleted ones included. A
-restart therefore never duplicates content, never overwrites an
-administrator's edit, and never brings back a module somebody removed. The
-demonstration accounts are not loaded this way: `seed.py` stays a manual step,
-because accounts with a known password should not appear by themselves on a
-real installation.
+### 4.3 Calculated values
+
+These are calculated when needed and not stored:
+
+| Value | Calculated from |
+|---|---|
+| Trainee state on a module | Registration, current test, attempts |
+| Due date | Retake interval and latest attempt |
+| Test locked | Whether any attempt exists |
+| Results | Attempts |
+
+Tables are created at startup with `create_all()`.
+
+### 4.4 Initial content
+
+Four training modules are loaded at startup from
+`backend/app/seed_content/training_content.json`. Each module has 6 pages, a
+20-question bank and an end-of-module quiz (10 questions, 70% pass mark, 2
+attempts). Modules that already exist are skipped. Demo accounts are created
+separately with `seed.py`.
 
 ---
 
-## 5. System design: processes
+## 5. Process design
 
-### 5.1 The state machine
+### 5.1 Trainee state
 
-Every trainee is in exactly one of seven states on every module they are
-registered on. The state is computed at read time by one pure function, which all
-three views call. Any state computed inside a query, a template or a second
-helper would be a copy of this rule, and copies drift.
+Each trainee has one state per module, calculated by `state.py`:
 
 ```mermaid
 stateDiagram-v2
     [*] --> NoTest : registered
-
-    NoTest --> NotStarted : a test is published
+    NoTest --> NotStarted : test published
     NotStarted --> InProgress : attempt started
-    InProgress --> Passed : submitted, at or above the pass mark
-    InProgress --> Failed : submitted, below it
-
-    Passed --> InProgress : retake started
-    Failed --> InProgress : retake started
-
-    Passed --> Due : due date within 14 days
-    Failed --> Due : due date within 14 days
-    NotStarted --> Due : due date within 14 days
-
+    InProgress --> Passed : score >= pass mark
+    InProgress --> Failed : score < pass mark
+    Passed --> InProgress : retake
+    Failed --> InProgress : retake
+    Passed --> Due : due within 14 days
+    Failed --> Due : due within 14 days
+    NotStarted --> Due : due within 14 days
     Due --> Overdue : due date passed
-    Due --> InProgress : they act on it
-    Overdue --> InProgress : they act on it
-
-    Passed --> NotStarted : a replacement test is published
-    Failed --> NotStarted : a replacement test is published
-    Overdue --> NotStarted : a replacement test is published
-    NotStarted --> Overdue : scheduled replacement, registered longer ago than the interval
-
-    note right of Passed
-        The deciding attempt is the
-        MOST RECENT, not the best.
-        Against a pass mark of 80%:
-        40%, then 90%, then 70%
-        is Failed at 70%.
-    end note
-
-    note right of Overdue
-        Announced once, never repeated.
-        What persists is this state,
-        not the messaging (FR-014).
-    end note
+    Due --> InProgress : attempt started
+    Overdue --> InProgress : attempt started
+    Passed --> NotStarted : replacement test published
+    Failed --> NotStarted : replacement test published
+    Overdue --> NotStarted : replacement test published
 ```
 
-**Two rules that the diagram encodes and prose tends to blur.**
+- The **latest** attempt decides the state. Example with an 80% pass mark:
+  40%, 90%, then 70% = Failed.
+- Publishing a replacement test resets everyone to Not started. The instructor
+  sees how many people will be affected before publishing.
 
-*Most recent, not best.* On a test with a pass mark of 80%, somebody who scored
-40%, then 90%, then 70% is **failed at 70%**. Training measures what a person knows today, not their best day. If the
-rule quietly became "best attempt", the platform would report a workforce as
-trained when it is not, and nothing would complain.
-
-*A replacement resets the cohort.* State follows the module's **currently
-published** test. Publishing a replacement makes everyone "not started" again,
-because the module now asks something different. Their old attempts stay in
-history marked as being at a replaced test. The instructor is told the count
-before it happens: "Publish it and reset 12 people".
-
-If the replacement carries a schedule, "not started" is where the reset begins
-rather than where it ends. Nobody has attempted the new test, so `due.py` counts
-each person's first cycle from their own registration date, and somebody
-registered longer ago than the interval is **Due** or **Overdue** at once. There
-is no grace period: a replacement makes the whole cohort answerable to the new
-test immediately.
-
-### 5.2 Sequence: two-step sign-in
+### 5.2 Two-step login
 
 ```mermaid
 sequenceDiagram
-    actor P as Person
-    participant B as Browser
+    actor P as User
     participant R as auth router
     participant S as auth_service
     participant D as Database
     participant M as SMTP
 
-    P->>B: email and password
-    B->>R: POST /login
-    R->>S: start_login(email, password)
-    S->>D: find user by email
-    D-->>S: row
-    S->>S: verify_secret(password_hash)
-
-    alt wrong credentials or inactive
-        S-->>R: InvalidCredentials or InactiveAccount
-        R-->>B: 401, the form again
-    else accepted
-        S->>S: generate 6-digit code
-        S->>D: store hash and expiry together
-        Note over S,D: any outstanding code is<br/>overwritten, so a fresh sign-in<br/>invalidates the previous one
-        S->>M: send the code
-        alt mail refused
-            M-->>S: EmailDeliveryFailed
-            Note over R: the code is already stored<br/>and still valid, so the person<br/>continues rather than being<br/>sent back to the start
-        end
-        S-->>R: ok
-        R-->>B: 303 to /login/verify
+    P->>R: POST /login (email, password)
+    R->>S: start_login
+    S->>D: find user, check password
+    alt invalid or inactive
+        S-->>R: error
+        R-->>P: login form with message
+    else valid
+        S->>D: save code hash + expiry
+        S->>M: email the code
+        R-->>P: redirect to /login/verify
     end
 
-    P->>B: the six digits
-    B->>R: POST /login/verify
-    R->>S: verify_code(email, code)
-    S->>D: read hash and expiry
-
-    alt expired
-        S->>D: clear the code
-        S-->>R: CodeExpired
-        R-->>B: 401, sign in again for a new one
+    P->>R: POST /login/verify (code)
+    R->>S: verify_code
+    S->>D: check hash and expiry
+    alt expired or wrong
+        R-->>P: error message
     else correct
-        S->>D: clear the code, create session row
-        S->>D: sweep expired sessions
-        S-->>R: session id
-        R-->>B: 303 to /, session cookie set
+        S->>D: clear code, create session
+        R-->>P: redirect to /, set session cookie
     end
 ```
 
-**Why the code is stored hashed with its expiry in the same write.** A code and
-its deadline that can be written separately can disagree. They are written
-together, and cleared together on use, so a used code cannot be replayed and an
-expired one is deleted on sight.
+Codes expire after 10 minutes and a new login replaces any previous code.
+Sessions last 12 hours.
 
-**The session is re-read on every request**, and `is_active` re-checked, which is
-what makes deactivation take effect on the account's very next request rather
-than whenever its session happened to expire (FR-022).
-
-### 5.3 Sequence: the daily sweep
+### 5.3 Daily job
 
 ```mermaid
 sequenceDiagram
     participant SCH as APScheduler
-    participant J as daily_job.run_daily
+    participant J as daily_job
     participant DU as due.py
     participant N as notification_service
     participant D as Database
     participant M as SMTP
 
-    SCH->>J: run_daily(session, today)
-    Note over SCH,J: 06:00 UTC, nobody signed in.<br/>The date is a parameter, so a<br/>test can run it for any day.
-
-    J->>D: every trainee registration
-    D-->>J: rows
-
-    loop each module with a scheduled test
-        J->>D: current published test, and its attempts
-        loop each registered person
-            J->>DU: due_date_for(test, registration, attempts)
-            DU-->>J: a fixed calendar date, or none
-            alt due date has passed
-                J->>N: create(kind=overdue, due_date)
-            else within 14 days
-                J->>N: create(kind=due_soon, due_date)
-            else not yet
-                Note over J: nothing to say
-            end
-            N->>D: INSERT inside a savepoint
-            alt the unique constraint refuses it
-                D-->>N: IntegrityError
-                Note over N: already told. Skipped, and<br/>the savepoint keeps one<br/>collision from taking the<br/>whole run down with it.
-            end
+    SCH->>J: run_daily(today) at 06:00 UTC
+    J->>D: trainee registrations and current tests
+    loop each trainee on a scheduled test
+        J->>DU: due_date_for(test, registration, attempts)
+        alt overdue
+            J->>N: create overdue notice
+        else due within 14 days
+            J->>N: create due-soon notice
         end
+        N->>D: insert (skipped if it already exists)
     end
-
-    J->>D: every due_soon or overdue notification with emailed_at IS NULL
-    D-->>J: rows, grouped by person
-    loop each person
-        J->>M: one message listing every module
-        alt sent
-            J->>D: stamp emailed_at on every row it covered
-        else failed
-            Note over J,D: rows left unstamped, so the<br/>next run retries without<br/>creating a second record
-        end
+    J->>D: notices not yet emailed
+    loop each user
+        J->>M: one email listing all modules
+        J->>D: mark as emailed
     end
 ```
 
-**Idempotency comes from the database, not from bookkeeping.** There is no
-`last_run` record anywhere. A stored last-run timestamp is wrong after a restart,
-wrong if the clock moves, and wrong if a run half-completed. Instead the job asks
-who is due **now**, and the unique constraint on
-`(user_id, kind, module_id, due_date)` refuses a second insert. Run it twice for
-the same date and the second run creates nothing and sends nothing, which a test
-asserts directly.
+Failed emails are retried on the next run.
 
-**The due date must be a fixed calendar date.** If any branch of `due.py`
-returned "now", the key an overdue row is written under would move every morning,
-and a notification meant to arrive once would arrive daily. This is the single
-defect the scheduling design is shaped to prevent, and a test walks every branch to
-confirm none of them reads a clock.
-
-**One message, several records.** Somebody overdue on three modules receives one
-email and sees three entries in their list. The record and the message are
-different things: the record is the notification, the message is a delivery of
-it, and the record always exists first.
-
-### 5.4 Activity: taking a test
+### 5.4 Taking a test
 
 ```mermaid
 flowchart TD
-    A(["Trainee opens the test page"]) --> B{"Can they start?"}
-    B -->|not registered| B1["Panel: not registered on this module"]
-    B -->|outside the window| B2["Panel: opens or closed at ..."]
-    B -->|attempts used up| B3["Panel: all attempts used"]
-    B -->|yes| C["Start button shown"]
-
-    C --> D["POST /tests/id/attempts"]
-    D --> E{"Attempt already open?"}
-    E -->|yes| F["Resume it"]
-    E -->|no| G["Fix ends_at = min(start + limit, closes_at)<br/>Fix question_order, shuffled if set"]
-
-    G --> H["Attempt row created"]
-    F --> H
-    H --> I["One scrolling page, every question"]
-
-    I --> J["Answer changed"]
-    J --> K["htmx posts the whole question group"]
-    K --> L{"Past ends_at?"}
-    L -->|yes| M["Submit with what they had"]
-    L -->|no| N["Upsert on attempt_id + question_id"]
-    N --> I
-
-    I --> O["Submit pressed"]
-    O --> P["scoring.score: earned and possible"]
-    P --> Q["percentage, then pass or fail"]
-    Q --> R["Mark each answer right or wrong"]
-    R --> S["Notify the result immediately"]
-    S --> T(["Review: every question and the correct answer"])
-
-    M --> P
-
-    U(["Anyone reads this attempt later"]) --> V{"Past ends_at and not submitted?"}
-    V -->|yes| M
-    V -->|no| W["Show as it is"]
+    A(["Open test page"]) --> B{"Can start?"}
+    B -->|no| B1["Show reason"]
+    B -->|yes| C["Start / resume attempt"]
+    C --> D["Set ends_at and question order"]
+    D --> E["All questions on one page"]
+    E --> F["Answer changed: saved immediately (htmx)"]
+    F --> G{"Time up?"}
+    G -->|yes| H["Auto-submit"]
+    G -->|no| E
+    E --> I["Submit"]
+    I --> J["Score, pass/fail"]
+    H --> J
+    J --> K["Notify result"]
+    K --> L(["Review answers"])
 ```
 
-**Three design decisions are visible in this diagram.**
+- A test's questions are picked at random from the bank when the test is saved.
+  Saving again with the same count keeps the same questions.
+- `shuffle_questions` changes the question order for each attempt.
+- `allowed_attempts` of 0 means unlimited; on recurring tests the limit resets
+  after a pass.
 
-*`ends_at` and `question_order` are fixed once, at creation, and never
-recomputed.* This is what makes an instructor's later edit harmless to an attempt
-already running, and what makes an interrupted attempt resumable on another
-device as the same attempt.
-
-*Each answer is its own write.* An upsert the moment it is given, so a dropped
-connection loses at most the click in flight rather than the whole attempt.
-
-*There is no background sweep for expired attempts.* An attempt past its ending
-moment is submitted and scored **the next time anyone reads it**, which is why
-the diagram has a second entry point. The rule holds wherever a read happens: the
-trainee's dashboard, the instructor's cohort view, or the attempt itself.
-
-**Where a test's questions come from.** The instructor does not pick questions
-one by one. The test form asks how many questions the test should have, and
-`test_service` draws that many from the module's bank at random when the test is
-saved, storing them in bank order in `test_question`. Saving again with the same
-number keeps the questions already drawn, so changing a title cannot quietly
-change the content; a different number draws again. Every person who sits the
-test meets the same questions. `shuffle_questions` is separate: it changes only
-the order, per attempt, when `question_order` is fixed.
-
-### 5.5 Data flow: the study assistant
+### 5.5 Study assistant
 
 ```mermaid
 flowchart LR
-    subgraph Browser
-        Q["Question typed"]
-        TH["Thread so far<br/>hidden fields"]
-    end
-
-    subgraph Backend
-        RT["tutor router"]
-        CS["content_service.get_page"]
-        TS["tutor_service"]
-        NH["nh3: strip markup"]
-    end
-
-    subgraph External
-        G["Google Gemini API"]
-    end
-
-    DB[(page.body)]
-
-    Q --> RT
-    TH --> RT
-    RT --> CS
-    CS --> DB
-    DB --> CS
-    CS -->|"page, if they may read it"| TS
-    TS --> NH
-    NH -->|"page as words, capped at 6000 chars"| TS
-    TS -->|"system instruction + thread + question"| G
-    G -->|"answer text"| TS
-    TS --> RT
-    RT -->|"HTML fragment, swapped in place"| Q
-
-    style G fill:#fde2e2,stroke:#b02a37,color:#10161f
+    Q["Question + previous messages"] --> RT["tutor router"]
+    RT --> CS["content_service.get_page"]
+    CS --> TS["tutor_service"]
+    TS -->|"page text (max 6000 chars) + question"| G["Google Gemini"]
+    G --> TS --> RT -->|"HTML fragment"| Q
 ```
 
-**The external call is named rather than buried.** The page text and the
-trainee's question leave the server and reach Google. That is what the feature
-is, and it is the first thing a reviewer of this platform should be told.
-
-**Nothing is stored.** No table, no column, no migration. The conversation lives
-in hidden form fields in the reader's own browser and comes back with each
-question, trimmed to the last six exchanges. Closing the page ends it.
-
-**The page is fetched through the same service every other reader uses**, so the
-assistant cannot become a route to read a module somebody is not on. A stranger
-asking about a page receives 404, and a test asserts it.
-
-**With no API key the feature does not exist**: no panel renders, no route
-answers, and the platform behaves exactly as it did before the feature was
-written.
+- The page text and the question are sent to Google.
+- Nothing is stored; the conversation is kept in the page (last 6 exchanges).
+- Only pages the user can access can be used.
+- The feature is hidden when no API key is set.
 
 ---
 
-## 6. System design: interface
+## 6. Interface design
 
-### 6.1 Approach
+- Server-rendered Jinja2 templates with Bootstrap 5.3.
+- htmx is used for saving test answers and for the study assistant.
+- Quill is used as the page editor.
+- One stylesheet with design tokens (colours, type scale, spacing); see
+  `docs/design-system.md`.
+- Light and dark theme, following the OS setting.
+- Dashboards show summary figures (modules, published, drafts for staff; to do,
+  completed, overdue for trainees).
+- Module cards show a coloured cover or an uploaded image, and the trainee's
+  state.
+- Times are stored in UTC and shown in the user's local time zone.
 
-Server-rendered Jinja2 templates over vendored Bootstrap 5.3, with htmx for the
-two places that genuinely need to update in place: saving a test answer, and
-asking the assistant. Reordering pages is an ordinary form post. There is no
-client framework and no build step. Every asset is local, including the Inter
-typeface and the Bootstrap Icons font, so the interface works on a machine with
-no outbound access.
+**Accessibility**
 
-A few checks run in the browser as a convenience on top of the server's own:
-choosing a picture larger than the upload limit, or a file that is not an
-image, is refused on the same page before it is sent. Without that check nginx
-would refuse an oversized file first and replace the form with its own error
-page. The server still validates every upload.
-
-### 6.2 Design system
-
-35 templates share one stylesheet built entirely from design tokens: a neutral
-ramp, one brand hue, semantic colours, a 1.125 type scale from a 15.6px base,
-and 4px spacing. No template carries a colour or a radius of its own; the few
-inline styles set a width, an offset or a computed progress value.
-
-Each dashboard opens with a short welcome section and three summary figures
-computed from data the page already has: modules, published and drafts for
-staff; to do, completed and overdue for a trainee. Modules appear as cards
-whose cover is a two-tone gradient with a dot grid, or an uploaded picture, and
-whose foot carries the state. Reading pages show their position in the module.
-The design system itself is documented in `docs/design-system.md`.
-
-Components reference **role** tokens rather than palette tokens, which is what
-makes the dark theme a redefinition of one block rather than a second stylesheet.
-The theme follows the operating system, applied before the stylesheets load so
-the first paint is already correct.
-
-### 6.3 Accessibility
-
-| Requirement | Status |
+| Item | Implementation |
 |---|---|
-| 4.5:1 contrast for normal text | **Measured** with WCAG relative luminance. Lowest pair 5.47:1 |
-| 3:1 for graphical objects | **Measured** on the icons beside the summary figures, lowest 4.35:1. Not claimed for covers: a cover is a gradient or an uploaded picture and carries no information |
-| Visible focus | One global `:focus-visible` rule, so no component can be missed |
-| Touch targets | 44px minimum on standard buttons, inputs, navigation links and choice rows; small buttons are 36px, with smaller type rather than a smaller hit area |
-| Colour never alone | Every state badge carries its word: Passed, Failed, Due, Overdue, Not started, In progress, No test |
-| Reduced motion | `prefers-reduced-motion` collapses every transition |
-| Text scaling | Every size in rem; the desktop step is a root percentage, so a reader's own browser font preference is preserved rather than overruled |
-
-**One exclusion is declared rather than quietly skipped.** Keyboard navigation
-requirements were removed from this project at the owner's direction, so the
-platform makes no claim to that part of WCAG AA. Focus styling is present because
-it costs nothing, but it is styling rather than a claim.
-
-### 6.4 Three interface decisions worth recording
-
-**A control nobody may use is not a control.** The Start button appears only for
-somebody who can actually start; where they cannot, a panel names the reason. The
-administrator's own row is absent from the accounts list rather than present and
-inert. Publishing is absent for an instructor rather than shown and refused. In
-every case the service refuses it as well, so the page hiding a control is never
-the enforcement.
-
-**Empty is a statement, not a blank frame.** Every list has an empty branch that
-says what the situation is, because somebody with nothing to do should be told
-that rather than left wondering whether the page failed to load.
-
-**One form, one Save.** The cover picture was first built as its own form with
-its own upload button, sitting below the form that saves the module. It was
-reported as broken twice in one message: there was no Save after uploading, and
-a module being created could not be given a picture at all, because the file
-needs a module to belong to and the record did not exist yet. Both followed from
-the same mistake. A field that belongs to a record is saved with that record:
-the picture moved into the module form, the separate routes were deleted, and
-the file is now read before the module is created and stored once it exists.
-Two save buttons on one page are two ways to half-save it.
+| Text contrast | At least 4.5:1 |
+| Focus | Visible focus outline |
+| Touch targets | 44px minimum |
+| State badges | Always show a text label |
+| Reduced motion | Transitions disabled when requested |
+| Text size | All sizes in rem |
 
 ---
 
 ## 7. Implementation
 
-*Waterfall stage 3. The design in §3 to §6 is turned into code. This stage
-builds the requirements and the design as they stand; it does not change them.*
+### 7.1 Technology
 
-### 7.1 Technology and structure
-
-The technology fixed at design time is listed in Appendix B. The code follows
-the four layers of §3.1, one directory each:
-
-| Layer | Location | Size |
-|---|---|---|
-| Models | `backend/app/models/` | 13 tables in 10 files |
-| Schemas | `backend/app/schemas/` | read and write models in 5 files |
-| Services | `backend/app/services/` | 16 services |
-| Routers | `backend/app/routers/` | 12 routers, 65 routes (Appendix A) |
-| Templates | `backend/app/templates/` | 35 pages and components, 4 email templates |
-
-Beside the layers sit the modules every layer shares: `security.py` (hashing,
-CSRF, rate limiting), `dependencies.py` (route guards), `rendering.py` (every
-page goes through one render function), `sanitise.py`, `art.py`,
-`content_seed.py` and `config.py`, which reads every setting from `.env`.
-
-### 7.2 Order of construction
-
-The five requirement groups were built in the order of their dependencies, each
-on the tables and services of the groups before it:
-
-1. **P0 Foundation.** Users, sessions, the two-step sign-in, roles and the
-   application shell. Everything else needs an account.
-2. **P1 Modules and content.** Modules, registrations, pages, the editor and
-   image storage. A test needs a module to belong to.
-3. **P2 Tests.** The question bank, tests, attempts and scoring.
-4. **P3 Results.** The state function and the views that read it, which need
-   attempts to exist.
-5. **P4 Scheduling.** Due dates, the daily job and notifications, which need
-   state.
-
-### 7.3 Rules applied while building
-
-The constitution's principles became rules for the code, and the ones that can
-be checked mechanically are checked by tests rather than by review (§8.2):
-
-| Rule | Where it holds |
+| Component | Choice |
 |---|---|
-| A router parses the request, calls one service and renders or redirects; it never queries | every file in `routers/` |
-| Every module-scoped action checks its own authorisation | `module_service.get_for` and `get_for_write` |
-| No `table=True` instance reaches a template | read models in `schemas/` |
-| Instructor HTML is sanitised before it is stored | `content_service`, through `sanitise.py` |
-| The server owns the clock during an attempt | `attempt_service` |
-| State and due dates are derived, never stored | `state.py`, `due.py` |
+| Language | Python 3.12 |
+| Web framework | FastAPI, Jinja2 |
+| ORM | SQLModel |
+| Database | MySQL 8 (utf8mb4) |
+| Web server | nginx 1.27 |
+| Front end | Bootstrap 5.3, Bootstrap Icons, Inter, htmx, Quill |
+| HTML sanitising | nh3 |
+| Password hashing | Argon2 |
+| Scheduling | APScheduler |
+| Email | Brevo SMTP |
+| Study assistant | Google Gemini (optional) |
+
+### 7.2 Code structure
+
+| Folder | Contents |
+|---|---|
+| `backend/app/models/` | 13 tables |
+| `backend/app/schemas/` | Read and input models |
+| `backend/app/services/` | 16 services |
+| `backend/app/routers/` | 12 routers, 65 routes |
+| `backend/app/templates/` | 35 templates, 4 email templates |
+
+Shared modules: `config.py` (settings from `.env`), `security.py` (hashing, CSRF,
+rate limiting), `dependencies.py` (login and role checks), `rendering.py`,
+`sanitise.py`, `art.py`, `content_seed.py`.
+
+### 7.3 Routes
+
+| Area | Router | Routes |
+|---|---|---|
+| Login and password | `auth`, `password` | 7 |
+| Accounts | `admin` | 7 |
+| Modules | `modules` | 11 |
+| Content | `content` | 10 |
+| Registration | `registrations` | 3 |
+| Questions | `questions` | 6 |
+| Tests | `tests` | 7 |
+| Attempts | `attempts` | 7 |
+| Results | `results` | 4 |
+| Notifications | `notifications` | 2 |
+| Study assistant | `tutor` | 1 |
+| **Total** | | **65** |
 
 ---
 
 ## 8. Testing
 
-*Waterfall stage 4. The implementation is tested against the requirements of §2
-and the design of §3 to §6.*
+**659 automated tests** in 57 files, run with pytest against MySQL 8 in a
+separate test database. Each test runs in a transaction that is rolled back.
 
-### 8.1 Test strategy
-
-**645 tests across 54 files**, run against a real MySQL 8 instance in a
-disposable schema, never SQLite. The project depends on unique indexes, foreign
-keys and `utf8mb4`, and SQLite enforces none of them the same way; a suite that
-passed on SQLite would prove less than it appeared to.
-
-Each test runs inside a transaction that is rolled back, so tests never see each
-other's leftovers.
-
-| Kind | What it covers |
+| Type | Covers |
 |---|---|
-| Pure function tests | `scoring`, `state`, `due`, `art` exhaustively, by table of cases |
-| Service tests | Authorisation, freezing, idempotency, the daily job run twice |
-| Router tests | Status codes, what each role may reach, CSRF, what a page offers |
-| Structural tests | The done-gates, asserted mechanically rather than reviewed |
+| Unit tests | `scoring`, `state`, `due`, `art` |
+| Service tests | Access checks, test locking, daily job, notifications |
+| Route tests | Status codes, role access, CSRF, page content |
+| Structure tests | Routers contain no queries; templates receive only read models |
 
-### 8.2 Done-gates as executable checks
+Run the tests with:
 
-Six done-gates must pass before an implementation is accepted for testing.
-Two of them are assertions rather than reviews:
-
-- **No module under `routers/` imports `Session` or `select`.** A grep, run as a
-  test.
-- **No `table=True` instance reaches a template.** Every page is rendered and its
-  context inspected recursively.
-
-Running the second gate as a test is what found `current_test` handing a table
-row to two templates, which reading the routers had not.
-
-### 8.3 Defects found in testing
-
-Several defects in this system were found by a test or by a live check rather
-than by review, and they are recorded because the kind matters more than the
-count.
-
-| Defect | Found by | Why review missed it |
-|---|---|---|
-| `most_recent_submitted` returned the first attempt | A test asserting the rule | `submitted_at` has second precision; two attempts in one second ordered arbitrarily |
-| Results pages never triggered expire-on-read | A test written for the requirement | Nothing looked wrong. A lapsed attempt simply sat as "in progress" forever |
-| `GET /` registered twice | A structural test | A second registration is shadowed silently, with no error to find |
-| The scheduled sweep died every night | Watching a real scheduled run | `main.py` had shadowed the session type with the session table. Every test called the job with a session already in hand |
-| Page navigation never rendered | A test asserting the links | Comparing model objects rather than ids matched nothing, so every page silently became the last one |
-| nginx would not start on macOS | Deploying to a second platform | Docker Desktop on Windows reported 755 for build-context files and hid a 644 script |
-| Every save without a file attached was refused | A test that posted the form the way a browser does | An untouched file input still posts a part. Two clients shape it differently, and the route accepted only one of the two shapes |
-
----
-
-## 9. Deployment and maintenance
-
-*Waterfall stage 5. The tested system is deployed, and every change made to it
-afterwards is maintenance, recorded here.*
-
-### 9.1 Deployment
-
-The platform is deployed with Docker Compose as the three containers of §3.2,
-by one command, `docker compose up -d --build`. Every setting comes from one
-`.env` file: the database passwords, the Brevo SMTP login and key, and the
-optional Gemini key. On each start the backend waits for the database, checks that the
-connection is `utf8mb4`, creates any missing table, loads the training content
-(§4.5) and starts the daily scheduler.
-
-| The server needs | Why |
-|---|---|
-| Port 80 reachable on the local network | nginx is the only published port |
-| Outbound access to `smtp-relay.brevo.com:587`, from an IP address authorised in Brevo | sign-in codes and notices are emailed through Brevo, which refuses unlisted addresses |
-| A correct clock | every time is stored in UTC, and due dates follow it |
-| A machine that does not sleep | the daily sweep runs at a fixed hour |
-
-The demonstration accounts are created by hand with `seed.py`; real accounts
-are created by an administrator. There is no automatic backup: a `mysqldump`
-of the database and a copy of the uploads volume are the whole of it, and the
-README gives both commands.
-
-### 9.2 Maintenance changes
-
-Maintenance is of three kinds: corrective, which fixes a defect; adaptive, which
-responds to a change in the environment; and perfective, which improves
-something that already worked. Every change since deployment is one of them.
-
-| Change | Kind | Where it is described |
-|---|---|---|
-| The cover picture moved into the module form | Corrective | §6.4 |
-| `module.art` added, then widened | Adaptive | §9.3 |
-| Seven unread columns removed | Perfective | §9.4 |
-| The public tunnel removed; the platform is served on the local network | Adaptive | §3.2 |
-| Mail moved from the previous SMTP provider to Brevo's SMTP relay | Adaptive | §9.1, §10.2 |
-| Attempts set as a number or as Unlimited (stored as 0); on a recurring test the number now applies per cycle and starts again after a pass, where before a retake interval silently made every test unlimited | Corrective | `attempt_service` |
-| Registration and result notices sent in the background, so a roster save or a submitted attempt no longer waits about three seconds per message for the relay; the record is still committed first, and the sign-in code is still sent inside the request | Perfective | `notification_service` |
-| The training content loaded at startup | Perfective | §4.5 |
-| A test's questions drawn at random by count | Perfective | §5.4 |
-| Oversized or non-image uploads refused on the same page | Corrective | §6.1 |
-| The interface refreshed: Inter, icons, summary figures | Perfective | §6.2 |
-| Database names imported from SQLModel rather than SQLAlchemy | Perfective | Appendix B |
-
-### 9.3 Schema changes on the live database
-
-The schema rule in §4.4 has been departed from three times on the live
-deployment, each time by hand and each time recorded, rather than by
-discarding real data:
-
-| Change | Statement | Why it could not wait |
-|---|---|---|
-| `module.art` added | `ALTER TABLE module ADD COLUMN art VARCHAR(32) NULL` | The cover feature, on a database already carrying modules |
-| `module.art` widened to 64 | `ALTER TABLE module MODIFY art VARCHAR(64) NULL` | A stored image name is a 32-character uuid plus an extension, which does not fit the width a colour name needed |
-| Seven columns dropped | `ALTER TABLE ... DROP COLUMN` on `content_image`, `session` and `attempt_answer` | They were written on every operation and read by nothing (§9.4) |
-
-In every case the model carries the change, so a database created fresh is
-already correct, and the running instance was brought level by hand. The pattern
-is the same each time: the model is the specification, and a live database is
-reconciled to it deliberately rather than automatically.
-
-### 9.4 Columns removed after audit
-
-
-Schemas accumulate columns that were plausible when written and are read by
-nothing once the system exists. An audit compared every column against the code
-that reads it, distinguishing a column that is *written* from one that is
-*read*: a value assigned on every operation and never consulted looks like
-recorded data and is not.
-
-Seven were removed, with the code that wrote them:
-
-| Table | Column | Written | Read |
-|---|---|---|---|
-| `content_image` | `content_type` | Every upload | Nowhere |
-| `content_image` | `size_bytes` | Every upload | Nowhere |
-| `content_image` | `uploaded_by` | Every upload | Nowhere |
-| `content_image` | `uploaded_at` | Every upload | Nowhere |
-| `session` | `ip` | Every sign-in | Nowhere |
-| `session` | `user_agent` | Every sign-in | Nowhere |
-| `attempt_answer` | `answered_at` | Every answer change | Nowhere |
-
-`content_image` fell from eight columns to four. `uploaded_by` was the only
-foreign key in the schema that no query ever traversed, so its constraint was
-dropped with it.
-
-Not every unread column was caught. `config.session_secret` is still required
-in `.env` and read by nothing: sessions are random tokens held in the
-`session` table and CSRF tokens are random values compared against a cookie, so
-neither is signed. It is recorded here rather than silently left.
-
-**Three were kept although unread**, because the distinction is between a column
-nobody reads and a column nobody reads *yet*. `attempt.points_earned`,
-`attempt.points_possible` and `attempt_answer.points_awarded` are the raw
-numbers behind a percentage. Without them a score of 75% is a number that cannot
-be explained or recomputed, and the information cannot be recovered later
-because it was never kept. The `created_at` timestamps were kept on the same
-reasoning.
-
-The audit also found five definitions in the code that nothing referenced: two
-service functions, an exception never raised, and two request models never
-constructed. One of them, `most_recent_submitted`, carried a docstring claiming
-two parts of the system read it; in fact the rule it named had been rewritten three times
-elsewhere, against a list rather than a query, once the services began loading
-attempts in bulk. The function was removed. **The duplication it left behind is
-recorded as outstanding in §10.2**, because that is a design question rather than
-dead code.
-
----
-
-## 10. Evaluation and limitations
-
-### 10.1 Against the objectives
-
-| Objective | Outcome |
-|---|---|
-| Deployable by an SME without specialist staff | One command, three containers, one configuration file |
-| Material authored in the platform | Rich text with server-side sanitising, ordered pages, image upload |
-| Assessment with a recorded outcome | Automatic scoring, attempt history, instructor correction |
-| A record that stays true without maintenance | State and due dates derived at read time, never stored |
-| Acts without being asked | A daily sweep that is safe to run twice, never, or late |
-
-### 10.2 Known limitations
-
-**Single instance by design.** The scheduler runs in-process, so two backend
-replicas would run two schedulers. The unique constraint makes that wasted work
-rather than duplicate email, but the platform is single-instance by intent and
-does not horizontally scale.
-
-**No migration path.** `create_all` never alters an existing table, so every
-column change on a live database is a hand-written statement, applied in the
-right order relative to the deploy or the two disagree. Three such changes have
-now been made (§9.3). This is acceptable while the system is being built and is
-not acceptable once it holds an organisation's training record.
-
-**Derived state has a cost that will eventually be visible.** The dashboard runs
-whole-set queries. At tens of people across tens of modules this is invisible.
-At thousands it would not be, and the answer would be a cache with an explicit
-invalidation rule rather than a stored column.
-
-**Mail depends on one provider and one IP address.** Mail goes through Brevo's
-SMTP relay, and Brevo accepts a connection only from an address on the
-account's Authorised IPs list. A server whose public address changes stops
-sending until the new address is authorised, and every sign-in then depends on
-the fallback below. The sign-in code is always printed to the server console, so
-whoever can read the backend log can finish a sign-in; that print is permanent
-by decision. In development builds the code is also shown on the verification
-page, which one setting turns off.
-
-**The assistant sends page content to a third party.** This is inherent to the
-feature. An organisation with a policy against that should leave the API key
-empty, at which point the feature does not exist.
-
-**One rule is written in three places.** Which attempt represents a person, the
-most recent rather than the best, with the row id breaking a tie because
-`submitted_at` has only second precision, appears twice in `state` and once in
-`due`. It was extracted into a single function once, but the services then
-changed to load attempts in bulk and pass lists rather than query one at a time,
-and the extraction was left behind unused instead of being rewritten to match.
-Removing the unused function (§9.4) did not resolve the duplication. Changing
-the rule today means finding three places, and the compiler will not help.
-
-**A cover is decoration only.** It was once a drawn pattern chosen per module,
-then a set of emblems, then a plain colour, and is now a two-tone gradient with
-a dot grid, or an uploaded picture. Nothing
-about a module's state, progress or urgency is expressed by it, and nothing
-should be: the state badges carry that, in words.
-
-### 10.3 Further work
-
-1. A migration tool, before the platform holds a real training record.
-2. A sending path that does not depend on a fixed public IP address, such as
-   Brevo's HTTP API with an API key, so a changed address does not stop mail.
-3. Extract the deciding-attempt rule into one place that `state` and `due` both
-   call, on the list rather than on a query.
-4. Per-question analytics for instructors: which question the cohort fails most.
-5. An export of the training record, for an auditor who wants it outside the
-   platform.
-
----
-
-## Appendix A: Route inventory
-
-65 routes across twelve routers, each owning one area. The counts below are
-taken from the routers themselves and sum to the total, which an earlier
-revision of this table did not.
-
-| Area | Router | Routes | Notable |
-|---|---|---|---|
-| Identity | `auth`, `password` | 7 | Two-step sign-in, sign out, forced password change |
-| Administration | `admin` | 7 | Accounts. None of them acts on the caller's own |
-| Modules | `modules` | 11 | Create, publish, soft delete and restore, cover picture |
-| Content | `content` | 10 | Pages, ordering, images |
-| Registration | `registrations` | 3 | Roster, add, remove |
-| Questions | `questions` | 6 | The module's bank |
-| Tests | `tests` | 7 | Build, publish, and the confirmation before a replacement |
-| Attempts | `attempts` | 7 | Start, answer, submit, review, correct |
-| Results | `results` | 4 | Including `GET /`, registered exactly once |
-| Notifications | `notifications` | 2 | List and mark seen |
-| Assistant | `tutor` | 1 | Ask about the page being read |
-
-## Appendix B: Technology
-
-| Component | Choice | Reason |
-|---|---|---|
-| Language | Python 3.12 | |
-| Web framework | FastAPI with Jinja2 | Server-rendered; no separate client application |
-| ORM | SQLModel over SQLAlchemy 2 | One class is both the table and the validation boundary |
-| Database | MySQL 8, InnoDB, utf8mb4 | Foreign keys and unique indexes enforced |
-| Driver | PyMySQL with `cryptography` | MySQL 8 defaults to `caching_sha2_password` |
-| Reverse proxy | nginx 1.27-alpine | Serves static files; the only published port |
-| Front end | Bootstrap 5.3, Bootstrap Icons 1.11, Inter, htmx, Quill, all vendored | No CDN, no build step |
-| Sanitising | nh3 | Server-side, before storage |
-| Passwords and codes | Argon2 | |
-| Scheduling | APScheduler, in-process | No broker, no worker container |
-| Assistant | Google Gemini | Optional; absent without a key |
-
----
-
-*This document describes the system as built and verified on 12 October 2026:
-645 tests passing against MySQL 8, behind nginx.*
+```bash
+docker compose exec backend pytest
+```

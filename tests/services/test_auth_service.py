@@ -1,8 +1,4 @@
-"""The code and credential cases, as a table.
-
-Covers FR-013, FR-016, FR-017 and FR-018: two steps every time, a fixed lifetime,
-single use, and a fresh sign-in replacing whatever was outstanding.
-"""
+"""Login service: password check, code expiry, single use and code replacement."""
 
 from __future__ import annotations
 
@@ -104,7 +100,7 @@ def test_a_used_code_is_refused_the_second_time(db, make_user, sent):
 
 
 def test_a_fresh_sign_in_replaces_the_outstanding_code(db, make_user, sent):
-    """Two devices: the second issues a new code and the first stops working."""
+    """A new login replaces the previous code."""
     make_user(email="a@example.com", password="demo-password")
     start(db, "a@example.com", "demo-password")
     first = sent[0]

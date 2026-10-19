@@ -1,13 +1,6 @@
-"""Everything these pages show is derived. Nothing here writes.
+"""Results and progress, calculated from registrations and attempts (read-only).
 
-No results table, no cached state, no summary row. Every figure comes from
-registrations and attempts that already exist, so nothing can drift out of step
-with what it came from (FR-025).
-
-The queries are deliberately whole-set rather than per-module. The obvious
-implementation, looping the registrations and querying each module's test and
-each person's attempts, is thirty modules times three queries, and it looks fine
-with three modules in testing (research R3).
+Queries load data for all modules at once to avoid one query per module.
 """
 
 from __future__ import annotations
@@ -26,12 +19,7 @@ from app.services import attempt_service, due, module_service, state
 
 
 def current_test(db: DbSession, module_id: int) -> Test | None:
-    """The module's currently published test, or None.
-
-    Where more than one is published, the newest is the current one. State comes
-    from this test alone: attempts at anything it replaced stay in the history
-    but decide nothing (FR-008).
-    """
+    """The module's current test: the newest published one, or None."""
     return db.exec(
         select(Test)
         .where(Test.module_id == module_id, Test.is_published == True)  # noqa: E712
@@ -40,7 +28,7 @@ def current_test(db: DbSession, module_id: int) -> Test | None:
 
 
 def current_test_row(db: DbSession, module_id: int) -> CurrentTestRow | None:  # noqa: D401
-    """The same test, as something a template may be handed (done-gate 5)."""
+    """`current_test` as a read model for templates."""
     row = current_test(db, module_id)
     if row is None:
         return None
@@ -51,10 +39,7 @@ def current_test_row(db: DbSession, module_id: int) -> CurrentTestRow | None:  #
 
 
 def for_person(db: DbSession, user: User) -> list[ModuleResultRow]:
-    """Every module they hold a **trainee** registration on, and no other.
-
-    A module somebody only instructs is not training they owe (FR-015).
-    """
+    """Dashboard rows for every module the user is a trainee on."""
     registrations = db.exec(
         select(Registration).where(
             Registration.user_id == user.id,
@@ -90,22 +75,17 @@ def for_person(db: DbSession, user: User) -> list[ModuleResultRow]:
     ).all()
     by_test: dict[int, list[Attempt]] = {}
     for row in attempts:
-        # Reading these pages is one of the moments an attempt past its ending
-        # is submitted and scored. Without this a lapsed attempt would sit here
-        # as "in progress" forever (Phase 2 research R8).
+        # Auto-submit attempts whose time has run out.
         by_test.setdefault(row.test_id, []).append(attempt_service.expire_if_due(db, row))
 
     rows: list[ModuleResultRow] = []
     for registration in registrations:
         module = modules.get(registration.module_id)
         if module is None:
-            continue  # soft-deleted, so it is gone from every list
+            continue  # deleted module
 
         test = current.get(module.id)
         mine = by_test.get(test.id, []) if test else []
-        # Every row already holds what due.py needs, so the date is computed
-        # here and handed to the same state function the other two views use
-        # (Phase 4 FR-010).
         current_state = state.state_for(
             test, mine, due.due_date_for(test, registration, mine)
         )
@@ -123,15 +103,13 @@ def for_person(db: DbSession, user: User) -> list[ModuleResultRow]:
             )
         )
 
-    # Sorted in Python after grouping, so the state rule is never expressed a
-    # second time in SQL (research R4).
+    # Sort in Python using the state ranking.
     rows.sort(key=lambda row: (state.rank(state.State(row.state)), row.title))
     return rows
 
 
 def _link_for(current_state: "state.State", module_id: int, attempts) -> str:
-    """An attempt in progress leads back **into the attempt**, not to a review
-    of something unfinished (FR-011)."""
+    """Link to the attempt if one is in progress, otherwise the module history."""
     if current_state is state.State.IN_PROGRESS:
         open_attempt = next((row for row in attempts if not row.is_submitted), None)
         if open_attempt is not None:
@@ -143,13 +121,9 @@ def _link_for(current_state: "state.State", module_id: int, attempts) -> str:
 
 
 def history_for(db: DbSession, subject: User, module_id: int, actor: User) -> list[AttemptRow]:
-    """Every attempt this person made at this module's tests, newest first.
+    """All of a user's attempts on the module's tests (including old tests), newest first.
 
-    **Including attempts at replaced tests**, which is the one place they remain
-    visible (FR-008, FR-009).
-
-    Subject and actor are separate arguments: a trainee may ask only for
-    themselves, an instructor for anyone on a module they run (FR-018).
+    Trainees can only view their own; instructors can view anyone on their module.
     """
     if subject.id != actor.id:
         module_service.get_for_write(db, module_id, actor)
@@ -193,10 +167,7 @@ def history_for(db: DbSession, subject: User, module_id: int, actor: User) -> li
 
 
 def for_module(db: DbSession, module_id: int, actor: User) -> list[CohortRow]:
-    """Everyone registered as a trainee, with their state and score.
-
-    Those who have not passed come first, then by name (FR-020).
-    """
+    """All trainees on the module with state and score (not passed first, then by name)."""
     module_service.get_for_write(db, module_id, actor)
 
     people = db.exec(
@@ -240,13 +211,7 @@ def for_module(db: DbSession, module_id: int, actor: User) -> list[CohortRow]:
 
 
 def count_affected_by_replacement(db: DbSession, module_id: int) -> int:
-    """How many registered people currently show **passed**.
-
-    Phase 2's publish route names this number before replacing a test, because
-    "this will reset trainees" is ignored and "this will reset 30 people" is not
-    (FR-027, research R6). It counts through the same state function, so the
-    number warned about is the number that changes.
-    """
+    """Number of trainees currently passed (shown before replacing a test)."""
     test = current_test(db, module_id)
     if test is None:
         return 0
@@ -270,9 +235,7 @@ def count_affected_by_replacement(db: DbSession, module_id: int) -> int:
         if state.state_for(
             test,
             by_user.get(registration.user_id, []),
-            # The same due date the dashboard uses, so the number warned about
-            # stays the number that changes: somebody already overdue does not
-            # show as passed and is not counted as being reset.
+            # Same due-date logic as the dashboard, so overdue users aren't counted.
             due.due_date_for(test, registration, by_user.get(registration.user_id, [])),
         )
         is state.State.PASSED
@@ -280,11 +243,7 @@ def count_affected_by_replacement(db: DbSession, module_id: int) -> int:
 
 
 def subject_on_module(db: DbSession, module_id: int, user_id: int) -> User | None:
-    """The person a cohort row points at, or None if they are not on the module.
-
-    Guards against an instructor typing an id for somebody who is not theirs to
-    see, which would otherwise reach across module boundaries (FR-021).
-    """
+    """Return the user if they are registered on the module, else None."""
     registration = db.exec(
         select(Registration).where(
             Registration.module_id == module_id, Registration.user_id == user_id
@@ -296,11 +255,7 @@ def subject_on_module(db: DbSession, module_id: int, user_id: int) -> User | Non
 
 
 def state_for_module(db: DbSession, module_id: int, user: User) -> str | None:
-    """The caller's own state on one module, for the badge on its home page.
-
-    Returns None where they hold no trainee registration, because the badge is
-    about training they owe.
-    """
+    """The user's state on the module (None if not a trainee on it)."""
     registration = db.exec(
         select(Registration).where(
             Registration.module_id == module_id,

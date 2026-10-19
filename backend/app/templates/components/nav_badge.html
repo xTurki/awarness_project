@@ -1,8 +1,4 @@
-{# The shell indicator: a count of what the caller has not seen (FR-030).
-
-   The number is attached to every rendered page by `rendering.render`, from a
-   count taken while the session was resolved, so no page has to remember to ask
-   for it. Zero renders the link without a badge rather than a badge saying nought. #}
+{# Unread notifications count (set in rendering.render). No badge when zero. #}
 <a class="nav-link position-relative{% if request.url.path.startswith('/notifications') %} active{% endif %}"
    href="/notifications">
   <i class="bi bi-bell" aria-hidden="true"></i> Notifications

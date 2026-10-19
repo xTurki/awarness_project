@@ -1,10 +1,4 @@
-"""The two new states, on all three pages Phase 3's states appear on.
-
-This is the task that stops `due` and `overdue` existing in a function and on no
-screen. All three pages read the same state function, each passing in a date
-computed at the call site, so if one of them stopped passing a date the state
-would silently revert to *passed* there and nowhere else (FR-010).
-"""
+"""Due and overdue states appear on the dashboard, cohort view and module page."""
 
 from __future__ import annotations
 
@@ -64,7 +58,7 @@ def recurring_test(db, owner, module):
 
 @pytest.fixture()
 def lapsed(db, make_user, module, recurring_test):
-    """Somebody who passed long enough ago to have lost currency."""
+    """A trainee who passed long enough ago to be overdue."""
     person = make_user(email="t@example.com", full_name="Tess Trainee")
     db.add(
         Registration(
@@ -95,7 +89,7 @@ def lapsed(db, make_user, module, recurring_test):
 
 @pytest.fixture()
 def approaching(db, make_user, module, recurring_test):
-    """Somebody inside the warning period but not yet past it."""
+    """A trainee who is due soon."""
     person = make_user(email="soon@example.com", full_name="Sam Soon")
     db.add(
         Registration(
@@ -143,8 +137,7 @@ def test_due_shows_on_the_trainee_dashboard(client, sign_in, approaching):
 
 
 def test_overdue_sorts_to_the_top(client, db, sign_in, lapsed, make_user):
-    """Outstanding things first, and nothing is more outstanding than something
-    already missed (FR-010 with Phase 3 FR-007)."""
+    """Overdue modules are listed first."""
     settled = Module(title="Already Done", is_published=True)
     db.add(settled)
     db.commit()
@@ -184,8 +177,7 @@ def test_due_shows_on_the_cohort_view(client, sign_in, owner, module, approachin
 
 
 def test_overdue_shows_on_the_module_home_page(client, sign_in, module, lapsed):
-    """The badge Phase 3 added to a page that already existed, not a list of
-    its own."""
+    """Overdue is shown on the module home page badge."""
     sign_in(lapsed)
     page = client.get(f"/modules/{module.id}")
 
@@ -194,8 +186,7 @@ def test_overdue_shows_on_the_module_home_page(client, sign_in, module, lapsed):
 
 
 def test_the_word_travels_with_the_colour(client, sign_in, lapsed):
-    """Legible in greyscale, printed, or screenshotted: never colour alone
-    (Phase 3 research R5)."""
+    """The state is shown as text, not only colour."""
     sign_in(lapsed)
     page = client.get("/")
 
@@ -209,12 +200,11 @@ def test_the_word_travels_with_the_colour(client, sign_in, lapsed):
 def test_a_trainee_is_shown_the_retake_interval(
     client, sign_in, module, recurring_test, lapsed
 ):
-    """Shown to the people registered on it, not only to whoever set it
-    (FR-006)."""
+    """Trainees can see the retake interval."""
     sign_in(lapsed)
     page = client.get(f"/modules/{module.id}/tests/{recurring_test.id}")
 
     assert page.status_code == 200
     assert f"every {INTERVAL} days" in page.text
-    # And the attempts they have, which on a recurring test is per cycle.
+    # Attempts allowed (per cycle on recurring tests).
     assert "1 per cycle" in page.text

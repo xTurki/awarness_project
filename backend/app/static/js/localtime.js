@@ -1,15 +1,5 @@
-/* Times, shown and typed in the reader's own zone.
- *
- * The platform stores naive UTC in every column, which is right: a stored
- * moment must not depend on where the person who wrote it was sitting. But a
- * browser's `datetime-local` field speaks local wall time, and nothing was
- * translating between the two, so an instructor in Sydney typing 05:25 had
- * 05:25 UTC stored, and the test opened ten hours later than they meant.
- *
- * Only the browser knows the viewer's zone, so the conversion belongs here.
- * Three jobs, and each degrades to the old behaviour with no JavaScript at all:
- * a stored moment still renders, marked UTC, and a typed one is still read as
- * UTC, which is exactly what happened before this file existed.
+/* Convert between UTC (stored on the server) and the user's local time.
+ * Without JavaScript, times are shown and entered in UTC.
  */
 (function () {
   "use strict";
@@ -22,8 +12,7 @@
     }
   }
 
-  /* A naive value out of the database has no zone on it. Without the Z a
-     browser reads it as local time, which is the very mistake being fixed. */
+  /* Parse a UTC value from the server (adds "Z" if missing). */
   function fromUtc(iso) {
     if (!iso) return null;
     var stamped = /Z$|[+-]\d\d:?\d\d$/.test(iso) ? iso : iso + "Z";
@@ -35,7 +24,7 @@
     return String(n).padStart(2, "0");
   }
 
-  /* What a datetime-local input wants: local wall time, no zone. */
+  /* Format for a datetime-local input. */
   function asInputValue(d) {
     return (
       d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()) +
@@ -48,7 +37,7 @@
     hour: "2-digit", minute: "2-digit"
   };
 
-  /* 1. Every stored moment on the page, rewritten into the reader's zone. */
+  /* Show <time data-utc> elements in local time. */
   function showLocalTimes(root) {
     root.querySelectorAll("time[data-utc]").forEach(function (el) {
       var d = fromUtc(el.getAttribute("data-utc"));
@@ -58,8 +47,7 @@
     });
   }
 
-  /* 2. Date fields open on the local equivalent of what is stored, so an
-        instructor edits the time they meant rather than its UTC shadow. */
+  /* Fill datetime-local inputs with local time. */
   function fillLocalInputs(root) {
     root.querySelectorAll('input[type="datetime-local"][data-utc]').forEach(function (el) {
       var d = fromUtc(el.getAttribute("data-utc"));
@@ -68,8 +56,7 @@
     });
   }
 
-  /* 3. And on the way out, back to UTC, because the server stores naive UTC
-        and has no way of knowing which zone the typing happened in. */
+  /* Convert inputs back to UTC on submit. */
   function convertOnSubmit(form) {
     form.addEventListener("submit", function () {
       form.querySelectorAll('input[type="datetime-local"][data-utc]').forEach(function (el) {
@@ -81,8 +68,7 @@
     });
   }
 
-  /* 4. And say which zone that is, so nobody has to guess whose clock a page
-        is speaking in. */
+  /* Show the user's time zone name. */
   function nameTheZone(root) {
     var name = zoneName();
     if (!name) return;

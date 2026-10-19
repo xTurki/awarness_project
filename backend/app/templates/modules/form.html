@@ -10,9 +10,7 @@
 
   <div class="card"><div class="card-body p-4">
 
-  {# multipart because the cover picture is a field of this form. The cover is
-     part of the module, so it is saved by the same button as the title: two
-     save buttons on one page is two ways to half-save it. #}
+  {# multipart because the form includes the cover image upload. #}
   <form method="post" action="{{ '/modules/' ~ module.id if module else '/modules' }}"
         enctype="multipart/form-data" novalidate>
     <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token }}">
@@ -30,15 +28,7 @@
                 rows="4">{{ description|default('') }}</textarea>
     </div>
 
-    {# The colour of the module's cover band. Shown as the colours themselves
-       rather than as a list of words, because "violet" in a dropdown tells you
-       nothing about what the card will look like.
-
-       Put away, fields and all, while a picture is in use: a picture covers
-       the band entirely, so the colour under it would be a choice with no
-       visible effect. The absence of the field is also what tells the service
-       to leave the cover alone, so editing a title cannot paint over the
-       picture. #}
+    {# Colour swatches. Hidden while an image is used, so saving keeps the image. #}
     <fieldset class="mb-4"{% if art_image %} hidden disabled{% endif %}>
       <legend class="form-label">Cover colour</legend>
 
@@ -60,9 +50,7 @@
       </div>
     </fieldset>
 
-    {# The cover picture, in this same form and saved by this same button.
-       Available on a new module too: the file is read here and stored once the
-       module exists, so there is nothing to come back and do afterwards. #}
+    {# Cover image upload (also available when creating a module). #}
     <fieldset class="mb-4">
       <legend class="form-label">Cover picture</legend>
 
@@ -111,10 +99,7 @@
   {% if module %}
     <hr class="my-4">
 
-    {# Publishing moved to the module page itself, beside the badge that says
-       whether anybody can see it. Only Remove is left here, which is where a
-       destructive action belongs: behind a step, not on the page somebody
-       passes through daily. #}
+    {# Publish is on the module page; only Remove is here. #}
     <form method="post" action="/modules/{{ module.id }}/delete" class="m-0">
       <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token }}">
       <button type="submit" class="btn btn-outline-danger btn-sm">Remove</button>

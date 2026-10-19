@@ -1,9 +1,4 @@
-"""The scheduled run, and the thing it must never do twice.
-
-The first test in this module is the one the whole phase is shaped around: run
-the job twice for the same date and assert that the second run created nothing
-and sent nothing. Everything else here is a consequence of that design.
-"""
+"""Daily job: who gets notified, and running it twice does nothing extra."""
 
 from __future__ import annotations
 
@@ -90,8 +85,7 @@ def enrol(db):
 
 @pytest.fixture()
 def attempted(db):
-    """A finished attempt, written directly: the point here is the date it
-    carries, not the taking of it."""
+    """Create a submitted attempt directly with a given date."""
 
     def _attempt(person, test, days_ago: int, passed: bool):
         when = datetime.combine(TODAY - timedelta(days=days_ago), datetime.min.time())
@@ -130,12 +124,7 @@ def _notifications(db, user_id=None) -> list[Notification]:
 def test_a_second_run_for_the_same_date_changes_nothing(
     db, mail, make_user, make_module, enrol, attempted
 ):
-    """The assertion the phase exists to satisfy (FR-024, SC-003).
-
-    Idempotency comes from the unique constraint, not from the job remembering
-    that it ran. A `last_run` record would look like the obvious solution and
-    would be wrong after a restart, a clock change, or a half-completed run.
-    """
+    """A second run on the same date creates and sends nothing."""
     person = make_user(email="a@example.com", full_name="A Person")
     module, test = make_module("Phishing")
     enrol(person, module, days_ago=200)
@@ -190,8 +179,7 @@ def test_someone_overdue_is_told_it_has_lapsed(
 def test_someone_approaching_is_warned_before_it_lapses(
     db, mail, make_user, make_module, enrol, attempted
 ):
-    """Passed 76 days ago on a 90-day interval: due in 14 days, which is the
-    warning period exactly."""
+    """Passed 76 days ago on a 90-day interval: due in 14 days, so warned."""
     person = make_user(email="b@example.com")
     module, test = make_module("Phishing")
     enrol(person, module, days_ago=200)
@@ -217,7 +205,7 @@ def test_someone_who_passed_recently_hears_nothing(
 
 
 def test_a_newcomer_hears_nothing(db, mail, make_user, make_module, enrol):
-    """Registered yesterday, so they have their own full interval (FR-008)."""
+    """Someone registered yesterday isn't notified."""
     person = make_user(email="f@example.com")
     module, _ = make_module("Phishing")
     enrol(person, module, days_ago=1)
@@ -230,7 +218,7 @@ def test_a_newcomer_hears_nothing(db, mail, make_user, make_module, enrol):
 def test_a_newcomer_who_failed_once_still_hears_nothing(
     db, mail, make_user, make_module, enrol, attempted
 ):
-    """A failed attempt does not shorten a first cycle (FR-008)."""
+    """A failed attempt doesn't make a newcomer due early."""
     person = make_user(email="g@example.com")
     module, test = make_module("Phishing")
     enrol(person, module, days_ago=1)
@@ -256,8 +244,7 @@ def test_never_attempted_and_registered_long_ago_is_overdue(
 def test_a_test_with_no_schedule_never_produces_anything(
     db, mail, make_user, make_module, enrol
 ):
-    """No interval and no completion period means nobody is ever chased
-    (FR-039, SC-016)."""
+    """A test without a schedule never creates notifications."""
     person = make_user(email="h@example.com")
     module, _ = make_module("One off", interval=None)
     enrol(person, module, days_ago=2000)
@@ -271,8 +258,7 @@ def test_a_test_with_no_schedule_never_produces_anything(
 def test_an_instructor_is_not_chased_about_their_own_module(
     db, mail, owner, make_module
 ):
-    """Only trainee registrations fall due. A module somebody runs is not
-    training they owe."""
+    """Instructors aren't notified about their own modules."""
     module, _ = make_module("Phishing")
 
     daily_job.run_daily(db, TODAY)
@@ -286,7 +272,7 @@ def test_an_instructor_is_not_chased_about_their_own_module(
 def test_overdue_on_three_modules_is_one_email_and_three_records(
     db, mail, make_user, make_module, enrol
 ):
-    """FR-019 with FR-034: the record and the message are different things."""
+    """Several notifications for one user are sent in one email."""
     person = make_user(email="busy@example.com", full_name="Busy Person")
     for title in ("Phishing", "Passwords", "Devices"):
         module, _ = make_module(title)
@@ -320,14 +306,13 @@ def test_two_people_get_a_message_each(db, mail, make_user, make_module, enrol):
 def test_a_run_skipped_for_days_catches_everyone_up(
     db, mail, make_user, make_module, enrol, attempted
 ):
-    """The job asks who is due now, never what changed since last time, so a
-    week of missed runs costs nobody anything (FR-027, SC-006)."""
+    """After missed runs, the next run still finds everyone due."""
     person = make_user(email="a@example.com")
     module, test = make_module("Phishing")
     enrol(person, module, days_ago=200)
     attempted(person, test, days_ago=100, passed=True)
 
-    # Nobody ran it for a week. The first run afterwards finds them anyway.
+    # Not run for a week.
     late = daily_job.run_daily(db, TODAY + timedelta(days=7))
 
     assert late.created == 1
@@ -337,9 +322,7 @@ def test_a_run_skipped_for_days_catches_everyone_up(
 def test_running_it_for_a_later_date_does_not_repeat_an_overdue_notice(
     db, mail, make_user, make_module, enrol, attempted
 ):
-    """Seven days later the same person is still overdue and hears nothing
-    further. Their due date has not moved, so the row is the same row (FR-014,
-    SC-005 pattern)."""
+    """An overdue notice is not repeated on later days."""
     person = make_user(email="a@example.com")
     module, test = make_module("Phishing")
     enrol(person, module, days_ago=200)
@@ -358,8 +341,7 @@ def test_running_it_for_a_later_date_does_not_repeat_an_overdue_notice(
 def test_retaking_and_passing_stops_the_chasing(
     db, mail, make_user, make_module, enrol, attempted
 ):
-    """FR-011, SC-005: they are no longer due, and their next date is a full
-    interval from the attempt that passed."""
+    """Passing a retake stops the notifications."""
     person = make_user(email="a@example.com")
     module, test = make_module("Phishing")
     enrol(person, module, days_ago=200)
@@ -368,7 +350,7 @@ def test_retaking_and_passing_stops_the_chasing(
     daily_job.run_daily(db, TODAY)
     assert len(mail) == 1
 
-    # They put it right today.
+    # Passed today.
     attempted(person, test, days_ago=0, passed=True)
 
     daily_job.run_daily(db, TODAY + timedelta(days=1))
@@ -414,19 +396,11 @@ def test_passing_a_one_off_test_ends_it(
 def test_the_scheduler_entry_point_builds_its_own_session_and_runs(
     db, engine, mail, monkeypatch, make_user, make_module, enrol
 ):
-    """`run_now` is the function the cron job is given, and nothing else covers
-    it: every other test here hands `run_daily` a session already built.
-
-    That gap let a real failure through. `main.py` imports the session *table*
-    as `Session`, so a database session built there constructed a row instead,
-    and the scheduled run died with "takes 1 positional argument but 2 were
-    given" every night while the whole suite stayed green.
-    """
+    """`run_now` (used by the scheduler) creates its own session and runs."""
     person = make_user(email="a@example.com")
     module, _ = make_module("Phishing")
     enrol(person, module, days_ago=2000)
-    # Committed through the fixture's connection, so the separate session this
-    # opens can see it.
+    # Commit so the job's own session can see the data.
     db.commit()
 
     monkeypatch.setattr(daily_job, "engine", engine)
@@ -442,18 +416,13 @@ def test_the_scheduler_entry_point_builds_its_own_session_and_runs(
 def test_a_replacement_test_makes_everyone_due_on_the_next_run(
     db, mail, owner, make_user, make_module, enrol, attempted
 ):
-    """No grace period and no suppression: the instructor was warned before
-    publishing exactly what it would do (FR-020, Phase 3 FR-027).
-
-    State follows the module's currently published test, and nobody has
-    attempted this one, so their clock runs from their registration again.
-    """
+    """After a test is replaced, due dates count from registration again."""
     person = make_user(email="a@example.com")
     module, original = make_module("Phishing")
     enrol(person, module, days_ago=200)
     attempted(person, original, days_ago=5, passed=True)
 
-    # Nothing to say: they passed five days ago on a 90-day interval.
+    # Passed 5 days ago on a 90-day interval, so not due.
     assert daily_job.run_daily(db, TODAY).created == 0
 
     questions = [
@@ -483,8 +452,7 @@ def test_a_replacement_test_makes_everyone_due_on_the_next_run(
 def test_attempts_at_the_replaced_test_decide_nothing(
     db, mail, owner, make_user, make_module, enrol, attempted
 ):
-    """Their pass is still in their history. It simply stops deciding whether
-    they are current, which is the same rule Phase 3 applies to state."""
+    """Passes on the old test don't count for the new one."""
     person = make_user(email="a@example.com")
     module, original = make_module("Phishing")
     enrol(person, module, days_ago=200)

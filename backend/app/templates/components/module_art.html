@@ -1,23 +1,13 @@
-{# A module's cover: an uploaded picture, or its colour.
-
-   Nothing is drawn in this template. The colour class carries a gradient and
-   a dot grid from app.css; a module either wears a picture somebody chose for
-   it or wears a colour nobody had to choose.
-
-   The colour arrives already resolved on `module.art_colour`, derived from the
-   id in `app/art.py`, so this template never decides what an unset cover looks
-   like and never sees a null.
+{# Module cover: uploaded image or colour (see app/art.py).
 
    Usage:
      {% with module = row %}{% include "components/module_art.html" %}{% endwith %}
-     {% with module = row, art_tall = true %}...{% endwith %}   on a page header
+     {% with module = row, art_tall = true %}...{% endwith %}   for page headers
 #}
 <div class="module-art module-art-{{ module.art_colour }}{% if art_tall %} module-art-tall{% endif %}"
      role="presentation">
 {% if module.art_image %}
-  {# Cropped from the centre rather than letterboxed: the same file is shown at
-     two different proportions, and a picture fitted whole would sit in a band
-     of empty colour at one of them. #}
+  {# object-fit: cover, cropped from the centre. #}
   <img src="/uploads/{{ module.art_image }}" alt="" class="module-art-photo"
        loading="lazy" decoding="async">
 {% endif %}

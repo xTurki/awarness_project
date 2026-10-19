@@ -1,7 +1,6 @@
-"""Settings, read from the environment only.
+"""App settings, loaded from environment variables / .env.
 
-No default here embeds a credential. A missing secret is a startup failure,
-not a silently weak default (FR-033).
+Secrets have no defaults, so a missing one fails at startup.
 """
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -17,9 +16,8 @@ class Settings(BaseSettings):
     mysql_host: str = "db"
     mysql_port: int = 3306
 
-    # Application. Required, but read by nothing: sessions are random tokens in
-    # the `session` table and CSRF tokens are random values, neither of them
-    # signed. Kept so an existing .env still loads.
+    # Currently unused (sessions and CSRF tokens are random, not signed).
+    # Kept so existing .env files still load.
     session_secret: str
 
     # Email
@@ -30,33 +28,25 @@ class Settings(BaseSettings):
     smtp_port: int = 587
     smtp_timeout_seconds: int = 10
 
-    # Uploads. One number feeds both the application limit and the one nginx
-    # enforces, so the two cannot drift apart and produce a blank 413 the
-    # application never sees (research R4).
+    # Uploads. The same value is used for the nginx body size limit.
     upload_max_mb: int = 5
     upload_dir: str = "/data/uploads"
 
-    # Scheduling. There is deliberately no overdue-reminder interval: an overdue
-    # test is announced once and never repeated. What persists is the state on
-    # the dashboard, not the messaging (FR-014).
+    # Scheduling. Overdue notices are sent once, not repeated.
     due_soon_lead_days: int = 14
     scheduler_hour_utc: int = 6
 
-    # Development only. Shows the sign-in code on the page that asks for it,
-    # so building does not stop when the mail provider refuses to send. Set it
-    # to false for production; see app/development.py for removing it entirely.
+    # Development only: show the login code on the verify page.
+    # Must be false in production (see app/development.py).
     show_login_code: bool = False
 
-    # The study assistant. Empty key means the feature is simply absent: no
-    # panel is rendered and no route answers, so the platform runs unchanged
-    # without one.
+    # Study assistant (Gemini). Disabled when the key is empty.
     gemini_api_key: str = ""
     gemini_model: str = "gemini-3.1-flash-lite"
     gemini_timeout_seconds: int = 25
-    #: Characters of page text sent as context. A page longer than this is cut,
-    #: and the trainee is told the answer covers the part they can see.
+    # Max characters of page text sent as context.
     gemini_context_chars: int = 6000
-    #: Questions per person per rate-limit window.
+    # Questions per user per rate-limit window.
     ask_rate_limit: int = 20
 
     # Timings and limits
@@ -65,8 +55,7 @@ class Settings(BaseSettings):
     login_rate_limit: int = 5
     login_rate_window_minutes: int = 2
 
-    # Checked by extension only. A renamed executable will be accepted and stored;
-    # it lands in a directory nginx serves as static content and does not run.
+    # Checked by extension only. Uploads are served as static files, never executed.
     allowed_image_extensions: tuple[str, ...] = (".png", ".jpg", ".jpeg", ".gif", ".webp")
 
     @property

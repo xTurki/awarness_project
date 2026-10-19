@@ -1,8 +1,6 @@
-"""The roster: who is on a module, and in what capacity.
+"""Module roster: registering users as instructors or trainees.
 
-There is no route by which a person registers or deregisters themselves, and no
-page listing modules they are not on. Training here is assigned, not chosen
-(FR-028).
+Users can't register themselves; training is assigned.
 """
 
 from __future__ import annotations
@@ -62,14 +60,12 @@ def roster(
 def register_people(
     module_id: int,
     user_ids: list[int] = Form(default=[]),
-    # Absent from the form unless an administrator is looking at it, so the
-    # default is what an instructor's roster always sends (FR-005).
+    # Only admins see the role field; instructors always add trainees.
     role_in_module: str = Form("trainee"),
     db: Db = Depends(get_session),
     account=Depends(require_password_set),
 ):
-    """Several at once, in one transaction. Anyone already registered is skipped
-    without a word (research R8)."""
+    """Register several users. Already registered users are skipped."""
     _module_for_write(db, module_id, account)
 
     if user_ids:

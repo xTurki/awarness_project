@@ -1,8 +1,4 @@
-"""The question bank, and what it refuses.
-
-At least two options, at least one correct, checked when the question is saved
-because neither is recoverable once a trainee is mid-attempt (FR-003).
-"""
+"""Question bank validation and permissions."""
 
 from __future__ import annotations
 
@@ -83,7 +79,7 @@ def test_one_correct_option_means_a_single_choice(db, owner, module):
 
 
 def test_several_correct_options_mean_a_multiple_choice(db, owner, module):
-    """The instructor never says which. It follows from how many are ticked."""
+    """More than one correct option makes it multiple choice."""
     created = question_service.create_question(
         db,
         owner,

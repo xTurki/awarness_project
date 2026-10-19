@@ -1,8 +1,4 @@
-"""What a module's address tells you about whether it exists.
-
-404 rather than 403 is deliberate: a trainee should not learn that a module
-exists by being refused it (FR-007, quickstart Scenario 1).
-"""
+"""Modules a user can't see return 404 (not 403)."""
 
 from __future__ import annotations
 

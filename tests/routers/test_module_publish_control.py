@@ -1,10 +1,4 @@
-"""Publishing a module, from the page it now lives on.
-
-The control sits on the module page beside the badge that says whether anybody
-can see the module, rather than behind Settings. Publishing is restricted to
-administrators (FR-005), so the page offers it to nobody else and the service
-refuses it regardless of what the page offered.
-"""
+"""The publish button on the module page (administrators only)."""
 
 from __future__ import annotations
 
@@ -50,8 +44,7 @@ def test_the_control_is_on_the_module_page(client, sign_in, admin, module):
 
 
 def test_it_comes_after_the_roster_button(client, sign_in, admin, module):
-    """Where it was asked for, and where the order reads: build it, staff it,
-    then let people see it."""
+    """The publish button comes after the roster button on the module page."""
     sign_in(admin)
     text = client.get(f"/modules/{module.id}").text
 
@@ -64,7 +57,7 @@ def test_it_is_no_longer_on_the_settings_page(client, sign_in, admin, module):
 
     assert page.status_code == 200
     assert f'action="/modules/{module.id}/publish"' not in page.text
-    # Remove stays there, which is where a destructive action belongs.
+    # Remove stays in Settings.
     assert f'action="/modules/{module.id}/delete"' in page.text
 
 
@@ -103,19 +96,18 @@ def test_it_offers_unpublish_once_the_module_is_live(client, db, sign_in, admin,
 
 
 def test_an_instructor_is_not_offered_it(client, sign_in, owner, module):
-    """Publishing is an administrator's act. The control is absent rather than
-    shown and refused (FR-005)."""
+    """Instructors don't see the publish button."""
     sign_in(owner)
     page = client.get(f"/modules/{module.id}")
 
     assert page.status_code == 200
     assert f'action="/modules/{module.id}/publish"' not in page.text
-    # They still run the module, so the rest of the toolbar is theirs.
+    # The rest of the toolbar is still shown.
     assert f'/modules/{module.id}/roster' in page.text
 
 
 def test_an_instructor_posting_it_by_hand_is_refused(client, db, sign_in, owner, module, csrf):
-    """The page not offering the control is never the enforcement."""
+    """The server rejects publish requests from instructors."""
     sign_in(owner)
 
     token = csrf(f"/modules/{module.id}")

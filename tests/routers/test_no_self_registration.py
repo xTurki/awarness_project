@@ -1,8 +1,4 @@
-"""Nobody puts themselves on the platform (FR-006, SC-011).
-
-Another absence test. Accounts come from an administrator or from the seed, and
-there is no third way.
-"""
+"""There is no self sign-up; accounts are created by administrators."""
 
 from __future__ import annotations
 
@@ -68,8 +64,7 @@ def test_the_sign_in_page_offers_no_way_to_create_an_account(client):
 
 
 def test_no_route_lets_a_person_put_themselves_on_a_module():
-    """Phase 1, FR-028. Every roster route names a module, and the person acted
-    on comes from the form or the path, never from the session."""
+    """Users can't register themselves on a module."""
     roster_routes = {
         route.path for route in app.routes if "roster" in route.path
     }
@@ -94,7 +89,7 @@ def test_a_trainee_cannot_register_themselves_on_a_module(client, db, make_user,
         f"/modules/{module.id}/roster",
         data={"user_ids": [trainee.id], "csrf_token": csrf("/")},
     )
-    # They cannot even see the module, so it does not exist as far as they know.
+    # Can't see the module, so 404.
     assert response.status_code == 404
 
 

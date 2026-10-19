@@ -1,11 +1,7 @@
-"""Modules, the instructors assigned to them, and the one authorisation
-chokepoint every module-scoped action in this phase and in Phases 2 to 4 passes
-through.
+"""Modules, instructor assignment and module access checks.
 
-`get_for` returns the module or raises `NotFound`. It never returns "found but
-forbidden", because that would disclose that the module exists. One function
-means one place to get the rule right; twenty separate checks would mean twenty
-chances to forget one, and the forgotten one is the hole (research R1, FR-009).
+All module access goes through `get_for`, which raises `NotFound` both when the
+module doesn't exist and when the user can't see it.
 """
 
 from __future__ import annotations
@@ -22,21 +18,21 @@ from app.schemas.module import ModuleRead, ModuleWrite
 
 
 class NotFound(Exception):
-    """No such module, or none this caller may see. Deliberately the same."""
+    """Module doesn't exist or the user can't see it."""
 
 
 class NotPermitted(Exception):
-    """The caller may see the module but may not change it."""
+    """The user can see the module but not edit it."""
 
 
-# ---------------------------------------------------------------- the chokepoint
+# ---------------------------------------------------------------- access
 
 
 def get_for(db: DbSession, module_id: int, actor: User) -> Module:
-    """Administrator: every module in any state.
-    Instructor: modules they are assigned to, including unpublished ones.
-    Trainee: published modules they hold a registration on.
-    A soft-deleted module is invisible to everyone.
+    """Get a module the user can see.
+
+    Admin: any module. Instructor: assigned modules. Trainee: published modules
+    they are registered on. Deleted modules are hidden from everyone.
     """
     module = db.get(Module, module_id)
     if module is None or module.deleted_at is not None:
@@ -59,11 +55,9 @@ def get_for(db: DbSession, module_id: int, actor: User) -> Module:
 
 
 def get_for_write(db: DbSession, module_id: int, actor: User) -> Module:
-    """`module:write`: an administrator, or an instructor assigned to it.
+    """Get a module the user can edit (admin or assigned instructor).
 
-    Resolving through `get_for` first is what keeps the 404-versus-403 rule
-    honest: a caller who may not see the module is told it does not exist,
-    and a caller who may see it but not change it is refused.
+    404 if they can't see it, 403 if they can see it but not edit it.
     """
     module = get_for(db, module_id, actor)
     if actor.role == "administrator":
@@ -87,7 +81,7 @@ def _registration(db: DbSession, module_id: int, user_id: int) -> Registration |
 
 
 def list_for(db: DbSession, actor: User) -> list[ModuleRead]:
-    """The list differs by role, and that is the whole point (FR-006/007/008)."""
+    """Modules visible to the user (depends on role)."""
     live = select(Module).where(Module.deleted_at.is_(None)).order_by(Module.title)
 
     if actor.role == "administrator":
@@ -118,8 +112,7 @@ def require_administrator(actor: User) -> None:
 
 def create(db: DbSession, actor: User, data: ModuleWrite) -> ModuleRead:
     require_administrator(actor)
-    # Null when no colour was picked, and then the id decides. Storing a
-    # derived colour would let the column and the id disagree later.
+    # Null if no colour was picked (the default colour is used).
     row = Module(
         title=data.title.strip(),
         description=data.description,
@@ -137,8 +130,7 @@ def update(db: DbSession, actor: User, module_id: int, data: ModuleWrite) -> Mod
     row.title = data.title.strip()
     row.description = data.description
 
-    # Only when the form offered the picker. A module wearing an uploaded
-    # picture submits no colour, and its picture survives the save.
+    # Only change the cover if a colour was submitted.
     if data.art_colour:
         row.art = art.format_colour(data.art_colour)
 
@@ -149,13 +141,7 @@ def update(db: DbSession, actor: User, module_id: int, data: ModuleWrite) -> Mod
 
 
 def set_art(db: DbSession, actor: User, module_id: int, value: str | None) -> ModuleRead:
-    """Write the cover column, whatever kind of cover it names.
-
-    Here rather than in `content_service` because the permission belongs with
-    the module record: only an administrator edits a module, and the cover is
-    part of that record. `content_service` owns the file and calls this for the
-    column, which keeps the import going one way.
-    """
+    """Set the module's `art` column (admin only). Used by content_service."""
     require_administrator(actor)
     row = get_for(db, module_id, actor)
     row.art = value
@@ -176,8 +162,7 @@ def set_published(db: DbSession, actor: User, module_id: int, published: bool) -
 
 
 def soft_delete(db: DbSession, actor: User, module_id: int) -> None:
-    """Reversible. Pages, images, and registrations are untouched, so restoring
-    returns everything (FR-010, SC-012)."""
+    """Soft delete a module. Related data is kept so it can be restored."""
     require_administrator(actor)
     row = get_for(db, module_id, actor)
     row.deleted_at = utcnow()
@@ -201,8 +186,7 @@ def restore(db: DbSession, actor: User, module_id: int) -> ModuleRead:
 
 
 def assign_instructor(db: DbSession, actor: User, module_id: int, user_id: int) -> None:
-    """A module with no instructor is permitted; an administrator can assign a
-    replacement at any time (FR-004)."""
+    """Assign an instructor to a module."""
     require_administrator(actor)
     get_for(db, module_id, actor)
 
@@ -218,8 +202,7 @@ def assign_instructor(db: DbSession, actor: User, module_id: int, user_id: int) 
 
 
 def remove_instructor(db: DbSession, actor: User, module_id: int, user_id: int) -> None:
-    """They lose access immediately, including to pages they wrote. The pages
-    remain with the module (spec, Edge Cases)."""
+    """Remove an instructor. Pages they wrote stay in the module."""
     require_administrator(actor)
     get_for(db, module_id, actor)
 

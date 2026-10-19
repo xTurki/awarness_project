@@ -1,9 +1,7 @@
-"""One person's sitting of one test, and the answers in it.
+"""Test attempts and their answers.
 
-`ends_at` and `question_order` are written once when the attempt begins and are
-never recomputed. They are what make an interrupted attempt resumable and an
-instructor's later edit harmless to an attempt already running. Nothing in this
-codebase should recalculate either.
+`ends_at` and `question_order` are set once when the attempt starts and never
+recalculated, so an attempt can be resumed and later test edits don't affect it.
 """
 
 from __future__ import annotations
@@ -17,15 +15,14 @@ from app.database import utcnow
 
 class Attempt(SQLModel, table=True):
     __tablename__ = "attempt"
-    # Every attempt-count and most-recent-attempt query uses this.
+    # Used by attempt-count and latest-attempt queries.
     __table_args__ = (Index("ix_attempt_test_user", "test_id", "user_id"),)
 
     id: int | None = Field(default=None, primary_key=True)
     test_id: int = Field(foreign_key="test.id", index=True, nullable=False)
     user_id: int = Field(foreign_key="user.id", index=True, nullable=False)
 
-    # Derived by counting this person's existing attempts. Never supplied by
-    # the request.
+    # Calculated from the user's previous attempts.
     attempt_number: int = Field(nullable=False)
 
     started_at: datetime = Field(default_factory=utcnow, nullable=False)
@@ -36,14 +33,13 @@ class Attempt(SQLModel, table=True):
     submitted_at: datetime | None = Field(default=None, nullable=True)
     is_submitted: bool = Field(default=False, nullable=False)
 
-    # The ordered question ids, fixed at creation. Read whole, never searched
-    # into, which is the one use the project permits a JSON column.
+    # Ordered question ids, fixed when the attempt starts.
     question_order: list[int] = Field(sa_column=Column(JSON, nullable=False))
 
     points_earned: int | None = Field(default=None, nullable=True)
     points_possible: int | None = Field(default=None, nullable=True)
 
-    # Replaced by an instructor's override; `passed` follows whatever it holds.
+    # Can be overridden by an instructor; `passed` follows it.
     score_percent: int | None = Field(default=None, nullable=True)
     passed: bool | None = Field(default=None, nullable=True)
     score_overridden: bool = Field(default=False, nullable=False)
@@ -51,8 +47,7 @@ class Attempt(SQLModel, table=True):
 
 class AttemptAnswer(SQLModel, table=True):
     __tablename__ = "attempt_answer"
-    # One row per question per attempt, however many times they change their
-    # mind. This is what makes each save an upsert.
+    # One answer row per question per attempt (saving updates it).
     __table_args__ = (
         UniqueConstraint("attempt_id", "question_id", name="uq_answer_attempt_question"),
     )
@@ -61,7 +56,7 @@ class AttemptAnswer(SQLModel, table=True):
     attempt_id: int = Field(foreign_key="attempt.id", index=True, nullable=False)
     question_id: int = Field(foreign_key="question.id", nullable=False)
 
-    # A list, because a question may have several correct answers.
+    # A list because a question can have more than one correct answer.
     selected_option_ids: list[int] = Field(sa_column=Column(JSON, nullable=False))
 
     is_correct: bool | None = Field(default=None, nullable=True)

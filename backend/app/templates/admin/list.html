@@ -14,7 +14,7 @@
 </div>
 
 <div class="panel">
-  {# The table scrolls inside its own box, so the page itself never scrolls sideways. #}
+  {# Table scrolls horizontally inside its own box. #}
   <div class="table-responsive">
     <table class="table table-hover align-middle">
       <thead>
@@ -52,11 +52,7 @@
               {% endif %}
             </td>
             <td class="text-nowrap text-end">
-              {# Every row here belongs to somebody else, because the caller is
-                 not in this list. Nobody administers their own account, which
-                 is what makes zero administrators unreachable without counting
-                 anything. The service refuses it too, so a crafted request
-                 fails exactly as a click would. #}
+              {# The current admin's own account is not in this list. #}
               <a class="btn btn-sm btn-outline-secondary" href="/admin/accounts/{{ person.id }}"><i class="bi bi-pencil" aria-hidden="true"></i> Edit</a>
               <form method="post" action="/admin/accounts/{{ person.id }}/active" class="d-inline">
                 <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token }}">

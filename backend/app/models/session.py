@@ -1,11 +1,4 @@
-"""Evidence that an account signed in successfully.
-
-Held here rather than in the browser, which is the whole reason access can be
-withdrawn at any moment: deleting this row ends the session immediately.
-
-An `ip` and a `user_agent` used to be recorded on every sign-in. Nothing ever
-read either one, so they are gone.
-"""
+"""Server-side login sessions. Deleting a row logs the user out."""
 
 from __future__ import annotations
 
@@ -19,7 +12,7 @@ from app.database import utcnow
 class Session(SQLModel, table=True):
     __tablename__ = "session"
 
-    # secrets.token_urlsafe(32), stored as issued (research, accepted simplifications).
+    # secrets.token_urlsafe(32)
     id: str = Field(max_length=64, primary_key=True)
 
     user_id: int = Field(foreign_key="user.id", index=True, nullable=False)

@@ -1,9 +1,4 @@
-"""Building a test, and the freeze.
-
-Once one attempt exists nothing in the test can change, through any route
-(FR-013, SC-011). Publishing and unpublishing stay available, which is how an
-instructor stops further attempts on a test they can no longer edit (FR-014).
-"""
+"""Building tests, and locking them once attempted (publishing still works)."""
 
 from __future__ import annotations
 
@@ -147,11 +142,11 @@ def test_one_attempt_freezes_the_test(db, owner, module, bank, trainee):
         test_service.update(db, owner, created.id, _test_write(bank, title="Too late"))
 
     assert "attempted" in str(caught.value)
-    assert "replacement" in str(caught.value), "the refusal must explain itself (FR-014)"
+    assert "replacement" in str(caught.value), "the error message should explain why"
 
 
 def test_the_questions_in_an_attempted_test_are_frozen_too(db, owner, module, bank, trainee):
-    """The freeze reaches question_service, which knows nothing about tests."""
+    """Questions in an attempted test can't be edited either."""
     created = test_service.create(db, owner, module.id, _test_write(bank))
     test_service.set_published(db, owner, created.id, True)
     _attempt(db, trainee, created.id)
@@ -173,7 +168,7 @@ def test_a_bank_question_outside_any_attempted_test_stays_editable(db, owner, mo
     test_service.set_published(db, owner, created.id, True)
     _attempt(db, trainee, created.id)
 
-    # bank[1] is in no attempted test, so it is still ordinary.
+    # bank[1] is not in an attempted test, so it can be edited.
     updated = question_service.update_question(
         db, owner, module.id, bank[1].id,
         QuestionWrite(prompt="Still editable", points=1, options=["A", "B"], correct=[1]),
@@ -182,7 +177,7 @@ def test_a_bank_question_outside_any_attempted_test_stays_editable(db, owner, mo
 
 
 def test_unpublishing_still_works_when_frozen(db, owner, module, bank, trainee):
-    """This is the route out: stop further attempts, then build a replacement."""
+    """A locked test can still be unpublished."""
     created = test_service.create(db, owner, module.id, _test_write(bank))
     test_service.set_published(db, owner, created.id, True)
     _attempt(db, trainee, created.id)

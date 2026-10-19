@@ -1,8 +1,4 @@
-"""The two events that are notified inside the request that caused them.
-
-Neither waits for the daily job. A registration notice sent tomorrow morning is
-not a registration notice (FR-018, research R4).
-"""
+"""Registration and result notifications are created immediately."""
 
 from __future__ import annotations
 
@@ -94,8 +90,7 @@ def test_registering_somebody_notifies_them_at_once(
 def test_registering_five_in_one_action_notifies_each_about_their_own(
     db, mail, owner, module, make_user
 ):
-    """One action, five notices, each naming that person (FR-015, quickstart
-    Scenario 5)."""
+    """Registering five users sends each one their own notice."""
     people = [make_user(email=f"p{n}@example.com", full_name=f"Person {n}") for n in range(5)]
 
     registration_service.register_many(
@@ -110,7 +105,7 @@ def test_registering_five_in_one_action_notifies_each_about_their_own(
 
     assert len(mail) == 5
     assert {to for to, _, _ in mail} == {f"p{n}@example.com" for n in range(5)}
-    # Each message greets the person it went to, not the batch.
+    # Each email uses the recipient's name.
     for person in people:
         assert any(
             to == person.email and person.full_name in body for to, _, body in mail
@@ -133,8 +128,7 @@ def test_somebody_already_registered_is_not_notified_again(
 def test_a_mail_failure_does_not_undo_the_registration(
     db, failing_mail, owner, module, make_user
 ):
-    """The record and the registration both stand; only the delivery failed
-    (FR-023, FR-025)."""
+    """If the email fails, the registration and notification are still saved."""
     person = make_user(email="new@example.com")
 
     added = registration_service.register_many(
@@ -180,7 +174,7 @@ def test_the_result_notice_says_the_outcome(
     attempt_service.submit_own(db, person, attempt.id)
 
     row = db.exec(select(Notification).where(Notification.user_id == person.id)).first()
-    # Nothing was answered, so it did not pass.
+    # No answers, so failed.
     assert "Not passed" in row.title
     assert "0%" in row.body
 
@@ -201,8 +195,7 @@ def test_nobody_else_is_told_about_somebody_elses_result(
 def test_each_submission_is_its_own_notice(
     db, mail, owner, module, make_user, live_test
 ):
-    """Two attempts, two results. The unique constraint does not collapse them,
-    because a result carries no due date and two nulls never collide."""
+    """Each submission gets its own result notification."""
     person = make_user(email="taker@example.com")
     db.add(Registration(user_id=person.id, module_id=module.id, role_in_module="trainee"))
     db.commit()

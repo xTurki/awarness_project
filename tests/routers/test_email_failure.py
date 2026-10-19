@@ -1,8 +1,4 @@
-"""A mail outage is legible, and quick (FR-020, FR-021, SC-008).
-
-The person is told plainly and left on the sign-in page, not sent to wait for a
-code that never left.
-"""
+"""Login behaviour when sending email fails."""
 
 from __future__ import annotations
 
@@ -23,9 +19,7 @@ def mail_is_down(monkeypatch):
 
 
 def test_the_person_reaches_the_code_page_and_is_told_why(client, make_user, csrf, mail_is_down):
-    """A mail outage slows sign-in; it does not stop it. The code was issued and
-    is on the server console, so the person is carried to the page where they
-    can use it, with the failure stated there (FR-020)."""
+    """On email failure the user still reaches the code page, with an error shown."""
     make_user(email="a@example.com", password="demo-password")
 
     token = csrf("/login")

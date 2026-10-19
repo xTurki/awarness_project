@@ -12,8 +12,7 @@ services:
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     volumes:
-      # A named volume, never a bind mount into this directory: the project
-      # lives in an iCloud folder and a synced database file would be corrupted.
+      # Named volume (not a bind mount) to keep database files out of the project folder.
       - db_data:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
@@ -21,7 +20,7 @@ services:
       timeout: 5s
       retries: 10
       start_period: 20s
-    # No published port. The database is reachable only from the compose network.
+    # Not published; only reachable inside the compose network.
 
   backend:
     build: ./backend
@@ -31,14 +30,12 @@ services:
       db:
         condition: service_healthy
     volumes:
-      # The suite lives at the repository root, outside the build context, so it
-      # is never baked into the image. Mounting it is what makes the documented
-      # command work: docker compose exec backend pytest
+      # Mount the tests so you can run: docker compose exec backend pytest
       - ./tests:/app/tests:ro
       - ./pytest.ini:/app/pytest.ini:ro
-      # Instructor image uploads. The first file storage in the project.
+      # Uploaded images.
       - uploads:/data/uploads
-    # No published port. Only nginx reaches it.
+    # Not published; only nginx connects to it.
 
   nginx:
     build: ./nginx
@@ -46,9 +43,7 @@ services:
     depends_on:
       - backend
     environment:
-      # nginx.conf is a template rendered at container start. Its
-      # client_max_body_size comes from this same number, plus a small margin
-      # for multipart overhead, so the two limits cannot drift apart.
+      # Used for client_max_body_size in the nginx template.
       UPLOAD_MAX_MB: ${UPLOAD_MAX_MB:-5}
     ports:
       - "80:80"

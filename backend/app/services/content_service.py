@@ -1,10 +1,6 @@
-"""Pages, their order, image uploads, and a module's cover picture.
+"""Pages, page order, image uploads and module cover images.
 
-Two rules carry this module. **`sanitise` runs before every write of `body`,
-never after**, so the column cannot hold anything unsafe. And `save_image` takes
-file **bytes and a filename**, not an `UploadFile`: reading the upload off the
-request is the router's job, and everything after it is plain arguments
-(Principle II).
+Page bodies are always sanitised before they are saved.
 """
 
 from __future__ import annotations
@@ -37,14 +33,14 @@ class PageNotFound(Exception):
 
 
 class UploadRejected(Exception):
-    """Wrong type or too large. The message says which, and names the limit."""
+    """Invalid file type or file too large."""
 
 
 # ----------------------------------------------------------------------- pages
 
 
 def list_pages(db: DbSession, actor: User, module_id: int) -> list[PageSummary]:
-    """Everything, drafts included. For the instructor's page list."""
+    """All pages including drafts (instructor view)."""
     module_service.get_for_write(db, module_id, actor)
     rows = db.exec(
         select(Page).where(Page.module_id == module_id).order_by(Page.position)
@@ -53,10 +49,7 @@ def list_pages(db: DbSession, actor: User, module_id: int) -> list[PageSummary]:
 
 
 def list_readable(db: DbSession, actor: User, module_id: int) -> list[PageSummary]:
-    """Published pages only, in the instructor's order (FR-014).
-
-    A draft is absent from a trainee's view entirely, with no sign it exists.
-    """
+    """Published pages only, in order."""
     module_service.get_for(db, module_id, actor)
     rows = db.exec(
         select(Page)
@@ -67,7 +60,7 @@ def list_readable(db: DbSession, actor: User, module_id: int) -> list[PageSummar
 
 
 def get_page(db: DbSession, actor: User, module_id: int, page_id: int) -> PageRead:
-    """A draft is 404 for anyone who may not write to the module."""
+    """Get a page. Drafts are 404 for users who can't edit the module."""
     module_service.get_for(db, module_id, actor)
     row = _page(db, module_id, page_id)
 
@@ -80,7 +73,7 @@ def get_page(db: DbSession, actor: User, module_id: int, page_id: int) -> PageRe
 
 
 def create_page(db: DbSession, actor: User, module_id: int, data: PageWrite) -> PageRead:
-    """Created as a draft, positioned last."""
+    """Create a draft page at the end."""
     module_service.get_for_write(db, module_id, actor)
 
     row = Page(
@@ -99,8 +92,7 @@ def create_page(db: DbSession, actor: User, module_id: int, data: PageWrite) -> 
 def update_page(
     db: DbSession, actor: User, module_id: int, page_id: int, data: PageWrite
 ) -> PageRead:
-    """Last write wins. `updated_at` records who won, not that a conflict
-    happened (spec, Assumptions)."""
+    """Update a page (last write wins)."""
     module_service.get_for_write(db, module_id, actor)
 
     row = _page(db, module_id, page_id)
@@ -126,7 +118,7 @@ def set_page_published(
 
 
 def delete_page(db: DbSession, actor: User, module_id: int, page_id: int) -> None:
-    """Its images stay on the volume, unreferenced. Nothing collects orphans."""
+    """Delete a page. Its uploaded images are not deleted."""
     module_service.get_for_write(db, module_id, actor)
     row = _page(db, module_id, page_id)
     db.delete(row)
@@ -134,11 +126,9 @@ def delete_page(db: DbSession, actor: User, module_id: int, page_id: int) -> Non
 
 
 def reorder(db: DbSession, actor: User, module_id: int, order: list[int]) -> None:
-    """Rewrite the affected positions in one transaction, keeping them unique
-    within the module (research R5, FR-013).
+    """Move a page to a new position.
 
-    Written in two passes because `(module_id, position)` is unique: moving a
-    page onto a position another page still holds would collide.
+    Done in two passes because (module_id, position) is unique.
     """
     module_service.get_for_write(db, module_id, actor)
 
@@ -175,13 +165,7 @@ def _page(db: DbSession, module_id: int, page_id: int) -> Page:
 
 
 def validate_upload(content: bytes, filename: str) -> str:
-    """Refuse an upload, or return the extension it will be stored under.
-
-    Separate from writing it so a caller can refuse a file before doing
-    anything else. Creating a module and only then discovering its picture is
-    a spreadsheet would leave the module made and the person confused about
-    which half of the form succeeded.
-    """
+    """Validate an upload and return its extension. Raises UploadRejected."""
     extension = Path(filename or "").suffix.lower()
     if extension not in settings.allowed_image_extensions:
         allowed = ", ".join(settings.allowed_image_extensions)
@@ -197,10 +181,9 @@ def validate_upload(content: bytes, filename: str) -> str:
 
 
 def _store_upload(content: bytes, filename: str) -> str:
-    """Check one upload and write it; return the name it was given.
+    """Validate and save an upload; return the generated file name.
 
-    The stored name is generated. That is not extra hardening: it is what stops
-    a filename like `../../app/main.py` deciding where the file lands.
+    The name is generated so the original filename can't control the path.
     """
     extension = validate_upload(content, filename)
 
@@ -212,12 +195,7 @@ def _store_upload(content: bytes, filename: str) -> str:
 
 
 def _discard_upload(db: DbSession, module_id: int, stored_name: str) -> None:
-    """Remove one stored file and the row that described it.
-
-    Only a name this platform generated is ever unlinked: `art.uploaded` is the
-    same shape check the column is written through, so a value that arrived by
-    any other route names nothing on disk and nothing is deleted.
-    """
+    """Delete a stored image file and its row (only valid generated names)."""
     if art.uploaded(f"{art.UPLOAD}{art.SEPARATOR}{stored_name}") is None:
         return
 
@@ -241,10 +219,9 @@ def save_image(
     content: bytes,
     filename: str,
 ) -> ImageRead:
-    """Bytes and a filename, never an `UploadFile` (Principle II).
+    """Save an image for page content and return it.
 
-    The stored name is generated. That is not extra hardening: it is what stops
-    a filename like `../../app/main.py` deciding where the file lands.
+    The name is generated so the original filename can't control the path.
     """
     module_service.get_for_write(db, module_id, actor)
 
@@ -274,14 +251,9 @@ def set_cover(
     content: bytes,
     filename: str,
 ) -> ModuleRead:
-    """Put an uploaded picture on a module in place of its colour.
+    """Set an uploaded image as the module cover.
 
-    The permission is checked before a byte is written, so a caller who could
-    not have saved the module never leaves a file behind on the volume.
-
-    A picture it replaces is deleted, file and row together. Nothing else in
-    the platform collects an orphaned image, and this is the one place that
-    knows for certain which file stopped being a cover.
+    Permission is checked before saving. The previous cover image is deleted.
     """
     module_service.require_administrator(actor)
     module = module_service.get_for(db, module_id, actor)
@@ -309,12 +281,7 @@ def set_cover(
 
 
 def clear_cover(db: DbSession, actor: User, module_id: int) -> ModuleRead:
-    """Take the picture off, leaving the module its colour.
-
-    The column goes back to null, and `art.colour_for` then gives the module
-    the same colour it wore before any picture was put on it. Nothing is
-    remembered because nothing was ever chosen.
-    """
+    """Remove the cover image; the module goes back to its default colour."""
     module_service.require_administrator(actor)
     module = module_service.get_for(db, module_id, actor)
     previous = art.uploaded(module.art)
