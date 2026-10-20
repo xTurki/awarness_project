@@ -187,7 +187,7 @@ flowchart LR
 | NFR5 | Data integrity | Unique constraints enforced by the database |
 | NFR6 | Security | Passwords and login codes are hashed with Argon2 |
 | NFR7 | Security | Every form is protected against CSRF |
-| NFR8 | Security | Login attempts are rate limited (5 per 2 minutes) |
+| NFR8 | Security | Login attempts are rate limited (10 per 2 minutes) |
 | NFR9 | Security | Page HTML is sanitised before it is saved |
 | NFR10 | Security | Login codes expire after 10 minutes and sessions after 12 hours |
 

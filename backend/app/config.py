@@ -53,7 +53,7 @@ class Settings(BaseSettings):
     code_ttl_minutes: int = 10
     session_hours: int = 12
     login_rate_limit: int = 10
-    login_rate_window_minutes: int = 5
+    login_rate_window_minutes: int = 2
 
     # Checked by extension only. Uploads are served as static files, never executed.
     allowed_image_extensions: tuple[str, ...] = (".png", ".jpg", ".jpeg", ".gif", ".webp")
