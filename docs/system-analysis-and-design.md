@@ -58,12 +58,15 @@ flowchart LR
     R["1. Requirements"] --> D["2. Design"] --> I["3. Implementation"] --> T["4. Testing"]
 ```
 
-| Stage | Output | Section |
-|---|---|---|
-| 1. Requirements | Actors, use cases, functional and non-functional requirements | §2 |
-| 2. Design | Architecture, data, processes, interface | §3 to §6 |
-| 3. Implementation | The application | §7 |
-| 4. Testing | Automated test suite | §8 |
+Each stage starts only when the previous one is complete, and uses its output
+as input:
+
+| Stage | Input | Output | Section |
+|---|---|---|---|
+| 1. Requirements | Problem and scope (Section 1) | Actors, use cases, numbered requirements (R, NFR) | 2 |
+| 2. Design | Requirements | Architecture, data model, processes, interface | 3 to 6 |
+| 3. Implementation | Design | The application | 7 |
+| 4. Testing | Requirements and implementation | Test suite and traceability matrix | 8 |
 
 Requirements are grouped and built in this order:
 
@@ -78,6 +81,10 @@ Requirements are grouped and built in this order:
 ---
 
 ## 2. Requirements
+
+> **Waterfall stage 1: Requirements.** Input: the problem and scope in Section 1.
+> Output: actors, use cases and numbered requirements, which are the input to
+> the design stage.
 
 ### 2.1 Actors
 
@@ -148,40 +155,49 @@ flowchart LR
     SCHED --> UC22 --> UC23
 ```
 
-### 2.3 Key functional requirements
+### 2.3 Functional requirements
 
-**Access**
-- Accounts are created only by an administrator.
-- Login needs a password and a 6-digit code sent by email.
-- A new account must set its own password before using the platform.
-- Deactivating an account takes effect on the next request.
-
-**Content and tests**
-- Only assigned instructors can edit a module's content.
-- A test cannot be edited once it has attempts.
-- The time limit is enforced on the server.
-- An expired attempt is submitted automatically the next time it is loaded.
-
-**Results and scheduling**
-- The most recent attempt decides a trainee's result.
-- Results and due dates are calculated, not stored.
-- A new trainee gets a full interval from their registration date.
-- An overdue notice is sent once.
-- Running the daily job twice on the same day creates no duplicates.
+| ID | Group | Requirement |
+|---|---|---|
+| R1 | P0 | Accounts are created only by an administrator |
+| R2 | P0 | Login needs a password and a 6-digit code sent by email |
+| R3 | P0 | A new account must set its own password before using the platform |
+| R4 | P0 | Deactivating an account takes effect on the next request |
+| R5 | P1 | Only assigned instructors can edit a module's content |
+| R6 | P1 | Users can only see modules they are registered on or assigned to |
+| R7 | P2 | A test's questions are picked at random from the module's question bank |
+| R8 | P2 | A test cannot be edited once it has attempts |
+| R9 | P2 | The time limit is enforced on the server |
+| R10 | P2 | An expired attempt is submitted automatically the next time it is loaded |
+| R11 | P3 | The most recent attempt decides a trainee's result |
+| R12 | P3 | Results and due dates are calculated, not stored |
+| R13 | P4 | A new trainee gets a full retake interval from their registration date |
+| R14 | P4 | An overdue notice is sent once |
+| R15 | P4 | Running the daily job twice on the same day creates no duplicates |
+| R16 | P1 | The study assistant answers only about pages the user can access |
 
 ### 2.4 Non-functional requirements
 
-| Attribute | Requirement |
-|---|---|
-| Deployment | Runs with `docker compose up` (three containers) |
-| Offline assets | Bootstrap, icons, fonts, htmx and Quill are served locally |
-| Accessibility | WCAG AA text contrast |
-| Responsive | Works on phone, tablet and desktop |
-| Data integrity | Unique constraints enforced by the database |
+| ID | Attribute | Requirement |
+|---|---|---|
+| NFR1 | Deployment | Runs with `docker compose up` (three containers) |
+| NFR2 | Offline assets | Bootstrap, icons, fonts, htmx and Quill are served locally |
+| NFR3 | Accessibility | WCAG AA text contrast |
+| NFR4 | Responsive | Works on phone, tablet and desktop |
+| NFR5 | Data integrity | Unique constraints enforced by the database |
+| NFR6 | Security | Passwords and login codes are hashed with Argon2 |
+| NFR7 | Security | Every form is protected against CSRF |
+| NFR8 | Security | Login attempts are rate limited (5 per 2 minutes) |
+| NFR9 | Security | Page HTML is sanitised before it is saved |
+| NFR10 | Security | Login codes expire after 10 minutes and sessions after 12 hours |
 
 ---
 
 ## 3. Architecture
+
+> **Waterfall stage 2: Design (Sections 3 to 6).** Input: the requirements in Section 2.
+> Output: the architecture, data model, processes and interface, which are the
+> input to implementation.
 
 ### 3.1 Layers
 
@@ -681,6 +697,10 @@ flowchart LR
 
 ## 7. Implementation
 
+> **Waterfall stage 3: Implementation.** Input: the design in Sections 3 to 6.
+> Output: the working application. The requirement groups were built in order:
+> P0, P1, P2, P3, P4.
+
 ### 7.1 Technology
 
 | Component | Choice |
@@ -732,8 +752,14 @@ rate limiting), `dependencies.py` (login and role checks), `rendering.py`,
 
 ## 8. Testing
 
+> **Waterfall stage 4: Testing.** Input: the requirements in Section 2 and the
+> application. Output: the test results and the traceability matrix below.
+
+### 8.1 Test suite
+
 **659 automated tests** in 57 files, run with pytest against MySQL 8 in a
 separate test database. Each test runs in a transaction that is rolled back.
+All tests pass.
 
 | Type | Covers |
 |---|---|
@@ -747,3 +773,35 @@ Run the tests with:
 ```bash
 docker compose exec backend pytest
 ```
+
+### 8.2 Traceability matrix
+
+Each requirement is linked to where it is designed, where it is implemented,
+and the tests that verify it. Test files are under `tests/`.
+
+| ID | Design | Implementation | Verified by |
+|---|---|---|---|
+| R1 | 2.1 | `admin_service` | `routers/test_no_self_registration.py` |
+| R2 | 5.2 | `auth_service` | `routers/test_login_flow.py`, `routers/test_no_2fa_bypass.py` |
+| R3 | 5.2 | `dependencies.require_password_set` | `routers/test_login_flow.py`, `routers/test_landing_page.py` |
+| R4 | 3.1 | `dependencies.current_account` | `routers/test_session_lifecycle.py` |
+| R5 | 3.4 | `module_service.get_for_write` | `routers/test_content_access.py` |
+| R6 | 3.1 | `module_service.get_for` | `services/test_module_access.py`, `routers/test_module_visibility.py` |
+| R7 | 5.4 | `test_service` | `services/test_random_draw.py` |
+| R8 | 4.3 | `test_service.assert_not_attempted` | `services/test_test_build.py` |
+| R9 | 5.4 | `attempt_service` | `services/test_attempt.py` |
+| R10 | 5.4 | `attempt_service` | `services/test_attempt.py`, `routers/test_results_access.py` |
+| R11 | 5.1 | `state` | `services/test_state.py` |
+| R12 | 4.3 | `state`, `due`, `results_service` | `services/test_results.py`, `services/test_due.py` |
+| R13 | 5.3 | `due` | `services/test_due.py`, `services/test_daily_job.py` |
+| R14 | 5.3 | `notification` unique constraint | `services/test_notification_once.py` |
+| R15 | 5.3 | `daily_job` | `services/test_daily_job.py` |
+| R16 | 5.5 | `tutor_service`, `content_service` | `routers/test_ask_panel.py`, `services/test_tutor.py` |
+| NFR5 | 4.2 | Model constraints | `test_schema.py` |
+| NFR6 | 7.1 | `security.py` | `test_seed.py`, `services/test_auth_service.py` |
+| NFR7 | 7.2 | `security.csrf_protect` | `routers/test_ask_panel.py` |
+| NFR8 | 7.2 | `security.rate_limit_exceeded` | Manual check |
+| NFR9 | 3.4 | `sanitise.py` | `services/test_sanitise.py`, `services/test_content_sanitising.py` |
+| NFR10 | 5.2 | `auth_service`, `dependencies` | `services/test_auth_service.py`, `routers/test_session_lifecycle.py` |
+
+NFR1 to NFR4 are checked manually by running the application.
