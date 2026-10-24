@@ -52,6 +52,16 @@ services:
       # Uploaded images are served by nginx as static files, read-only.
       - uploads:/srv/uploads:ro
 
+  # Cloudflare tunnel: publishes the site at its public name. Outbound only,
+  # so no extra port is published. The dashboard origin is http://nginx:80.
+  tunnel:
+    image: cloudflare/cloudflared:2026.9.1
+    restart: unless-stopped
+    # http2 (TCP) instead of quic, which needs a bigger UDP buffer than Docker allows.
+    command: tunnel --no-autoupdate --protocol http2 run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+    depends_on:
+      - nginx
+
 volumes:
   db_data:
   uploads:

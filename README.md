@@ -19,7 +19,7 @@ docker compose exec backend python seed.py
 docker compose ps
 ```
 
-Open <http://localhost>.
+Open <http://localhost> (or `http://<server-ip>` from another machine).
 
 Signing in needs a six-digit code sent by email. If email isn't working, the code
 also appears in `docker compose logs backend`.
