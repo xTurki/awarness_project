@@ -31,6 +31,7 @@
           <a class="btn btn-sm btn-outline-secondary" href="/modules/{{ module.id }}/pages"><i class="bi bi-file-earmark-text" aria-hidden="true"></i> Pages</a>
           <a class="btn btn-sm btn-outline-secondary" href="/modules/{{ module.id }}/tests"><i class="bi bi-ui-checks" aria-hidden="true"></i> Tests</a>
           <a class="btn btn-sm btn-outline-secondary" href="/modules/{{ module.id }}/roster"><i class="bi bi-people" aria-hidden="true"></i> Roster</a>
+          <a class="btn btn-sm btn-outline-secondary" href="/modules/{{ module.id }}/results"><i class="bi bi-bar-chart" aria-hidden="true"></i> Results</a>
 
           {# Publish button (admins only). Solid when unpublished, outlined when live. #}
           {% if account.role == "administrator" %}

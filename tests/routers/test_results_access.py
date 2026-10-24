@@ -209,3 +209,15 @@ def test_an_attempt_that_ran_out_reads_as_finished(client, db, sign_in, trainee,
 
     assert "In progress" not in page.text
     assert "Failed" in page.text
+
+
+def test_the_module_page_links_its_runner_to_the_results(client, sign_in, owner, module):
+    sign_in(owner)
+    page = client.get(f"/modules/{module.id}")
+    assert f'href="/modules/{module.id}/results"' in page.text
+
+
+def test_a_trainee_gets_no_results_link(client, sign_in, trainee, module):
+    sign_in(trainee)
+    page = client.get(f"/modules/{module.id}")
+    assert f'href="/modules/{module.id}/results"' not in page.text
