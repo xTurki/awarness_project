@@ -14,7 +14,13 @@ from app.models.module import Module
 from app.models.registration import Registration
 from app.models.test import Test
 from app.models.user import User
-from app.schemas.results import AttemptRow, CohortRow, CurrentTestRow, ModuleResultRow
+from app.schemas.results import (
+    AttemptRow,
+    CohortRow,
+    CohortSummary,
+    CurrentTestRow,
+    ModuleResultRow,
+)
 from app.services import attempt_service, due, module_service, state
 
 
@@ -208,6 +214,25 @@ def for_module(db: DbSession, module_id: int, actor: User) -> list[CohortRow]:
 
     rows.sort(key=lambda row: (state.rank(state.State(row.state)), row.full_name))
     return rows
+
+
+def summarise(rows: list[CohortRow]) -> CohortSummary:
+    """Counts by state, pass rate and average score for `for_module` rows."""
+    states = [row.state for row in rows]
+    passed = states.count(state.State.PASSED.value)
+    failed = states.count(state.State.FAILED.value)
+    overdue = states.count(state.State.OVERDUE.value)
+    scores = [row.score_percent for row in rows if row.score_percent is not None]
+
+    return CohortSummary(
+        trainees=len(rows),
+        passed=passed,
+        failed=failed,
+        overdue=overdue,
+        pending=len(rows) - passed - failed - overdue,
+        pass_rate=round(100 * passed / len(rows)) if rows else None,
+        average_score=round(sum(scores) / len(scores)) if scores else None,
+    )
 
 
 def count_affected_by_replacement(db: DbSession, module_id: int) -> int:

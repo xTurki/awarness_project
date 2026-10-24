@@ -404,3 +404,46 @@ def test_results_use_no_extra_table(engine):
     assert tables - core_tables == {"notification"}, (
         "There should be no results or cache table"
     )
+
+
+# ------------------------------------------------------------------ the summary
+
+
+def _row(user_id: int, row_state: str, score: int | None = None):
+    from app.schemas.results import CohortRow
+
+    return CohortRow(
+        user_id=user_id,
+        full_name=f"Person {user_id}",
+        email=f"p{user_id}@example.com",
+        state=row_state,
+        score_percent=score,
+        link="",
+    )
+
+
+def test_the_summary_counts_each_state_once():
+    summary = results_service.summarise(
+        [
+            _row(1, "passed", 90),
+            _row(2, "passed", 80),
+            _row(3, "failed", 40),
+            _row(4, "overdue"),
+            _row(5, "not started"),
+            _row(6, "in progress"),
+            _row(7, "due"),
+        ]
+    )
+
+    assert (summary.trainees, summary.passed, summary.failed) == (7, 2, 1)
+    assert (summary.overdue, summary.pending) == (1, 3)
+    assert summary.pass_rate == 29
+    assert summary.average_score == 70
+
+
+def test_an_empty_module_has_no_rates():
+    summary = results_service.summarise([])
+
+    assert summary.trainees == 0
+    assert summary.pass_rate is None
+    assert summary.average_score is None

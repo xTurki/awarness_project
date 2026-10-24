@@ -8,6 +8,40 @@
 </div>
 
 {% if rows %}
+  <div class="row g-3 mb-2">
+    <div class="col-6 col-lg-3">
+      <div class="stat">
+        <span class="stat-icon is-ok"><i class="bi bi-check-circle" aria-hidden="true"></i></span>
+        <div><div class="stat-value">{{ summary.passed }}</div><div class="stat-label">Passed</div></div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="stat">
+        <span class="stat-icon is-bad"><i class="bi bi-x-circle" aria-hidden="true"></i></span>
+        <div><div class="stat-value">{{ summary.failed }}</div><div class="stat-label">Failed</div></div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="stat">
+        <span class="stat-icon is-warn"><i class="bi bi-hourglass-split" aria-hidden="true"></i></span>
+        <div><div class="stat-value">{{ summary.pending }}</div><div class="stat-label">Not done yet</div></div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="stat">
+        <span class="stat-icon is-bad"><i class="bi bi-alarm" aria-hidden="true"></i></span>
+        <div><div class="stat-value">{{ summary.overdue }}</div><div class="stat-label">Overdue</div></div>
+      </div>
+    </div>
+  </div>
+
+  <p class="small mb-4">
+    <strong>{{ summary.pass_rate }}%</strong> of {{ summary.trainees }} trainees have passed
+    {%- if summary.average_score is not none %}
+      &middot; average score <strong>{{ summary.average_score }}%</strong>
+    {%- endif %}.
+  </p>
+
   <p class="text-body-secondary small">
     Everyone registered on this module. Anybody who has not passed is at the top.
   </p>

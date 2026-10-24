@@ -160,6 +160,7 @@ def test_the_owner_sees_the_cohort_and_reaches_a_person(
     cohort = client.get(f"/modules/{module.id}/results")
     assert cohort.status_code == 200
     assert "Tess Trainee" in cohort.text
+    assert "of 1 trainees have passed" in cohort.text
 
     person = client.get(f"/modules/{module.id}/results/{trainee.id}")
     assert person.status_code == 200

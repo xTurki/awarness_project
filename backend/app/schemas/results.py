@@ -45,6 +45,20 @@ class CurrentTestRow(BaseModel):
     title: str
 
 
+class CohortSummary(BaseModel):
+    """Headline numbers for one module's trainees."""
+
+    trainees: int
+    passed: int
+    failed: int
+    overdue: int
+    # Not started, in progress or due soon.
+    pending: int
+    # None when nobody is registered / nobody has a score.
+    pass_rate: int | None
+    average_score: int | None
+
+
 class CohortRow(BaseModel):
     """A user's row in the instructor's module view."""
 

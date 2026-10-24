@@ -106,6 +106,7 @@ def cohort(
             "account": UserRead.of(account),
             "module": ModuleRead.of(module),
             "rows": rows,
+            "summary": results_service.summarise(rows),
         },
     )
 
