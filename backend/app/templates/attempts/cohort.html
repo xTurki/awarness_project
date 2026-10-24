@@ -17,6 +17,7 @@
           <th scope="col">Submitted</th>
           <th scope="col">Score</th>
           <th scope="col">Outcome</th>
+          <th scope="col">Answers</th>
           <th scope="col">Correct the score</th>
         </tr>
       </thead>
@@ -41,6 +42,13 @@
                   <span class="badge text-bg-success">Passed</span>
                 {% else %}
                   <span class="badge text-bg-danger">Failed</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if row.is_submitted %}
+                  <a class="btn btn-sm btn-outline-secondary" href="/attempts/{{ row.id }}/review">View</a>
+                {% else %}
+                  <span class="small text-body-secondary">&mdash;</span>
                 {% endif %}
               </td>
               <td class="text-nowrap">

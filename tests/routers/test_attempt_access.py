@@ -166,6 +166,29 @@ def test_opening_a_submitted_attempt_shows_the_review(client, db, sign_in, train
     assert response.headers["location"].endswith("/review")
 
 
+def test_the_cohort_links_each_submitted_attempt_to_its_review(
+    client, db, sign_in, owner, trainee, live_test
+):
+    row = attempt_service.submit(db, attempt_service.start(db, trainee, live_test.id))
+    sign_in(owner)
+
+    page = client.get(f"/tests/{live_test.id}/attempts")
+    assert f'href="/attempts/{row.id}/review"' in page.text
+
+
+def test_the_instructor_sees_whose_answers_they_are_reviewing(
+    client, db, sign_in, owner, trainee, live_test
+):
+    row = attempt_service.submit(db, attempt_service.start(db, trainee, live_test.id))
+    sign_in(owner)
+
+    page = client.get(f"/attempts/{row.id}/review")
+    assert page.status_code == 200
+    assert trainee.full_name in page.text
+    assert "You chose:" not in page.text
+    assert f'href="/tests/{live_test.id}/attempts"' in page.text
+
+
 def test_a_trainee_taking_a_test_is_never_told_which_option_is_correct(
     client, db, sign_in, trainee, live_test
 ):

@@ -2,9 +2,13 @@
 {% block title %}Result: {{ test.title }}{% endblock %}
 
 {% block content %}
+{% set own = subject.id == account.id %}
 <div class="page-head">
   <a class="crumb" href="/modules/{{ module.id }}/tests/{{ test.id }}">{{ module.title }}</a>
   <h1 class="h3">{{ test.title }}</h1>
+  {% if not own %}
+    <p class="text-body-secondary mb-0">{{ subject.full_name }} &middot; {{ subject.email }}</p>
+  {% endif %}
 </div>
 
 <div class="card mb-4">
@@ -48,7 +52,7 @@
       {% for option in question.options %}
         <div class="pick{% if option.is_correct %} border-success bg-success-subtle{% endif %}"
              style="cursor: default">
-          {% if option.id in chosen %}<strong>You chose:</strong>{% endif %}
+          {% if option.id in chosen %}<strong>{{ "You chose:" if own else "Chose:" }}</strong>{% endif %}
           {{ option.text }}
           {% if option.is_correct %}
             <span class="badge text-bg-success ms-1">Correct answer</span>
@@ -59,5 +63,9 @@
   </div>
 {% endfor %}
 
-<a class="btn btn-outline-secondary" href="/results/modules/{{ module.id }}">Your attempts</a>
+{% if own %}
+  <a class="btn btn-outline-secondary" href="/results/modules/{{ module.id }}">Your attempts</a>
+{% else %}
+  <a class="btn btn-outline-secondary" href="/tests/{{ test.id }}/attempts">All attempts</a>
+{% endif %}
 {% endblock %}

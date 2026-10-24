@@ -211,6 +211,11 @@ def get_viewable(db: DbSession, actor: User, attempt_id: int) -> Attempt:
     return expire_if_due(db, row)
 
 
+def owner(db: DbSession, row: Attempt) -> User:
+    """The person who took the attempt."""
+    return db.get(User, row.user_id)
+
+
 def expire_if_due(db: DbSession, row: Attempt) -> Attempt:
     """Submit the attempt if its time has run out."""
     if not row.is_submitted and row.ends_at <= utcnow():

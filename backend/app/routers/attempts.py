@@ -149,6 +149,8 @@ def review(
             "test": test,
             "attempt": attempt_service.read(row),
             "review": attempt_service.review(db, row),
+            # An instructor can open anyone's attempt, so name whose it is.
+            "subject": UserRead.of(attempt_service.owner(db, row)),
         },
     )
 
