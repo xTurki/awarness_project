@@ -25,7 +25,8 @@
         {% for person in people %}
           {% for row in person.attempts %}
             <tr>
-              <td>{% if loop.first %}{{ person.full_name }}{% endif %}</td>
+              {# Name on every row, so a later attempt never looks unowned. #}
+              <td>{{ person.full_name }}</td>
               <td>{{ row.attempt_number }}</td>
               <td class="text-nowrap">
                 {% if row.submitted_at %}{{ row.submitted_at.strftime("%Y-%m-%d %H:%M") }}
